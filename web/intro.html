@@ -1,436 +1,642 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="dark">
-<title>EgressScope · 让 AI 时代的每一次数据外发都有迹可循</title>
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#efeae1">
+<meta name="description" content="EgressScope 是本地优先的数据外发审计工具。看清 AI Agent 与桌面应用的外发流量：去了哪里、由哪个进程发起、带走了什么。">
+<title>EgressScope · 让每一次 AI 外发都有迹可循</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23d45d35'/%3E%3Ccircle cx='16' cy='16' r='8' fill='none' stroke='%23fffdf9' stroke-width='2.4'/%3E%3Cpath d='M16 9v14M9 16h14' stroke='%23fffdf9' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
+<script>
+(function () {
+  try {
+    var saved = localStorage.getItem("egressscope-theme");
+    if (saved === "dark" || saved === "light") document.documentElement.dataset.theme = saved;
+  } catch (error) {}
+  document.documentElement.classList.add("js");
+})();
+</script>
 <style>
 :root{
-  --bg:#05090e;
-  --panel:#0a121c;
-  --panel-soft:#0c1622;
-  --line:rgba(128,160,195,.14);
-  --line-strong:rgba(128,160,195,.25);
-  --text:#eef7ff;
-  --muted:#8b9db2;
-  --dim:#5d7287;
-  --mint:#3ce8c2;
-  --mint-2:#1cc8a7;
-  --mint-soft:rgba(60,232,194,.09);
-  --blue:#7c9cff;
-  --amber:#ffbe6b;
-  --rose:#ff7590;
-  --violet:#b79cff;
-  --font:"Microsoft YaHei UI","Microsoft YaHei","Segoe UI",system-ui,sans-serif;
-  --mono:"Cascadia Code","JetBrains Mono","SFMono-Regular",Consolas,monospace;
-  --max:1180px;
+  --bg:#efeae1;
+  --tint:#e8e2d6;
+  --surface:#fffdf9;
+  --surface-2:#f7f2ea;
+  --ink:#2c2621;
+  --muted:#6d6155;
+  --dim:#9a8d7e;
+  --line:#ddd5c8;
+  --line-strong:#cec3b3;
+  --accent:#d45d35;
+  --accent-btn:#c3522b;
+  --accent-btn-hover:#ad4522;
+  --accent-ink:#963c1c;
+  --accent-soft:#f7e3d8;
+  --accent-wash:rgba(212,93,53,.055);
+  --accent-line:rgba(212,93,53,.25);
+  --green:#4d7a5c;
+  --green-soft:#e9f0e7;
+  --green-line:rgba(77,122,92,.24);
+  --amber:#9c681d;
+  --amber-soft:#f6ead6;
+  --amber-line:rgba(156,104,29,.24);
+  --red:#ad4638;
+  --red-soft:#f8e5e0;
+  --red-line:rgba(173,70,56,.22);
+  --cta-bg:#c4522c;
+  --nav-bg:rgba(239,234,225,.84);
+  --shadow-sm:0 1px 2px rgba(60,44,30,.05);
+  --shadow-md:0 18px 40px -22px rgba(60,44,30,.3);
+  --shadow-lg:0 42px 90px -38px rgba(60,44,30,.42);
+  --font:"Inter","SF Pro Display",-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei UI","Microsoft YaHei",sans-serif;
+  --mono:"SFMono-Regular","Cascadia Code","JetBrains Mono",Consolas,"Liberation Mono",monospace;
+  --max:1200px;
+  --radius:24px;
+  color-scheme:light;
 }
-*{box-sizing:border-box}
-html{scroll-behavior:smooth}
+[data-theme="dark"]{
+  --bg:#1d1915;
+  --tint:#231e18;
+  --surface:#29231c;
+  --surface-2:#2f2820;
+  --ink:#f3ece1;
+  --muted:#b7a896;
+  --dim:#8d7f71;
+  --line:#3b332a;
+  --line-strong:#4d4236;
+  --accent:#e47a50;
+  --accent-btn:#d2603a;
+  --accent-btn-hover:#e07048;
+  --accent-ink:#f0a184;
+  --accent-soft:#3a251c;
+  --accent-wash:rgba(228,122,80,.09);
+  --accent-line:rgba(228,122,80,.3);
+  --green:#93c09f;
+  --green-soft:#243128;
+  --green-line:rgba(147,192,159,.24);
+  --amber:#ddb276;
+  --amber-soft:#34291a;
+  --amber-line:rgba(221,178,118,.24);
+  --red:#e59a8b;
+  --red-soft:#3b2521;
+  --red-line:rgba(229,154,139,.24);
+  --cta-bg:#c4522c;
+  --nav-bg:rgba(29,25,21,.84);
+  --shadow-sm:0 1px 2px rgba(0,0,0,.28);
+  --shadow-md:0 18px 40px -22px rgba(0,0,0,.62);
+  --shadow-lg:0 42px 90px -38px rgba(0,0,0,.72);
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
 body{
-  margin:0;background:
-    radial-gradient(1300px 700px at 67% -8%,rgba(19,104,91,.22),transparent 64%),
-    radial-gradient(1000px 700px at 6% 34%,rgba(37,64,122,.12),transparent 60%),
-    var(--bg);
-  color:var(--text);font-family:var(--font);font-size:15px;line-height:1.7;-webkit-font-smoothing:antialiased;
+  margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);
+  font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
 }
-body::before{
-  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5;
-  background-image:linear-gradient(rgba(106,146,178,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(106,146,178,.035) 1px,transparent 1px);
-  background-size:54px 54px;mask-image:linear-gradient(to bottom,black 0%,transparent 44%);
-}
+h1,h2,h3,h4,p,ul{margin-top:0}
 a{color:inherit;text-decoration:none}
-::selection{background:rgba(60,232,194,.24);color:#fff}
-::-webkit-scrollbar{width:10px;height:10px}
-::-webkit-scrollbar-thumb{background:#223146;border-radius:20px;border:2px solid var(--bg)}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+svg{display:block}
+[hidden]{display:none!important}
+::selection{background:var(--accent-soft);color:var(--accent-ink)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 svg.ic{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
-
-.wrap{width:min(var(--max),calc(100vw - 48px));margin:0 auto;position:relative;z-index:2}
-.kicker{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--mint);text-transform:uppercase;display:flex;align-items:center;gap:9px}
-.kicker::before{content:"";width:22px;height:1px;background:linear-gradient(90deg,var(--mint),transparent)}
-.h2{font-size:clamp(28px,4vw,43px);line-height:1.2;letter-spacing:-1.4px;margin:13px 0 12px;font-weight:650}
-.lead{color:var(--muted);font-size:14px;max-width:680px;line-height:1.85;margin:0}
-.section{padding:108px 0;position:relative}
-.section-line{border-top:1px solid var(--line)}
+svg.ic.fill{fill:currentColor;stroke:none}
 .mono{font-family:var(--mono)}
+.logo-mark{width:38px;height:38px;flex:none}
+.lg-bg{fill:var(--accent)}
+.wrap{width:min(var(--max),calc(100vw - 48px));margin:0 auto}
+.skip{position:fixed;left:16px;top:-60px;z-index:100;background:var(--surface);border:1px solid var(--line);padding:10px 16px;border-radius:10px;font-size:13px;box-shadow:var(--shadow-md);transition:top .2s}
+.skip:focus{top:12px}
 
-/* ------- nav ------- */
-.nav{position:sticky;top:0;z-index:50;background:rgba(5,9,14,.7);backdrop-filter:blur(20px);border-bottom:1px solid var(--line)}
-.nav-inner{height:68px;display:flex;align-items:center;gap:25px;width:min(var(--max),calc(100vw - 48px));margin:0 auto}
-.brand{display:flex;align-items:center;gap:10px;flex:none}
-.brand svg{width:31px;height:31px}
-.brand-name{font-size:15px;font-weight:700;letter-spacing:.1px}
-.brand-ver{font-family:var(--mono);font-size:8px;color:var(--dim);border:1px solid var(--line);padding:2px 5px;border-radius:4px;margin-left:2px}
-.nav-links{display:flex;gap:27px;margin-left:auto}
-.nav-links a{color:#8296aa;font-size:12px;transition:.16s}
-.nav-links a:hover{color:var(--text)}
-.nav-cta{display:flex;align-items:center;gap:8px}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 16px;border-radius:9px;border:1px solid var(--line);background:rgba(15,25,39,.7);color:#c8d8e6;font-size:12px;transition:.17s;white-space:nowrap}
-.btn:hover{background:#152237;border-color:var(--line-strong);color:#fff;transform:translateY(-1px)}
-.btn.primary{background:linear-gradient(135deg,#54f3d1,#28ccad);border-color:#4beccf;color:#03231d;font-weight:700;box-shadow:0 10px 32px rgba(42,213,179,.16)}
-.btn.primary:hover{filter:brightness(1.07);background:linear-gradient(135deg,#62f7d7,#30d6b6)}
-.btn .ic{width:15px;height:15px}
-.btn.sm{height:33px;padding:0 12px;font-size:11px}
-.nav .btn{height:34px;font-size:11px;padding:0 12px}
-.nav-tag{display:flex;align-items:center;gap:6px;color:#687e92;font-family:var(--mono);font-size:9px;letter-spacing:.5px;margin-right:2px}
-.nav-tag i{width:5px;height:5px;border-radius:50%;background:var(--mint);box-shadow:0 0 8px var(--mint)}
+.nav{
+  position:sticky;top:0;z-index:60;background:var(--nav-bg);
+  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+  border-bottom:1px solid transparent;transition:border-color .25s,box-shadow .25s;
+}
+.nav.scrolled{border-bottom-color:var(--line);box-shadow:0 12px 30px -26px rgba(60,44,30,.55)}
+.nav-inner{height:76px;display:flex;align-items:center;gap:30px}
+.brand{display:flex;align-items:center;gap:10px;flex:none;font-weight:700;font-size:17px;letter-spacing:-.25px}
+.brand-tag{font-family:var(--mono);font-size:9.5px;font-weight:500;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:3px 8px;letter-spacing:.02em;background:var(--surface)}
+.nav-links{display:flex;gap:26px;margin-left:auto}
+.nav-links a{position:relative;font-size:14px;color:var(--muted);transition:color .18s;padding:4px 0}
+.nav-links a::after{content:"";position:absolute;left:0;right:0;bottom:-2px;height:1.5px;background:var(--accent);transform:scaleX(0);transform-origin:left;transition:transform .2s}
+.nav-links a:hover{color:var(--ink)}
+.nav-links a:hover::after{transform:scaleX(1)}
+.nav-actions{display:flex;align-items:center;gap:6px;margin-left:4px}
+.icon-btn{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;color:var(--muted);border:1px solid transparent;transition:background .18s,color .18s,border-color .18s}
+.icon-btn:hover{background:var(--surface);border-color:var(--line);color:var(--ink)}
+.icon-btn .ic{width:17px;height:17px}
+.icon-sun{display:none}
+[data-theme="dark"] .icon-sun{display:block}
+[data-theme="dark"] .icon-moon{display:none}
 
-/* ------- hero ------- */
-.hero{padding:93px 0 85px;position:relative;overflow:hidden}
-.hero::after{content:"";position:absolute;right:-230px;top:15px;width:760px;height:760px;border-radius:50%;border:1px solid rgba(60,232,194,.075);box-shadow:0 0 0 80px rgba(60,232,194,.016),0 0 0 160px rgba(60,232,194,.01);pointer-events:none}
-.hero-grid{display:grid;grid-template-columns:1.02fr .98fr;gap:58px;align-items:center;position:relative;z-index:2}
-.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid rgba(60,232,194,.19);border-radius:20px;background:rgba(60,232,194,.045);color:#a2d9ce;font-size:10px;font-family:var(--mono);letter-spacing:.4px;margin-bottom:22px}
-.hero-badge i{width:5px;height:5px;border-radius:50%;background:var(--mint);box-shadow:0 0 10px var(--mint)}
-.hero h1{font-size:clamp(42px,5.5vw,67px);line-height:1.08;letter-spacing:-2.8px;margin:0 0 24px;font-weight:680}
-.hero h1 em{font-style:normal;color:var(--mint);position:relative;white-space:nowrap}
-.hero h1 em::after{content:"";position:absolute;left:0;right:0;bottom:1px;height:1px;background:linear-gradient(90deg,var(--mint),transparent);opacity:.45}
-.hero .lead{font-size:15px;max-width:555px;line-height:1.9}
-.hero-actions{display:flex;align-items:center;gap:11px;margin-top:31px;flex-wrap:wrap}
-.hero-foot{display:flex;gap:22px;margin-top:30px;flex-wrap:wrap;color:#6c8196;font-size:10px;align-items:center}
-.hero-foot span{display:flex;align-items:center;gap:6px}
-.hero-foot .ic{width:13px;height:13px;color:#5f8e84}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  height:48px;padding:0 22px;border-radius:12px;border:1px solid transparent;
+  font-size:15px;font-weight:600;line-height:1;white-space:nowrap;
+  transition:transform .18s,background .18s,border-color .18s,color .18s,box-shadow .18s;
+}
+.btn .ic{width:16px;height:16px}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+.btn-primary{background:var(--accent-btn);border-color:var(--accent-btn);color:#fff;box-shadow:0 12px 26px -14px rgba(173,69,34,.6)}
+.btn-primary:hover{background:var(--accent-btn-hover);border-color:var(--accent-btn-hover)}
+.btn-ghost{background:transparent;border-color:var(--line-strong);color:var(--ink)}
+.btn-ghost:hover{background:var(--surface);border-color:var(--ink)}
+.btn-sm{height:40px;padding:0 16px;border-radius:10px;font-size:13.5px;gap:7px}
+.btn-lg{height:52px;padding:0 25px;font-size:15.5px;border-radius:13px}
+.btn-invert{background:#fffdf9;border-color:#fffdf9;color:#9b3a1a}
+.btn-invert:hover{background:#fff;border-color:#fff}
+.btn-ghost-light{background:transparent;border-color:rgba(255,255,255,.55);color:#fff}
+.btn-ghost-light:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.8)}
+
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--accent-ink)}
+.eyebrow::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent);flex:none}
+.section-head{max-width:780px;margin:0 auto 52px;text-align:center}
+.section-head h2{font-size:clamp(32px,4.6vw,48px);line-height:1.14;letter-spacing:-1.6px;margin:15px 0 17px;font-weight:700}
+.section-head p{font-size:16px;line-height:1.8;color:var(--muted);margin:0 auto;max-width:660px}
+.section-head.left{text-align:left;margin-left:0;margin-right:0}
+.section-head.left p{margin-left:0}
+.section{padding:clamp(72px,8.4vw,122px) 0}
+.section--tint{background:var(--tint);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+section[id],main[id]{scroll-margin-top:96px}
+
+.hero{position:relative;overflow:hidden;padding:clamp(58px,6.6vw,88px) 0 clamp(76px,7.6vw,112px)}
+.hero::before{
+  content:"";position:absolute;right:-180px;top:-220px;width:760px;height:760px;border-radius:50%;
+  background:radial-gradient(circle,rgba(212,93,53,.12),rgba(212,93,53,.035) 46%,transparent 68%);
+  pointer-events:none;
+}
+.hero::after{
+  content:"";position:absolute;left:-260px;bottom:-340px;width:620px;height:620px;border-radius:50%;
+  border:1px solid var(--line);opacity:.55;pointer-events:none;
+}
+.hero-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.06fr);gap:clamp(40px,5.2vw,72px);align-items:center;position:relative;z-index:1}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border:1px solid var(--line);
+  border-radius:999px;background:var(--surface);font-size:12px;color:var(--muted);box-shadow:var(--shadow-sm);
+}
+.hero-badge i{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.hero h1{font-size:clamp(42px,7vw,68px);line-height:1.07;letter-spacing:-2.8px;margin:22px 0 22px;font-weight:700}
+.hero h1 em{font-style:normal;color:var(--accent);white-space:nowrap}
+.hero-sub{font-size:clamp(17px,1.5vw,19.5px);line-height:1.78;color:var(--muted);max-width:530px;margin:0}
+.hero-actions{display:flex;align-items:center;gap:12px;margin-top:32px;flex-wrap:wrap}
+.hero-meta{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:28px;color:var(--dim);font-size:12.5px}
+.hero-meta .sep{width:3px;height:3px;border-radius:50%;background:var(--line-strong)}
+
 .hero-visual{position:relative;min-width:0}
-.glow{position:absolute;inset:6% -6% -10% 4%;background:radial-gradient(ellipse at 50% 50%,rgba(27,203,168,.16),transparent 65%);filter:blur(20px);pointer-events:none}
-.window{
-  position:relative;border:1px solid var(--line-strong);border-radius:13px;background:rgba(8,15,24,.92);
-  box-shadow:0 45px 110px rgba(0,0,0,.46),0 0 0 1px rgba(255,255,255,.015) inset;overflow:hidden;transform:perspective(1200px) rotateY(-3deg) rotateX(1.5deg);
+.app-window{
+  position:relative;z-index:2;overflow:hidden;background:var(--surface);
+  border:1px solid var(--line);border-radius:26px;
+  box-shadow:0 34px 80px -34px rgba(60,44,30,.42),0 2px 5px rgba(60,44,30,.05);
 }
-.window-bar{height:35px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:6px;padding:0 13px;background:rgba(13,22,35,.65)}
-.win-dot{width:7px;height:7px;border-radius:50%;background:#2a3a4d}
-.win-dot:nth-child(1){background:#723743}.win-dot:nth-child(2){background:#6c5b31}.win-dot:nth-child(3){background:#285e51}
-.win-title{margin-left:8px;font-family:var(--mono);font-size:8px;color:#586d82;letter-spacing:.5px}
-.win-live{margin-left:auto;display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:7.5px;color:#6e978e}
-.win-live i{width:4px;height:4px;border-radius:50%;background:var(--mint);box-shadow:0 0 6px var(--mint)}
-.window-body{padding:16px}
-.win-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.win-head h4{font-size:11px;margin:0;font-weight:600;color:#cedeea}
-.win-head span{font-family:var(--mono);font-size:7.5px;color:#50657a}
-.win-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:11px}
-.win-stat{border:1px solid var(--line);border-radius:7px;padding:9px 10px;background:rgba(17,30,44,.55)}
-.win-stat span{display:block;font-size:7.5px;color:#5f7489}
-.win-stat b{display:block;font-family:var(--mono);font-size:18px;font-weight:500;line-height:1.25;margin-top:2px;color:#d9e9f4}
-.win-stat.hot b{color:var(--rose)}.win-stat.ai b{color:var(--mint)}
-.win-chart{height:89px;border:1px solid var(--line);border-radius:7px;margin-bottom:10px;position:relative;overflow:hidden;background:rgba(3,9,15,.35)}
-.win-chart svg{position:absolute;inset:0;width:100%;height:100%}
-.win-flow{border:1px solid var(--line);border-radius:7px;overflow:hidden}
-.win-flow-head,.win-flow-row{display:grid;grid-template-columns:56px 1fr 68px 42px;gap:7px;align-items:center;padding:7px 9px;font-family:var(--mono);font-size:7.5px;border-bottom:1px solid rgba(128,160,195,.08)}
-.win-flow-head{background:rgba(16,27,41,.7);color:#53687c;font-size:6.5px;letter-spacing:.3px}
-.win-flow-row:last-child{border:0;color:#71879b}
-.win-flow-row .p{color:#a9bccd;font-family:var(--font);font-size:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.win-flow-row .risk{padding:1px 4px;border-radius:3px;background:rgba(255,117,144,.1);color:#f08a9d;text-align:center;font-size:6.5px}
-.win-flow-row .risk.mid{background:rgba(255,190,107,.1);color:#d6a660}
-.win-flow-row .ok{color:#75ae9f;font-size:6.5px;text-align:right}
-.win-float{position:absolute;background:rgba(10,19,30,.95);border:1px solid var(--line-strong);border-radius:9px;backdrop-filter:blur(9px);box-shadow:0 16px 50px rgba(0,0,0,.3)}
-.win-float.one{right:-20px;top:14%;padding:9px 11px;display:flex;gap:8px;align-items:center}
-.win-float.two{left:-29px;bottom:13%;padding:9px 11px;display:flex;gap:8px;align-items:center}
-.win-float .ic{width:14px;height:14px;color:var(--mint)}
-.win-float b{display:block;font-size:8.5px;color:#bccfde;font-weight:500}
-.win-float span{display:block;font-family:var(--mono);font-size:6.5px;color:#566c81;margin-top:2px}
-.sample-tag{position:absolute;right:8px;bottom:-24px;color:#42576b;font-family:var(--mono);font-size:8px;letter-spacing:.4px}
+.window-bar{height:48px;display:flex;align-items:center;gap:7px;padding:0 17px;border-bottom:1px solid var(--line);background:var(--surface-2)}
+.win-dot{width:9px;height:9px;border-radius:50%;background:#e07a5f;flex:none}
+.win-dot:nth-child(2){background:#e3b04b}
+.win-dot:nth-child(3){background:#7fa47c}
+.window-title{margin-left:9px;font-family:var(--mono);font-size:10px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.live{margin-left:auto;display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:999px;background:var(--green-soft);color:var(--green);font-family:var(--mono);font-size:9px;flex:none}
+.live i{width:5px;height:5px;border-radius:50%;background:var(--green)}
+.window-body{display:grid;grid-template-columns:166px minmax(0,1fr);min-height:402px}
+.app-side{display:flex;flex-direction:column;gap:3px;padding:18px 11px 13px;background:var(--surface-2);border-right:1px solid var(--line)}
+.side-label{padding:0 10px 8px;font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.side-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:9px;font-size:11.5px;color:var(--muted)}
+.side-item .ic{width:14px;height:14px;color:var(--dim)}
+.side-item.active{background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+.side-item.active .ic{color:var(--accent-ink)}
+.side-foot{margin-top:auto;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);font-size:8.5px;line-height:1.55;color:var(--dim)}
+.side-foot b{display:flex;align-items:center;gap:6px;color:var(--green);font-family:var(--mono);font-size:8px;font-weight:500;margin-bottom:3px}
+.side-foot b i{width:4px;height:4px;border-radius:50%;background:var(--green)}
+.app-main{padding:19px 19px 17px;min-width:0}
+.app-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:13px}
+.app-head h4{margin:0;font-size:14px;font-weight:650;letter-spacing:-.2px}
+.app-head span{font-family:var(--mono);font-size:8.5px;color:var(--dim);background:var(--surface-2);border:1px solid var(--line);padding:3px 7px;border-radius:999px;white-space:nowrap}
+.app-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.app-stat{padding:9px 11px;background:var(--surface-2);border:1px solid var(--line);border-radius:11px;min-width:0}
+.app-stat span{display:block;font-size:9px;color:var(--muted);white-space:nowrap}
+.app-stat b{display:block;margin-top:2px;font-size:21px;line-height:1.2;font-weight:650;letter-spacing:-.6px}
+.app-stat.ai b{color:var(--accent)}
+.app-stat.hot b{color:var(--red)}
+.app-chart{position:relative;height:74px;margin-bottom:10px;border:1px solid var(--line);border-radius:11px;overflow:hidden;background:var(--surface)}
+.app-chart svg{position:absolute;inset:0;width:100%;height:100%}
+.chart-grid{stroke:var(--line);stroke-width:.7}
+.chart-line{fill:none;stroke:var(--accent);stroke-width:1.7;stroke-linecap:round}
+.chart-line-2{fill:none;stroke:var(--green);stroke-width:1.1;opacity:.75;stroke-linecap:round}
+.chart-stop-1{stop-color:var(--accent);stop-opacity:.22}
+.chart-stop-2{stop-color:var(--accent);stop-opacity:0}
+.app-flows{border:1px solid var(--line);border-radius:11px;overflow:hidden;background:var(--surface)}
+.flow-row{display:grid;grid-template-columns:46px minmax(0,1fr) 34px 54px;gap:7px;align-items:center;padding:8px 10px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:9px;color:var(--dim)}
+.flow-row:last-child{border-bottom:0}
+.flow-row.head{background:var(--surface-2);font-size:8px;letter-spacing:.04em;color:var(--dim)}
+.flow-row .proc{font-family:var(--font);font-size:10px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.risk-pill{padding:2px 4px;border-radius:4px;text-align:center;background:var(--red-soft);color:var(--red);font-size:8.5px;font-weight:600}
+.risk-pill.mid{background:var(--amber-soft);color:var(--amber)}
+.flow-row .action{text-align:right;font-size:8.5px}
+.flow-row .action.alert{color:var(--red);font-weight:600}
+.float{
+  position:absolute;z-index:3;display:flex;align-items:center;gap:10px;padding:11px 13px;
+  background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-md);
+}
+.float .fi{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent-ink);flex:none}
+.float .fi .ic{width:14px;height:14px}
+.float b{display:block;font-size:11px;font-weight:600;line-height:1.4}
+.float span{display:block;margin-top:1px;font-family:var(--mono);font-size:8.5px;color:var(--dim);line-height:1.45}
+.float.one{left:20px;bottom:-46px}
+.float.two{right:20px;top:-46px}
+.sample-tag{margin:14px 2px 0;text-align:right;font-family:var(--mono);font-size:9.5px;color:var(--dim)}
 
-/* ------- trust strip ------- */
-.trust{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:rgba(8,14,22,.48)}
-.trust-grid{display:grid;grid-template-columns:repeat(4,1fr);width:min(var(--max),calc(100vw - 48px));margin:0 auto}
-.trust-item{padding:22px 22px;border-right:1px solid var(--line);display:flex;align-items:center;gap:11px}
-.trust-item:last-child{border:0}
-.trust-icon{width:30px;height:30px;border:1px solid var(--line);border-radius:8px;display:grid;place-items:center;color:var(--mint);background:rgba(60,232,194,.035);flex:none}
-.trust-icon .ic{width:14px;height:14px}
-.trust-copy b{display:block;font-size:10.5px;font-weight:600;color:#b8cada}
-.trust-copy span{display:block;font-size:9px;color:#5e7388;margin-top:2px}
+.trust{background:var(--tint);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.trust-grid{display:grid;grid-template-columns:repeat(4,1fr)}
+.trust-item{display:flex;align-items:center;gap:12px;padding:24px 26px;border-right:1px solid var(--line)}
+.trust-item:last-child{border-right:0}
+.trust-icon{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:var(--surface);border:1px solid var(--line);color:var(--accent-ink);flex:none}
+.trust-icon .ic{width:17px;height:17px}
+.trust-item b{display:block;font-size:13px;font-weight:600;line-height:1.4}
+.trust-item span{display:block;margin-top:2px;font-size:11.5px;color:var(--muted);line-height:1.5}
 
-/* ------- problem ------- */
-.problem-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:44px}
-.problem{border:1px solid var(--line);border-radius:14px;padding:26px 24px;background:linear-gradient(155deg,rgba(15,26,40,.84),rgba(8,15,24,.7));position:relative;overflow:hidden}
-.problem::after{content:"";position:absolute;right:-55px;top:-55px;width:150px;height:150px;border-radius:50%;border:1px solid rgba(128,160,195,.055)}
-.p-num{font-family:var(--mono);font-size:9px;color:#455b70;letter-spacing:1px}
-.p-icon{width:35px;height:35px;border-radius:9px;border:1px solid rgba(128,160,195,.16);display:grid;place-items:center;color:#93aabf;margin:17px 0 16px;background:rgba(124,156,255,.035)}
-.p-icon .ic{width:16px;height:16px}
-.problem h3{font-size:15px;font-weight:600;margin:0 0 8px;letter-spacing:-.2px}
-.problem p{color:#7d91a6;font-size:11.5px;line-height:1.8;margin:0}
-.problem code{font-family:var(--mono);color:#a7c5bd;font-size:10px;background:rgba(60,232,194,.045);padding:1px 4px;border-radius:3px}
+.card-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.card{
+  background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:28px;
+  box-shadow:var(--shadow-sm);transition:transform .25s,border-color .25s,box-shadow .25s;
+}
+.card:hover{transform:translateY(-3px);border-color:var(--line-strong);box-shadow:var(--shadow-md)}
+.card .num{font-family:var(--mono);font-size:10.5px;font-weight:500;letter-spacing:.1em;color:var(--accent-ink)}
+.card .card-icon{width:46px;height:46px;border-radius:13px;display:grid;place-items:center;margin:18px 0 17px;background:var(--accent-soft);color:var(--accent-ink)}
+.card .card-icon .ic{width:20px;height:20px}
+.card h3{font-size:19px;line-height:1.35;letter-spacing:-.35px;margin:0 0 9px;font-weight:650}
+.card p{margin:0;font-size:13.5px;line-height:1.8;color:var(--muted)}
+.card p + p{margin-top:9px}
+.card code,.step code{
+  font-family:var(--mono);font-size:.88em;color:var(--accent-ink);background:var(--surface-2);
+  border:1px solid var(--line);border-radius:5px;padding:1px 5px;white-space:nowrap;
+}
 .insight{
-  margin-top:18px;display:grid;grid-template-columns:auto 1fr auto;gap:22px;align-items:center;
-  border:1px solid rgba(60,232,194,.15);border-radius:14px;padding:22px 26px;
-  background:linear-gradient(100deg,rgba(20,44,43,.55),rgba(9,17,27,.55));
+  display:grid;grid-template-columns:auto 1fr auto;gap:18px;align-items:center;
+  margin-top:18px;padding:24px 28px;background:var(--surface);border:1px solid var(--line);
+  border-left:3px solid var(--accent);border-radius:18px;box-shadow:var(--shadow-sm);
 }
-.insight-mark{font-family:Georgia,serif;font-size:49px;color:rgba(60,232,194,.24);line-height:.8}
-.insight p{margin:0;color:#b5c8d5;font-size:13px;line-height:1.85}
-.insight p b{color:#e5f4f0;font-weight:600}
-.insight-note{font-family:var(--mono);font-size:8px;color:#5d8179;letter-spacing:.5px;white-space:nowrap;align-self:flex-end}
+.insight-mark{font-family:Georgia,"Times New Roman",serif;font-size:42px;line-height:.7;color:var(--accent);align-self:start;margin-top:4px}
+.insight p{margin:0;font-size:14.5px;line-height:1.82;color:var(--muted)}
+.insight p strong{color:var(--ink);font-weight:600}
+.insight-note{font-family:var(--mono);font-size:9px;letter-spacing:.09em;color:var(--dim);white-space:nowrap;align-self:end}
 
-/* ------- architecture ------- */
-.arch-section{background:linear-gradient(180deg,transparent,rgba(8,16,25,.5) 20%,rgba(8,16,25,.5) 80%,transparent)}
-.arch{padding:30px;border:1px solid var(--line);border-radius:18px;background:rgba(7,14,22,.65);position:relative;margin-top:42px;overflow:hidden}
-.arch::before{content:"";position:absolute;inset:0;background-image:radial-gradient(rgba(113,153,184,.11) 1px,transparent 1px);background-size:23px 23px;mask-image:linear-gradient(90deg,transparent,black 20%,black 80%,transparent);opacity:.4}
-.arch-row{position:relative;z-index:2;display:grid;grid-template-columns:repeat(5,1fr);gap:13px}
-.arch-node{position:relative;border:1px solid var(--line);border-radius:11px;padding:17px 15px;background:linear-gradient(160deg,#0f1b29,#0a131e);min-height:145px}
-.arch-node.highlight{border-color:rgba(60,232,194,.32);box-shadow:0 0 0 1px rgba(60,232,194,.04) inset,0 12px 35px rgba(20,125,108,.08)}
-.arch-node.highlight::after{content:"核心";position:absolute;top:10px;right:10px;font-family:var(--mono);font-size:6.5px;letter-spacing:.5px;color:var(--mint);background:rgba(60,232,194,.08);padding:2px 4px;border-radius:3px}
-.arch-ic{width:29px;height:29px;border-radius:7px;display:grid;place-items:center;background:rgba(124,156,255,.075);border:1px solid var(--line);color:#9bb3c7;margin-bottom:14px}
-.arch-node.highlight .arch-ic{background:rgba(60,232,194,.09);color:var(--mint);border-color:rgba(60,232,194,.2)}
-.arch-ic .ic{width:14px;height:14px}
-.arch-node h4{margin:0 0 5px;font-size:11.5px;font-weight:600;color:#ccdcea}
-.arch-node p{margin:0;font-size:9.5px;line-height:1.65;color:#677c91}
-.arch-arrow{align-self:center;justify-self:center;position:absolute;right:-17px;top:50%;z-index:5;color:#3c665e;background:#08111b;border:1px solid rgba(60,232,194,.1);border-radius:50%;width:21px;height:21px;display:grid;place-items:center;transform:translateY(-50%)}
-.arch-arrow .ic{width:11px;height:11px}
-.arch-flow{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;margin-top:17px;padding:11px 15px;border:1px dashed rgba(60,232,194,.15);border-radius:8px;background:rgba(60,232,194,.02);font-family:var(--mono);font-size:8.5px;color:#5f817a;letter-spacing:.2px}
-.arch-flow span{display:flex;align-items:center;gap:6px}
-.arch-flow .ic{width:11px;height:11px;color:#4d8074}
-.arch-flow .strong{color:#9bc6bc}
-.arch-note{position:relative;z-index:2;display:grid;grid-template-columns:1fr 1fr 1fr;gap:13px;margin-top:21px}
-.arch-why{border-left:1px solid rgba(60,232,194,.18);padding-left:14px}
-.arch-why span{font-family:var(--mono);font-size:7.5px;color:#46756a;letter-spacing:.8px}
-.arch-why p{margin:4px 0 0;color:#70869a;font-size:9.5px;line-height:1.7}
-.arch-why b{color:#a6bccb;font-weight:500}
+.arch-card{background:var(--surface);border:1px solid var(--line);border-radius:26px;padding:28px;box-shadow:var(--shadow-sm)}
+.pipeline{display:grid;grid-template-columns:repeat(5,1fr);gap:30px}
+.pipe-node{position:relative;min-height:154px;padding:17px 15px;background:var(--surface-2);border:1px solid var(--line);border-radius:16px}
+.pipe-node.highlight{border-color:var(--accent-line);background:var(--accent-wash);box-shadow:0 0 0 1px var(--accent-wash) inset}
+.pipe-node .pipe-icon{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:var(--surface);border:1px solid var(--line);color:var(--muted);margin-bottom:14px}
+.pipe-node.highlight .pipe-icon{color:var(--accent-ink);border-color:var(--accent-line);background:var(--surface)}
+.pipe-node .pipe-icon .ic{width:16px;height:16px}
+.pipe-node h4{margin:0 0 5px;font-size:13px;font-weight:650;letter-spacing:-.15px}
+.pipe-node p{margin:0;font-size:11.5px;line-height:1.68;color:var(--muted)}
+.pipe-node:not(:last-child)::after{
+  content:"";position:absolute;right:-21px;top:50%;width:10px;height:10px;
+  border-top:1.5px solid var(--line-strong);border-right:1.5px solid var(--line-strong);
+  transform:translateY(-50%) rotate(45deg);
+}
+.pipeline-caption{
+  display:flex;align-items:center;justify-content:center;gap:10px 18px;flex-wrap:wrap;
+  margin-top:18px;padding-top:17px;border-top:1px dashed var(--line);
+  font-family:var(--mono);font-size:10px;color:var(--dim);
+}
+.pipeline-caption b{font-weight:500;color:var(--muted)}
+.pipeline-caption .arr{color:var(--accent)}
+.why-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:18px}
+.why{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px 24px;box-shadow:var(--shadow-sm)}
+.why .label{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;color:var(--accent-ink);margin-bottom:8px}
+.why p{margin:0;font-size:13px;line-height:1.78;color:var(--muted)}
+.why b{color:var(--ink);font-weight:600}
+.table-card{margin-top:18px;background:var(--surface);border:1px solid var(--line);border-radius:22px;overflow:hidden;box-shadow:var(--shadow-sm)}
+.table-scroll{overflow-x:auto}
+table.compare{border-collapse:collapse;width:100%;min-width:820px}
+.compare th{padding:14px 18px;text-align:left;font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--dim);background:var(--surface-2);border-bottom:1px solid var(--line)}
+.compare td{padding:15px 18px;font-size:12.5px;line-height:1.65;color:var(--muted);border-bottom:1px solid var(--line);vertical-align:top}
+.compare tr:last-child td{border-bottom:0}
+.compare td:first-child{width:21%;color:var(--ink);font-weight:600}
+.compare .chosen td{background:var(--accent-wash)}
+.compare .chosen td:first-child{color:var(--accent-ink)}
+.tag-now{display:inline-block;margin-left:6px;padding:1px 5px;border-radius:4px;border:1px solid var(--accent-line);background:var(--accent-soft);color:var(--accent-ink);font-family:var(--mono);font-size:8px;vertical-align:1px}
+.compare .yes{color:var(--green)}
+.compare .mid{color:var(--amber)}
+.compare .no{color:var(--red)}
+.table-foot{display:flex;justify-content:space-between;gap:20px;padding:13px 18px;border-top:1px solid var(--line);background:var(--surface-2);font-size:10.5px;color:var(--dim)}
 
-/* comparison table */
-.compare-wrap{margin-top:40px;border:1px solid var(--line);border-radius:14px;overflow:hidden;overflow-x:auto;background:rgba(8,15,24,.55)}
-table.compare{border-collapse:collapse;width:100%;min-width:800px}
-.compare th{font-size:9px;color:#5e7489;font-weight:500;text-align:left;padding:13px 16px;border-bottom:1px solid var(--line);letter-spacing:.4px;background:rgba(14,24,37,.6)}
-.compare td{font-size:10.5px;color:#8195a9;padding:14px 16px;border-bottom:1px solid rgba(128,160,195,.075);vertical-align:top;line-height:1.6}
-.compare tr:last-child td{border:0}
-.compare td:first-child{color:#c4d5e3;font-weight:500;width:20%}
-.compare .chosen{background:rgba(60,232,194,.035)}
-.compare .chosen td:first-child{color:var(--mint)}
-.compare .chosen td:first-child::before{content:"● ";font-size:7px;vertical-align:middle}
-.compare .yes{color:#8ccab9}
-.compare .no{color:#b28089}
-.compare .mid{color:#c5a475}
-.badge-chosen{font-family:var(--mono);font-size:7px;color:var(--mint);border:1px solid rgba(60,232,194,.2);background:rgba(60,232,194,.06);border-radius:3px;padding:1px 4px;margin-left:6px;vertical-align:1px}
-.compare-foot{display:flex;justify-content:space-between;gap:20px;color:#566b80;font-size:9px;padding:12px 16px;border-top:1px solid var(--line);background:rgba(7,13,21,.5)}
+.outcome-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.outcome{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:26px 26px 24px;box-shadow:var(--shadow-sm);transition:transform .25s,border-color .25s,box-shadow .25s}
+.outcome:hover{transform:translateY(-3px);border-color:var(--line-strong);box-shadow:var(--shadow-md)}
+.o-label{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;color:var(--accent-ink);margin-bottom:12px}
+.outcome h3{font-size:18px;line-height:1.35;letter-spacing:-.3px;margin:0 0 8px;font-weight:650}
+.outcome p{margin:0;font-size:13px;line-height:1.78;color:var(--muted)}
+.example{
+  margin-top:17px;padding:13px 14px;background:var(--surface-2);border:1px solid var(--line);
+  border-radius:12px;font-family:var(--mono);font-size:10px;line-height:1.95;color:var(--muted);
+}
+.example b{color:var(--accent-ink);font-weight:600}
 
-/* ------- outcomes ------- */
-.outcome-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:42px}
-.outcome{border:1px solid var(--line);border-radius:13px;padding:22px;background:rgba(13,23,36,.58);position:relative}
-.outcome:hover{border-color:var(--line-strong)}
-.o-label{font-family:var(--mono);font-size:8px;color:var(--mint);letter-spacing:1.2px;margin-bottom:12px}
-.outcome h3{font-size:14px;margin:0 0 7px;font-weight:600}
-.outcome p{font-size:11px;line-height:1.8;color:#788da2;margin:0}
-.outcome .example{margin-top:14px;border-top:1px solid var(--line);padding-top:12px;font-family:var(--mono);font-size:8.5px;color:#5f756f;line-height:1.8}
-.outcome .example b{color:#9bbcb4;font-weight:400}
+.coverage-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.coverage{background:var(--surface);border:1px solid var(--line);border-radius:22px;overflow:hidden;box-shadow:var(--shadow-sm)}
+.cov-head{display:flex;align-items:center;gap:10px;padding:19px 24px;border-bottom:1px solid var(--line);font-size:15px;font-weight:650;letter-spacing:-.2px}
+.cov-head .ic{width:17px;height:17px}
+.coverage.good .cov-head{background:var(--green-soft);color:var(--green)}
+.coverage.bad .cov-head{background:var(--red-soft);color:var(--red)}
+.coverage ul{list-style:none;margin:0;padding:8px 24px 18px}
+.coverage li{display:flex;gap:11px;padding:11px 0;border-bottom:1px solid var(--line);font-size:12.5px;line-height:1.72;color:var(--muted)}
+.coverage li:last-child{border-bottom:0}
+.coverage li .ic{width:14px;height:14px;margin-top:2px;flex:none}
+.coverage.good li .ic{color:var(--green)}
+.coverage.bad li .ic{color:var(--red)}
+.coverage li b{color:var(--ink);font-weight:600}
+.notice{
+  display:flex;gap:12px;align-items:flex-start;margin-top:18px;padding:17px 20px;
+  background:var(--amber-soft);border:1px solid var(--amber-line);border-radius:16px;
+  font-size:12.5px;line-height:1.75;color:var(--muted);
+}
+.notice .ic{width:17px;height:17px;color:var(--amber);margin-top:2px;flex:none}
+.notice b{color:var(--ink);font-weight:600}
 
-/* ------- coverage ------- */
-.coverage-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:42px}
-.cov{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:rgba(9,17,27,.6)}
-.cov-head{padding:17px 21px;display:flex;align-items:center;gap:9px;font-size:12px;font-weight:600;border-bottom:1px solid var(--line)}
-.cov-head .ic{width:15px;height:15px}
-.cov.good .cov-head{color:#9be1d1;background:rgba(60,232,194,.04);border-bottom-color:rgba(60,232,194,.13)}
-.cov.bad .cov-head{color:#d5a3aa;background:rgba(255,117,144,.03)}
-.cov ul{list-style:none;margin:0;padding:8px 21px 17px}
-.cov li{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid rgba(128,160,195,.06);font-size:11px;color:#8499ad;line-height:1.7}
-.cov li:last-child{border:0}
-.cov li .ic{width:13px;height:13px;margin-top:2px;color:#5d8d82;flex:none}
-.cov.bad li .ic{color:#9a666e}
-.cov li b{color:#b9cbd9;font-weight:500}
-.notice{margin-top:14px;border:1px solid rgba(255,190,107,.16);background:rgba(255,190,107,.035);border-radius:11px;padding:15px 18px;display:flex;gap:11px;color:#9a8a70;font-size:10.5px;line-height:1.75}
-.notice .ic{width:15px;height:15px;color:var(--amber);flex:none;margin-top:2px}
-.notice b{color:#d4b98e;font-weight:500}
+.download-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.download-card{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:25px;box-shadow:var(--shadow-sm);transition:transform .25s,border-color .25s,box-shadow .25s}
+.download-card:hover{transform:translateY(-3px);border-color:var(--line-strong);box-shadow:var(--shadow-md)}
+.download-card.main{border-color:var(--accent-line);background:linear-gradient(165deg,var(--accent-wash),var(--surface) 46%)}
+.dl-badge{position:absolute;right:16px;top:16px;padding:3px 7px;border-radius:999px;background:var(--accent-soft);border:1px solid var(--accent-line);color:var(--accent-ink);font-family:var(--mono);font-size:8px;letter-spacing:.04em}
+.dl-os{font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);padding-right:76px}
+.download-card.main .dl-os{color:var(--accent-ink)}
+.download-card h3{margin:9px 0 7px;font-size:18px;line-height:1.35;letter-spacing:-.35px;font-weight:650}
+.download-card p{margin:0;font-size:12.5px;line-height:1.72;color:var(--muted);min-height:62px}
+.dl-file{margin-top:15px;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);font-family:var(--mono);font-size:9.5px;line-height:1.55;color:var(--muted);word-break:break-all}
+.dl-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}
+.chip{display:inline-flex;align-items:center;padding:3px 8px;border:1px solid var(--line);border-radius:999px;background:var(--surface-2);font-size:9.5px;color:var(--dim)}
+.chip.ok{background:var(--green-soft);border-color:transparent;color:var(--green)}
+.chip.warm{background:var(--amber-soft);border-color:transparent;color:var(--amber)}
+.release-bar{display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-top:24px;padding:20px 24px;background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow-sm)}
+.release-bar p{margin:0;font-size:13px;line-height:1.7;color:var(--muted)}
+.release-bar b{color:var(--ink);font-weight:600}
+.release-actions{display:flex;gap:10px;flex-wrap:wrap}
+.dl-note{display:flex;gap:9px;margin-top:14px;font-size:11.5px;line-height:1.75;color:var(--dim)}
+.dl-note .ic{width:14px;height:14px;margin-top:2px;flex:none;color:var(--dim)}
+.dl-note b{color:var(--muted);font-weight:600}
 
-/* ------- how it works / start ------- */
-.start-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:55px;align-items:center;margin-top:44px}
-.steps{position:relative}
-.step{display:grid;grid-template-columns:32px 1fr;gap:17px;padding-bottom:27px;position:relative}
+.start-grid{display:grid;grid-template-columns:.92fr 1.08fr;gap:clamp(36px,5vw,64px);align-items:center}
+.steps{margin-top:32px}
+.step{position:relative;display:grid;grid-template-columns:36px 1fr;gap:16px;padding-bottom:26px}
 .step:last-child{padding-bottom:0}
-.step:not(:last-child)::before{content:"";position:absolute;left:15px;top:36px;bottom:0;width:1px;background:linear-gradient(var(--line-strong),transparent)}
-.step-num{width:30px;height:30px;border-radius:50%;border:1px solid rgba(60,232,194,.22);display:grid;place-items:center;font-family:var(--mono);font-size:10px;color:var(--mint);background:rgba(60,232,194,.04);position:relative;z-index:1}
-.step h4{font-size:13px;margin:3px 0 5px;font-weight:600}
-.step p{font-size:11px;line-height:1.75;color:#768ba0;margin:0}
-.step code{font-family:var(--mono);font-size:9.5px;color:#a3c3bb;background:rgba(60,232,194,.045);border:1px solid rgba(60,232,194,.09);border-radius:4px;padding:2px 5px}
-.control-mock{border:1px solid var(--line-strong);border-radius:15px;background:linear-gradient(155deg,#0a121c,#070d15);box-shadow:0 38px 100px rgba(0,0,0,.4);overflow:hidden}
-.cm-bar{height:34px;display:flex;align-items:center;gap:6px;padding:0 13px;border-bottom:1px solid var(--line);background:rgba(14,24,36,.7)}
-.cm-bar .win-dot{width:6px;height:6px}
-.cm-title{margin-left:7px;font-family:var(--mono);font-size:8px;color:#566b80}
-.cm-body{padding:20px}
-.cm-head{display:flex;align-items:center;gap:10px;margin-bottom:18px}
-.cm-logo{width:30px;height:30px;border:1px solid rgba(60,232,194,.2);border-radius:9px;display:grid;place-items:center;color:var(--mint);background:rgba(60,232,194,.05)}
-.cm-logo .ic{width:14px;height:14px}
-.cm-head h4{margin:0;font-size:12px;font-weight:600}
-.cm-head span{display:block;font-size:8px;color:#5d7287;margin-top:2px}
-.cm-state{margin-left:auto;display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:7px;color:#70ae9f;background:rgba(60,232,194,.05);border:1px solid rgba(60,232,194,.12);border-radius:12px;padding:3px 7px}
-.cm-state i{width:4px;height:4px;border-radius:50%;background:var(--mint);box-shadow:0 0 6px var(--mint)}
-.cm-cards{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:13px}
-.cm-card{border:1px solid var(--line);border-radius:8px;background:rgba(14,24,37,.55);padding:10px 11px}
-.cm-card .top{display:flex;justify-content:space-between;align-items:center;font-size:8px;color:#6b8095}
-.cm-card .top .ic{width:11px;height:11px;color:#7094a2}
-.cm-card .val{margin-top:7px;display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:9px;color:#a9bdcb}
-.cm-card .val i{width:5px;height:5px;border-radius:50%;background:var(--mint)}
-.cm-card .val.warn i{background:var(--amber)}
-.cm-banner{display:flex;align-items:center;gap:9px;padding:10px 11px;border:1px solid rgba(60,232,194,.14);border-radius:8px;background:rgba(60,232,194,.035);color:#85a79f;font-size:8.5px;line-height:1.5;margin-bottom:13px}
-.cm-banner .ic{width:12px;height:12px;color:var(--mint);flex:none}
-.cm-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px}
-.cm-btn{border:1px solid var(--line);border-radius:7px;height:29px;display:flex;align-items:center;justify-content:center;gap:5px;font-size:8.5px;color:#93a7ba;background:rgba(14,24,37,.6)}
-.cm-btn.primary{background:linear-gradient(135deg,#49ecd0,#2ac6aa);border-color:#43dcc2;color:#04231d;font-weight:600}
-.cm-btn .ic{width:10px;height:10px}
-.cm-foot{display:flex;justify-content:space-between;color:#495e73;font-family:var(--mono);font-size:7px;margin-top:13px;padding-top:11px;border-top:1px solid var(--line)}
+.step:not(:last-child)::before{content:"";position:absolute;left:17px;top:40px;bottom:2px;width:1px;background:var(--line)}
+.step-num{position:relative;z-index:1;width:35px;height:35px;border-radius:50%;display:grid;place-items:center;background:var(--surface);border:1px solid var(--accent-line);color:var(--accent-ink);font-family:var(--mono);font-size:11px}
+.step h4{margin:4px 0 5px;font-size:16px;font-weight:650;letter-spacing:-.2px}
+.step p{margin:0;font-size:13px;line-height:1.78;color:var(--muted)}
+.control{overflow:hidden;background:var(--surface);border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow-lg)}
+.control-body{padding:23px}
+.control-head{display:flex;align-items:center;gap:11px;margin-bottom:18px}
+.control-logo{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent-ink);flex:none}
+.control-logo .ic{width:19px;height:19px}
+.control-head h4{margin:0;font-size:14px;font-weight:650;letter-spacing:-.2px}
+.control-head span{display:block;margin-top:2px;font-size:9.5px;color:var(--dim)}
+.control-state{margin-left:auto;display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:999px;background:var(--green-soft);color:var(--green);font-family:var(--mono);font-size:8.5px;white-space:nowrap}
+.control-state i{width:5px;height:5px;border-radius:50%;background:var(--green)}
+.control-cards{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:11px}
+.control-card{padding:10px 11px;background:var(--surface-2);border:1px solid var(--line);border-radius:10px}
+.control-card .label{display:flex;align-items:center;justify-content:space-between;font-size:9px;color:var(--muted)}
+.control-card .label .ic{width:11px;height:11px;color:var(--dim)}
+.control-card .value{display:flex;align-items:center;gap:6px;margin-top:6px;font-family:var(--mono);font-size:9.5px;color:var(--ink)}
+.control-card .value i{width:5px;height:5px;border-radius:50%;background:var(--green);flex:none}
+.control-card .value.warn i{background:var(--amber)}
+.control-banner{display:flex;align-items:flex-start;gap:8px;margin-bottom:12px;padding:10px 11px;border-radius:9px;background:var(--green-soft);color:var(--muted);font-size:9.5px;line-height:1.6}
+.control-banner .ic{width:12px;height:12px;color:var(--green);margin-top:1px;flex:none}
+.control-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.mock-btn{display:flex;align-items:center;justify-content:center;gap:5px;height:32px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--muted);font-size:9.5px;white-space:nowrap}
+.mock-btn .ic{width:11px;height:11px}
+.mock-btn.primary{background:var(--accent-btn);border-color:var(--accent-btn);color:#fff;font-weight:600}
+.control-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:13px;padding-top:11px;border-top:1px solid var(--line);font-family:var(--mono);font-size:8px;color:var(--dim)}
 
-/* ------- privacy ------- */
-.privacy-section{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:linear-gradient(110deg,rgba(11,29,29,.42),rgba(7,13,21,.15) 60%)}
-.privacy-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:60px;align-items:center}
-.privacy-list{list-style:none;margin:25px 0 0;padding:0;display:grid;gap:15px}
+.privacy-grid{display:grid;grid-template-columns:1.02fr .98fr;gap:clamp(40px,6vw,72px);align-items:start}
+.privacy-list{list-style:none;margin:26px 0 0;padding:0;display:grid;gap:17px}
 .privacy-list li{display:flex;gap:12px}
-.privacy-list .ic{width:16px;height:16px;color:var(--mint);margin-top:3px;flex:none}
-.privacy-list b{display:block;font-size:12px;font-weight:600;color:#cfdfe9;margin-bottom:2px}
-.privacy-list p{margin:0;font-size:10.5px;line-height:1.7;color:#74899e}
-.privacy-card{border:1px solid rgba(60,232,194,.18);border-radius:16px;background:rgba(8,18,23,.7);padding:27px;position:relative;overflow:hidden}
-.privacy-card::after{content:"";position:absolute;right:-60px;bottom:-90px;width:230px;height:230px;border-radius:50%;border:1px solid rgba(60,232,194,.09);box-shadow:0 0 0 30px rgba(60,232,194,.015),0 0 0 60px rgba(60,232,194,.008)}
-.pc-label{font-family:var(--mono);font-size:8px;color:#56847b;letter-spacing:1px}
-.pc-title{font-size:20px;line-height:1.4;font-weight:600;margin:11px 0 20px;position:relative;z-index:1}
-.pc-row{display:flex;justify-content:space-between;gap:15px;border-top:1px solid var(--line);padding:10px 0;font-size:9.5px;position:relative;z-index:1}
-.pc-row span{color:#5f7489}
-.pc-row b{color:#9fb5c6;font-weight:400;font-family:var(--mono);font-size:9px;text-align:right}
-.pc-row b.good{color:var(--mint)}
-.pc-note{margin-top:17px;font-size:8.5px;color:#577068;line-height:1.7;position:relative;z-index:1;display:flex;gap:8px}
-.pc-note .ic{width:12px;height:12px;color:#659589;flex:none;margin-top:1px}
+.privacy-list .ic{width:17px;height:17px;color:var(--accent-ink);margin-top:3px;flex:none}
+.privacy-list b{display:block;margin-bottom:2px;font-size:14px;font-weight:650;color:var(--ink)}
+.privacy-list p{margin:0;font-size:12.5px;line-height:1.72;color:var(--muted)}
+.boundary{
+  position:relative;overflow:hidden;padding:30px;border-radius:24px;
+  background:#2e2722;border:1px solid #3e342c;color:#f5eee4;
+  box-shadow:0 36px 80px -36px rgba(40,28,18,.72);
+}
+.boundary::after{content:"";position:absolute;right:-90px;bottom:-130px;width:260px;height:260px;border-radius:50%;border:1px solid rgba(255,255,255,.08);box-shadow:0 0 0 34px rgba(255,255,255,.025),0 0 0 68px rgba(255,255,255,.015);pointer-events:none}
+.boundary .label{position:relative;z-index:1;font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;color:#e8a184}
+.boundary h3{position:relative;z-index:1;margin:11px 0 20px;font-size:clamp(22px,2.4vw,27px);line-height:1.4;letter-spacing:-.5px;color:#fbf6ee;font-weight:650}
+.boundary-row{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:9px 0;border-top:1px solid rgba(255,255,255,.11);font-size:12px}
+.boundary-row span{color:rgba(245,238,228,.55)}
+.boundary-row b{font-family:var(--mono);font-size:10.5px;font-weight:500;color:#f5eee4;text-align:right}
+.boundary-row b.good{color:#a6cfa9}
+.boundary-note{position:relative;z-index:1;display:flex;gap:8px;margin-top:16px;font-size:10px;line-height:1.7;color:rgba(245,238,228,.48)}
+.boundary-note .ic{width:12px;height:12px;margin-top:1px;flex:none}
+[data-theme="dark"] .boundary{background:var(--surface);border-color:var(--line);color:var(--ink);box-shadow:var(--shadow-lg)}
+[data-theme="dark"] .boundary .label{color:var(--accent-ink)}
+[data-theme="dark"] .boundary h3{color:var(--ink)}
+[data-theme="dark"] .boundary-row{border-top-color:var(--line)}
+[data-theme="dark"] .boundary-row span{color:var(--muted)}
+[data-theme="dark"] .boundary-row b{color:var(--ink)}
+[data-theme="dark"] .boundary-row b.good{color:var(--green)}
+[data-theme="dark"] .boundary-note{color:var(--dim)}
 
-/* ------- roadmap ------- */
-.roadmap{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:40px}
-.road{border:1px solid var(--line);border-radius:13px;padding:23px;background:rgba(10,18,29,.48);position:relative}
-.road.done{border-color:rgba(60,232,194,.2);background:rgba(60,232,194,.025)}
-.road.plan{opacity:.9}
-.road-tag{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:7.5px;letter-spacing:.8px;color:#6c8298;border:1px solid var(--line);padding:2px 6px;border-radius:3px;margin-bottom:14px}
-.road.done .road-tag{color:var(--mint);border-color:rgba(60,232,194,.2);background:rgba(60,232,194,.05)}
-.road h3{font-size:14px;margin:0 0 9px;font-weight:600}
-.road p{font-size:10.5px;line-height:1.8;color:#74899d;margin:0}
-.road ul{margin:11px 0 0;padding-left:16px;color:#687d92;font-size:9.5px;line-height:1.9}
-.road li::marker{color:#4f7a70}
-.road .ic{width:12px;height:12px}
+.roadmap-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.road{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:26px;box-shadow:var(--shadow-sm)}
+.road.done{border-color:var(--green-line)}
+.road-tag{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:999px;border:1px solid var(--line);background:var(--surface-2);color:var(--dim);font-family:var(--mono);font-size:8.5px;letter-spacing:.08em;margin-bottom:14px}
+.road-tag .ic{width:10px;height:10px}
+.road.done .road-tag{background:var(--green-soft);border-color:transparent;color:var(--green)}
+.road h3{margin:0 0 8px;font-size:17.5px;line-height:1.4;letter-spacing:-.3px;font-weight:650}
+.road p{margin:0;font-size:12.5px;line-height:1.75;color:var(--muted)}
+.road ul{margin:12px 0 0;padding-left:16px;font-size:11.5px;line-height:1.95;color:var(--dim)}
+.road li::marker{color:var(--accent)}
+.road.done li::marker{color:var(--green)}
 
-/* ------- downloads ------- */
-.download-section{background:linear-gradient(180deg,transparent,rgba(8,16,25,.44) 24%,rgba(8,16,25,.44) 76%,transparent)}
-.dl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:40px}
-.dl-card{border:1px solid var(--line);border-radius:14px;padding:22px;background:linear-gradient(155deg,rgba(15,26,40,.82),rgba(8,15,24,.7));position:relative;overflow:hidden}
-.dl-card.main{border-color:rgba(60,232,194,.24);box-shadow:0 0 0 1px rgba(60,232,194,.03) inset}
-.dl-card.muted{background:rgba(10,18,29,.42);border-style:dashed}
-.dl-badge{position:absolute;right:14px;top:14px;font-family:var(--mono);font-size:7px;letter-spacing:.6px;color:var(--mint);border:1px solid rgba(60,232,194,.2);background:rgba(60,232,194,.06);border-radius:3px;padding:2px 5px}
-.dl-os{font-family:var(--mono);font-size:8px;letter-spacing:1.2px;color:#5b817a;margin-bottom:10px}
-.dl-card.main .dl-os{color:var(--mint)}
-.dl-card h3{font-size:15px;margin:0 0 7px;font-weight:600;letter-spacing:-.2px}
-.dl-card p{margin:0;color:#788da2;font-size:10.5px;line-height:1.75;min-height:55px}
-.dl-file{margin-top:15px;padding-top:12px;border-top:1px solid var(--line);font-family:var(--mono);font-size:8.5px;color:#76978f;word-break:break-all}
-.dl-meta{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:7px;font-family:var(--mono);font-size:7.5px;color:#50657a}
-.dl-meta .ok{color:#78a99b}
-.dl-actions{display:flex;align-items:center;gap:10px;margin-top:22px;flex-wrap:wrap}
-.dl-foot{display:flex;gap:8px;margin-top:18px;color:#61788c;font-size:9.5px;line-height:1.7}
-.dl-foot .ic{width:13px;height:13px;color:#6c9b90;flex:none;margin-top:2px}
+.final{position:relative;overflow:hidden;background:var(--cta-bg);color:#fff;padding:clamp(72px,8vw,104px) 0}
+.final::before{content:"";position:absolute;right:-140px;top:-220px;width:560px;height:560px;border-radius:50%;border:1px solid rgba(255,255,255,.16);box-shadow:0 0 0 50px rgba(255,255,255,.045),0 0 0 100px rgba(255,255,255,.025);pointer-events:none}
+.final::after{content:"";position:absolute;left:18%;bottom:-260px;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.1),transparent 68%);pointer-events:none}
+.final-inner{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:42px}
+.final .eyebrow{color:rgba(255,255,255,.72)}
+.final .eyebrow::before{background:#fff}
+.final h2{max-width:740px;margin:14px 0 13px;font-size:clamp(33px,4.3vw,52px);line-height:1.14;letter-spacing:-1.8px;font-weight:700;color:#fff}
+.final p{max-width:590px;margin:0;font-size:14px;line-height:1.8;color:rgba(255,255,255,.8)}
+.final-actions{display:flex;gap:11px;flex-wrap:wrap;flex:none}
+.final-actions .btn{height:50px}
+.final-note{position:relative;z-index:1;margin-top:30px;font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;color:rgba(255,255,255,.55)}
 
-/* ------- final cta ------- */
-.final{padding:90px 0;position:relative;overflow:hidden}
-.final-box{border:1px solid rgba(60,232,194,.18);border-radius:20px;background:
-  radial-gradient(600px 300px at 90% 120%,rgba(30,157,136,.16),transparent 65%),
-  linear-gradient(120deg,rgba(15,31,42,.9),rgba(7,14,22,.8));
-  padding:54px;display:flex;align-items:center;justify-content:space-between;gap:40px;position:relative;overflow:hidden}
-.final-box::after{content:"";position:absolute;right:8%;top:-160px;width:360px;height:360px;border:1px solid rgba(60,232,194,.08);border-radius:50%;box-shadow:0 0 0 45px rgba(60,232,194,.015),0 0 0 90px rgba(60,232,194,.008)}
-.final h2{font-size:clamp(26px,3.3vw,38px);line-height:1.26;letter-spacing:-1.1px;margin:0 0 11px;font-weight:650}
-.final p{margin:0;color:#8297aa;font-size:12px;max-width:560px}
-.final-actions{display:flex;gap:10px;flex:none;z-index:1}
-.footer{border-top:1px solid var(--line);padding:34px 0;background:rgba(5,10,16,.6)}
-.footer-inner{display:flex;align-items:flex-start;justify-content:space-between;gap:30px;width:min(var(--max),calc(100vw - 48px));margin:0 auto}
-.footer .brand-name{font-size:13px}
-.footer .brand svg{width:26px;height:26px}
-.footer p{margin:9px 0 0;color:#50657a;font-size:9px;line-height:1.7;max-width:440px}
-.footer-right{text-align:right;color:#4f6479;font-size:8.5px;line-height:1.9;font-family:var(--mono)}
-.footer-links{display:flex;gap:16px;justify-content:flex-end;margin-bottom:5px}
-.footer-links a{color:#70869a;font-family:var(--font);font-size:10px}
-.footer-links a:hover{color:var(--mint)}
+.footer{background:var(--bg);padding:54px 0 26px}
+.footer-grid{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:38px}
+.footer .brand{margin-bottom:14px}
+.footer-desc{max-width:350px;margin:0;font-size:12px;line-height:1.75;color:var(--muted)}
+.footer-badge{display:inline-flex;align-items:center;gap:6px;margin-top:14px;padding:4px 8px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-family:var(--mono);font-size:8.5px;color:var(--dim)}
+.footer-badge i{width:4px;height:4px;border-radius:50%;background:var(--green)}
+.footer h4{margin:2px 0 12px;font-size:10px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--dim)}
+.footer-col{display:flex;flex-direction:column;gap:9px}
+.footer-col a,.footer-col span{font-size:12px;color:var(--muted);line-height:1.5}
+.footer-col a:hover{color:var(--accent-ink)}
+.footer-bottom{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:38px;padding-top:18px;border-top:1px solid var(--line);font-family:var(--mono);font-size:9.5px;color:var(--dim)}
 
-section[id]{scroll-margin-top:82px}
-/* reveal on scroll */
-.reveal{opacity:0;transform:translateY(15px);transition:opacity .6s ease,transform .6s ease}
-.reveal.in{opacity:1;transform:none}
+.js .reveal{opacity:0;transform:translateY(16px);transition:opacity .6s ease,transform .6s ease}
+.js .reveal.in{opacity:1;transform:none}
 
-@media(max-width:1020px){
-  .hero-grid{grid-template-columns:1fr;gap:48px}
-  .hero{padding-top:70px}
-  .hero-visual{max-width:610px}
-  .window{transform:none}
-  .hero::after{right:-450px}
+@media(max-width:1180px){
+  .hero-grid{grid-template-columns:1fr;gap:52px}
+  .hero-visual{max-width:720px;margin:0 auto;width:100%}
+  .float{display:none}
+  .nav-links{gap:20px}
+  .pipeline{grid-template-columns:repeat(3,1fr)}
+  .pipe-node:not(:last-child)::after{display:none}
+  .pipe-node{min-height:auto}
+}
+@media(max-width:1000px){
   .nav-links{display:none}
-  .nav-tag{display:none}
-  .arch-row{grid-template-columns:1fr 1fr}
-  .arch-node{min-height:auto}
-  .arch-arrow{display:none}
-  .arch-note{grid-template-columns:1fr}
-  .problem-grid{grid-template-columns:1fr 1fr}
-  .outcome-grid{grid-template-columns:1fr 1fr}
-  .start-grid{grid-template-columns:1fr;gap:40px}
-  .privacy-grid{grid-template-columns:1fr;gap:35px}
-  .roadmap{grid-template-columns:1fr 1fr}
-  .dl-grid{grid-template-columns:1fr 1fr}
-  .final-box{flex-direction:column;align-items:flex-start;padding:40px}
-  .final-actions{z-index:1}
+  .nav-actions{margin-left:auto}
   .trust-grid{grid-template-columns:1fr 1fr}
   .trust-item:nth-child(2){border-right:0}
   .trust-item:nth-child(1),.trust-item:nth-child(2){border-bottom:1px solid var(--line)}
+  .card-grid{grid-template-columns:1fr 1fr}
+  .outcome-grid{grid-template-columns:1fr 1fr}
+  .download-grid{grid-template-columns:1fr 1fr}
+  .roadmap-grid{grid-template-columns:1fr 1fr}
+  .start-grid{grid-template-columns:1fr;gap:42px}
+  .privacy-grid{grid-template-columns:1fr;gap:38px}
   .coverage-grid{grid-template-columns:1fr}
+  .why-grid{grid-template-columns:1fr 1fr}
+  .final-inner{flex-direction:column;align-items:flex-start}
+  .footer-grid{grid-template-columns:1.5fr 1fr 1fr}
+  .footer-grid .footer-brand{grid-column:1 / -1}
 }
-@media(max-width:680px){
-  .wrap,.nav-inner,.trust-grid,.footer-inner{width:calc(100vw - 32px)}
-  .nav-cta .btn:not(.primary){display:none}
-  .hero h1{letter-spacing:-1.8px}
-  .hero{padding:52px 0 70px}
-  .section{padding:70px 0}
-  .problem-grid,.outcome-grid,.roadmap,.dl-grid{grid-template-columns:1fr}
+@media(max-width:760px){
+  .wrap{width:calc(100vw - 32px)}
+  .nav-inner{height:68px;gap:14px}
+  .brand{font-size:15.5px;gap:9px}
+  .logo-mark{width:34px;height:34px}
+  .brand-tag{display:none}
+  .nav .repo-btn{display:none}
+  .hero{padding-top:44px;padding-bottom:72px}
+  .hero h1{letter-spacing:-2.2px}
+  .hero-sub{font-size:16.5px}
+  .hero-actions .btn{flex:1;min-width:150px}
+  .hero-meta{font-size:11.5px;gap:9px}
+  .app-window{border-radius:20px}
+  .window-body{grid-template-columns:1fr;min-height:0}
+  .app-side{display:none}
+  .app-main{padding:15px}
+  .app-stats{gap:6px}
+  .app-stat{padding:8px 9px}
+  .app-stat b{font-size:18px}
+  .app-stat span{font-size:8px}
+  .window-title{font-size:9px}
+  .live{display:none}
+  .flow-row{grid-template-columns:40px minmax(0,1fr) 30px 48px;padding:7px 8px;font-size:8.5px;gap:5px}
+  .flow-row .proc{font-size:9px}
+  .sample-tag{text-align:center}
+  .section{padding:68px 0}
+  .section-head{margin-bottom:38px}
+  .section-head h2{letter-spacing:-1.1px}
+  .section-head p{font-size:14.5px}
   .trust-grid{grid-template-columns:1fr}
-  .trust-item{border-right:0;border-bottom:1px solid var(--line)}
+  .trust-item{border-right:0;border-bottom:1px solid var(--line);padding:18px 20px}
   .trust-item:last-child{border-bottom:0}
-  .hero-actions .btn{flex:1}
-  .window-body{padding:12px}
-  .win-float{display:none}
-  .sample-tag{display:none}
-  .arch{padding:17px}
-  .arch-row{grid-template-columns:1fr}
-  .arch-node{min-height:auto}
-  .arch-flow{display:none}
-  .arch-note{grid-template-columns:1fr}
-  .insight{grid-template-columns:1fr;gap:8px}
+  .card-grid,.outcome-grid,.download-grid,.roadmap-grid,.why-grid{grid-template-columns:1fr}
+  .card,.outcome,.download-card,.road{padding:23px}
+  .download-card p{min-height:0}
+  .insight{grid-template-columns:1fr;gap:8px;padding:22px}
   .insight-mark{display:none}
   .insight-note{text-align:left}
-  .final-box{padding:30px 24px}
-  .final-actions{flex-direction:column;width:100%}
-  .final-actions .btn{width:100%}
-  .footer-inner{flex-direction:column}
-  .footer-right{text-align:left}
-  .footer-links{justify-content:flex-start}
-  .coverage-grid{grid-template-columns:1fr}
+  .pipeline{grid-template-columns:1fr 1fr}
+  .pipe-node h4{font-size:12.5px}
+  .pipe-node p{font-size:11px}
+  .arch-card{padding:18px;border-radius:20px}
+  .pipeline-caption{font-size:9px;gap:6px 12px}
   .compare-foot{flex-direction:column;gap:4px}
+  .compare td,.compare th{padding:12px 14px}
+  .coverage ul{padding:6px 20px 14px}
+  .coverage li{font-size:12px}
+  .release-bar{align-items:flex-start;padding:18px}
+  .release-actions{width:100%}
+  .release-actions .btn{flex:1}
+  .final-actions{width:100%}
+  .final-actions .btn{flex:1;min-width:150px}
+  .final::before,.final::after{display:none}
+  .final{background-image:radial-gradient(circle at 100% 0,rgba(255,255,255,.15),transparent 46%)}
+  .footer-grid{grid-template-columns:1fr 1fr;gap:28px}
+  .footer-grid .footer-brand{grid-column:1 / -1}
+  .footer-bottom{flex-direction:column;align-items:flex-start}
+  .boundary{padding:24px}
+  .boundary-row{font-size:11px}
+  .boundary-row b{font-size:9.5px}
+}
+@media(max-width:480px){
+  .nav .btn-sm{padding:0 12px;font-size:12.5px}
+  .nav .btn-sm .ic{display:none}
+  .hero h1{font-size:clamp(38px,10.4vw,48px)}
+  .hero-meta{gap:6px 14px}
+  .hero-meta .sep{display:none}
+  .hero-actions .btn{width:100%;flex:none}
+  .app-chart{height:62px}
+  .flow-row.head span:nth-child(1){display:none}
+  .flow-row{grid-template-columns:minmax(0,1fr) 28px 44px}
+  .flow-row > span:first-child{display:none}
+  .pipeline{grid-template-columns:1fr}
+  .final h2{letter-spacing:-1.2px}
+  .final-actions .btn{width:100%;flex:none}
+  .control-cards{grid-template-columns:1fr}
+  .control-actions{grid-template-columns:1fr}
+  .footer-grid{grid-template-columns:1fr}
+  .dl-badge{position:static;display:inline-flex;margin-bottom:10px}
+  .dl-os{padding-right:0}
 }
 @media(prefers-reduced-motion:reduce){
-  *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
-  .reveal{opacity:1;transform:none}
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+  .js .reveal{opacity:1;transform:none}
 }
 </style>
 </head>
 <body>
+<a class="skip" href="#main">跳到主要内容</a>
+
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-logo" viewBox="0 0 40 40">
+    <rect class="lg-bg" width="40" height="40" rx="12"/>
+    <circle cx="20" cy="20" r="11.2" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="1.3"/>
+    <circle cx="20" cy="20" r="6.6" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="1.3" stroke-dasharray="2.4 3"/>
+    <circle cx="20" cy="20" r="2.3" fill="#fff"/>
+    <path d="M21.7 18.3L29 11" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/>
+    <circle cx="30" cy="10" r="1.8" fill="#fff" opacity=".9"/>
+  </symbol>
   <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.5-3 7.7-7 9-4-1.3-7-4.5-7-9V6z"/><path d="M9.5 12l1.8 1.8 3.5-3.7"/></symbol>
   <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></symbol>
-  <symbol id="i-terminal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3M13 15h4"/></symbol>
   <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9S14.5 18.4 12 21c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></symbol>
   <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 10-5.7-5.7l-1.7 1.7"/><path d="M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 105.7 5.7l1.7-1.7"/></symbol>
   <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6z"/><circle cx="12" cy="12" r="2.5"/></symbol>
   <symbol id="i-eye-off" viewBox="0 0 24 24"><path d="M3 3l18 18M10.6 6.2A9.6 9.6 0 0112 6c6 0 9.5 6 9.5 6a16 16 0 01-3.1 3.6M6.2 7.7A17 17 0 002.5 12s3.5 6 9.5 6c1.4 0 2.7-.3 3.8-.8"/><path d="M9.9 9.9a3 3 0 004.2 4.2"/></symbol>
-  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h15M14 7l5 5-5 5"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></symbol>
   <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3l9.5 17H2.5z"/><path d="M12 9v4.5M12 17h.01"/></symbol>
   <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h15M14 7l5 5-5 5"/></symbol>
+  <symbol id="i-arrow-up" viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></symbol>
   <symbol id="i-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></symbol>
   <symbol id="i-activity" viewBox="0 0 24 24"><path d="M3 12h4l2.5-7 5 14 2.5-7h4"/></symbol>
   <symbol id="i-file" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></symbol>
-  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9S14.5 18.4 12 21c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></symbol>
   <symbol id="i-server" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="6" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/><path d="M7 7h.01M7 17h.01"/></symbol>
   <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l2 2M14 9l2 2"/></symbol>
-  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
-  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></symbol>
   <symbol id="i-box" viewBox="0 0 24 24"><path d="M3 8l9-5 9 5v8l-9 5-9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></symbol>
   <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h2M10 12h10M4 18h9M17 18h3"/><circle cx="16" cy="6" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="15" cy="18" r="2"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></symbol>
+  <symbol id="i-terminal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3M13 15h4"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20.5 14.2A8.5 8.5 0 019.8 3.5 8.5 8.5 0 1020.5 14.2z"/></symbol>
+  <symbol id="i-github" viewBox="0 0 24 24"><path d="M12 .5C5.73.5.5 5.73.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56 0-.28-.01-1.02-.02-2-3.2.7-3.88-1.54-3.88-1.54-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.23-1.28-5.23-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11.1 11.1 0 015.79 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.43-2.69 5.41-5.25 5.69.41.36.78 1.06.78 2.14 0 1.55-.01 2.8-.01 3.18 0 .31.21.68.8.56A11.51 11.51 0 0023.5 12C23.5 5.73 18.27.5 12 .5z"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 20h16"/></symbol>
 </svg>
 
-<nav class="nav">
-  <div class="nav-inner">
+<nav class="nav" aria-label="主导航">
+  <div class="nav-inner wrap">
     <a class="brand" href="#top" aria-label="EgressScope 首页">
-      <svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="18" fill="none" stroke="#1b534d" stroke-width="1"/><circle cx="20" cy="20" r="12.5" fill="none" stroke="rgba(60,232,194,.42)" stroke-width="1" stroke-dasharray="3 4"/><circle cx="20" cy="20" r="6" fill="#3ce8c2" opacity=".14"/><circle cx="20" cy="20" r="2.8" fill="#3ce8c2"/><path d="M21.8 18.2L32 8" stroke="#3ce8c2" stroke-width="1.6" stroke-linecap="round"/><circle cx="33" cy="7" r="2" fill="#060a10" stroke="#3ce8c2"/></svg>
-      <span class="brand-name">EgressScope</span><span class="brand-ver">v0.1</span>
+      <svg class="logo-mark" aria-hidden="true"><use href="#i-logo"/></svg>
+      <span>EgressScope</span>
+      <span class="brand-tag">v0.1.1</span>
     </a>
     <div class="nav-links">
       <a href="#problem">问题</a>
@@ -440,383 +646,512 @@ section[id]{scroll-margin-top:82px}
       <a href="#start">快速开始</a>
       <a href="#privacy">隐私设计</a>
     </div>
-    <div class="nav-cta">
-      <span class="nav-tag"><i></i>LOCAL ONLY · AUTHORIZED DEVICES</span>
-      <a class="btn primary" href="/"><span class="cta-label">打开审计台</span> <svg class="ic"><use href="#i-arrow"/></svg></a>
+    <div class="nav-actions">
+      <a class="icon-btn repo-btn" data-repo href="__REPO_URL__" target="_blank" rel="noopener" aria-label="GitHub 仓库">
+        <svg class="ic fill" aria-hidden="true"><use href="#i-github"/></svg>
+      </a>
+      <button class="icon-btn theme-toggle" id="theme-toggle" type="button" aria-label="切换深色模式">
+        <svg class="ic icon-moon" aria-hidden="true"><use href="#i-moon"/></svg>
+        <svg class="ic icon-sun" aria-hidden="true"><use href="#i-sun"/></svg>
+      </button>
+      <a class="btn btn-primary btn-sm" data-release href="__REPO_URL__/releases/latest">
+        <span class="cta-label">免费下载</span>
+        <svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg>
+      </a>
     </div>
   </div>
 </nav>
 
-<main id="top">
-  <section class="hero">
+<main id="main">
+  <section class="hero" id="top">
     <div class="wrap hero-grid">
-      <div>
-        <div class="hero-badge"><i></i>OS-LEVEL EGRESS AUDIT · 为授权设备设计</div>
-        <h1>AI 读过的每一个上下文，<br>不该<em>悄无声息地</em><br>离开你的电脑。</h1>
-        <p class="lead">EgressScope 把本机应用与 AI Agent 的出站流量收拢到一条可见、可归因、可追溯的审计路径。它不读取 Agent 的聊天记录，而是直接观察操作系统里的数据外发行为——请求去了哪里、由哪个进程发起、带走了什么。</p>
+      <div class="hero-copy">
+        <div class="hero-badge"><i></i>v0.1.1 正式发布 · 六平台原生构建</div>
+        <h1>让每一次 <em>AI 外发</em><br>都有迹可循。</h1>
+        <p class="hero-sub">EgressScope 把本机 Agent 与桌面应用的出站流量，收拢成一条可见、可归因、可追溯的审计路径。它不读取聊天记录，而是观察操作系统里真实发生的数据外发。</p>
         <div class="hero-actions">
-          <a class="btn primary" href="/" style="height:44px;padding:0 20px"><span class="cta-label">打开本机审计台</span> <svg class="ic"><use href="#i-arrow"/></svg></a>
-          <a class="btn" href="#architecture" style="height:44px;padding:0 18px">了解架构取舍</a>
+          <a class="btn btn-primary btn-lg" data-release href="__REPO_URL__/releases/latest">
+            <span class="cta-label">免费下载</span>
+            <svg class="ic" aria-hidden="true"><use href="#i-download"/></svg>
+          </a>
+          <a class="btn btn-ghost btn-lg" href="#architecture">
+            查看架构
+            <svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg>
+          </a>
         </div>
-        <div class="hero-foot">
-          <span><svg class="ic"><use href="#i-check"/></svg>无需内核驱动</span>
-          <span><svg class="ic"><use href="#i-check"/></svg>本地 CA · 显式授权</span>
-          <span><svg class="ic"><use href="#i-check"/></svg>AES-GCM + DPAPI</span>
-          <span><svg class="ic"><use href="#i-check"/></svg>数据不离开设备</span>
+        <div class="hero-meta">
+          <span>Windows 10+ · macOS · Linux</span>
+          <span class="sep" aria-hidden="true"></span>
+          <span>本地运行 · 无需内核驱动</span>
+          <span class="sep" aria-hidden="true"></span>
+          <span>数据不离开设备</span>
         </div>
       </div>
+
       <div class="hero-visual">
-        <div class="glow"></div>
-        <div class="window">
-          <div class="window-bar"><span class="win-dot"></span><span class="win-dot"></span><span class="win-dot"></span><span class="win-title">EgressScope / local audit console</span><span class="win-live"><i></i>LIVE</span></div>
+        <div class="app-window" role="img" aria-label="EgressScope 本机审计台界面示意：展示今日请求、AI 外发、高风险流量与进程归因列表">
+          <div class="window-bar">
+            <span class="win-dot"></span><span class="win-dot"></span><span class="win-dot"></span>
+            <span class="window-title">EgressScope · 本机审计台</span>
+            <span class="live"><i></i>实时</span>
+          </div>
           <div class="window-body">
-            <div class="win-head"><h4>态势总览</h4><span>过去 24H · LOCAL</span></div>
-            <div class="win-stats">
-              <div class="win-stat"><span>今日请求</span><b>1,284</b></div>
-              <div class="win-stat ai"><span>AI 外发</span><b>327</b></div>
-              <div class="win-stat hot"><span>高风险</span><b>12</b></div>
-            </div>
-            <div class="win-chart">
-              <svg viewBox="0 0 420 90" preserveAspectRatio="none" aria-hidden="true">
-                <defs><linearGradient id="area" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#3ce8c2" stop-opacity=".18"/><stop offset="1" stop-color="#3ce8c2" stop-opacity="0"/></linearGradient></defs>
-                <line x1="0" y1="63" x2="420" y2="63" stroke="rgba(128,160,195,.09)"/><line x1="0" y1="36" x2="420" y2="36" stroke="rgba(128,160,195,.07)"/>
-                <path d="M0,72 C35,67 48,52 78,58 S120,42 150,47 S190,33 220,41 S260,20 292,30 S330,22 360,18 S390,31 420,11 L420,90 L0,90 Z" fill="url(#area)"/>
-                <path d="M0,72 C35,67 48,52 78,58 S120,42 150,47 S190,33 220,41 S260,20 292,30 S330,22 360,18 S390,31 420,11" fill="none" stroke="#3ce8c2" stroke-width="1.3"/>
-                <path d="M0,80 C44,77 60,69 92,72 S135,58 170,64 S225,47 260,52 S310,43 344,39 S390,45 420,31" fill="none" stroke="#7c9cff" stroke-width="1" opacity=".8"/>
-              </svg>
-            </div>
-            <div class="win-flow">
-              <div class="win-flow-head"><span>TIME</span><span>PROCESS / ENDPOINT</span><span>RISK</span><span>ACTION</span></div>
-              <div class="win-flow-row"><span>11:42:08</span><span class="p">Codex.exe → api.openai.com</span><span class="risk">92</span><span class="ok">ALERT</span></div>
-              <div class="win-flow-row"><span>11:41:54</span><span class="p">python.exe → generativelanguage…</span><span class="risk mid">58</span><span class="ok">OBSERVE</span></div>
-              <div class="win-flow-row"><span>11:40:31</span><span class="p">Cursor.exe → api.anthropic.com</span><span class="risk mid">44</span><span class="ok">OBSERVE</span></div>
+            <aside class="app-side">
+              <div class="side-label">工作台</div>
+              <div class="side-item active"><svg class="ic" aria-hidden="true"><use href="#i-activity"/></svg>态势总览</div>
+              <div class="side-item"><svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg>流量记录</div>
+              <div class="side-item"><svg class="ic" aria-hidden="true"><use href="#i-sliders"/></svg>外发规则</div>
+              <div class="side-item"><svg class="ic" aria-hidden="true"><use href="#i-database"/></svg>证据链</div>
+              <div class="side-item"><svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg>隐私设置</div>
+              <div class="side-foot">
+                <b><i></i>LOCAL ONLY</b>
+                仅绑定 127.0.0.1<br>无云同步 · 无外部脚本
+              </div>
+            </aside>
+            <div class="app-main">
+              <div class="app-head">
+                <h4>态势总览</h4>
+                <span>过去 24 小时</span>
+              </div>
+              <div class="app-stats">
+                <div class="app-stat"><span>今日请求</span><b>1,284</b></div>
+                <div class="app-stat ai"><span>AI 外发</span><b>327</b></div>
+                <div class="app-stat hot"><span>高风险</span><b>12</b></div>
+              </div>
+              <div class="app-chart">
+                <svg viewBox="0 0 420 80" preserveAspectRatio="none" aria-hidden="true">
+                  <defs><linearGradient id="chartFill" x1="0" x2="0" y1="0" y2="1"><stop class="chart-stop-1" offset="0"/><stop class="chart-stop-2" offset="1"/></linearGradient></defs>
+                  <line class="chart-grid" x1="0" y1="58" x2="420" y2="58"/>
+                  <line class="chart-grid" x1="0" y1="32" x2="420" y2="32"/>
+                  <path d="M0,66 C34,62 48,48 76,54 S118,39 148,44 S190,30 220,37 S262,18 294,27 S332,20 362,16 S394,28 420,10 L420,80 L0,80 Z" fill="url(#chartFill)"/>
+                  <path class="chart-line" d="M0,66 C34,62 48,48 76,54 S118,39 148,44 S190,30 220,37 S262,18 294,27 S332,20 362,16 S394,28 420,10"/>
+                  <path class="chart-line-2" d="M0,73 C44,70 60,63 92,66 S135,54 170,59 S225,44 260,48 S310,40 344,37 S390,42 420,30"/>
+                </svg>
+              </div>
+              <div class="app-flows">
+                <div class="flow-row head"><span>时间</span><span>进程 / 端点</span><span>风险</span><span>动作</span></div>
+                <div class="flow-row"><span>11:42:08</span><span class="proc">Codex.exe → api.openai.com</span><span class="risk-pill">92</span><span class="action alert">告警</span></div>
+                <div class="flow-row"><span>11:41:54</span><span class="proc">python.exe → generativelanguage…</span><span class="risk-pill mid">58</span><span class="action">观察</span></div>
+                <div class="flow-row"><span>11:40:31</span><span class="proc">Cursor.exe → api.anthropic.com</span><span class="risk-pill mid">44</span><span class="action">观察</span></div>
+              </div>
             </div>
           </div>
         </div>
-        <div class="win-float one"><svg class="ic"><use href="#i-cpu"/></svg><div><b>PID 归因完成</b><span>python.exe → parent: code.exe</span></div></div>
-        <div class="win-float two"><svg class="ic"><use href="#i-lock"/></svg><div><b>证据已加密</b><span>AES-256-GCM · DPAPI key</span></div></div>
-        <span class="sample-tag">* 界面为产品示意，数据为样例</span>
+        <div class="float one" aria-hidden="true">
+          <div class="fi"><svg class="ic"><use href="#i-cpu"/></svg></div>
+          <div><b>PID 归因完成</b><span>python.exe · PID 18240</span></div>
+        </div>
+        <div class="float two" aria-hidden="true">
+          <div class="fi"><svg class="ic"><use href="#i-lock"/></svg></div>
+          <div><b>证据已加密</b><span>AES-256-GCM · DPAPI</span></div>
+        </div>
+        <div class="sample-tag">* 产品界面示意，数据为样例</div>
       </div>
     </div>
   </section>
 
-  <div class="trust">
-    <div class="trust-grid">
-      <div class="trust-item"><div class="trust-icon"><svg class="ic"><use href="#i-eye"/></svg></div><div class="trust-copy"><b>进程级可见性</b><span>端口到 PID 的本地关联</span></div></div>
-      <div class="trust-item"><div class="trust-icon"><svg class="ic"><use href="#i-lock"/></svg></div><div class="trust-copy"><b>内容只在本地</b><span>SQLite · 不启用云端</span></div></div>
-      <div class="trust-item"><div class="trust-icon"><svg class="ic"><use href="#i-database"/></svg></div><div class="trust-copy"><b>可验证证据链</b><span>SHA-256 逐条链接</span></div></div>
-      <div class="trust-item"><div class="trust-icon"><svg class="ic"><use href="#i-shield"/></svg></div><div class="trust-copy"><b>可撤销的系统变更</b><span>代理备份 · CA 可移除</span></div></div>
+  <section class="trust" aria-label="核心特性">
+    <div class="wrap trust-grid">
+      <div class="trust-item">
+        <div class="trust-icon"><svg class="ic" aria-hidden="true"><use href="#i-eye"/></svg></div>
+        <div><b>进程级可见性</b><span>端口到 PID 的本地关联</span></div>
+      </div>
+      <div class="trust-item">
+        <div class="trust-icon"><svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg></div>
+        <div><b>内容只在本地</b><span>SQLite 存储 · 无云同步</span></div>
+      </div>
+      <div class="trust-item">
+        <div class="trust-icon"><svg class="ic" aria-hidden="true"><use href="#i-database"/></svg></div>
+        <div><b>可验证证据链</b><span>SHA-256 逐条链接</span></div>
+      </div>
+      <div class="trust-item">
+        <div class="trust-icon"><svg class="ic" aria-hidden="true"><use href="#i-shield"/></svg></div>
+        <div><b>可撤销的系统变更</b><span>代理备份 · CA 可移除</span></div>
+      </div>
     </div>
-  </div>
+  </section>
 
   <section class="section" id="problem">
     <div class="wrap">
-      <div class="reveal">
-        <div class="kicker">The blind spot</div>
-        <h2 class="h2">问题不在模型，<br>而在看不见的出站路径。</h2>
-        <p class="lead">当 Agent 获得文件系统、终端和代码库的访问权，它同时获得了把这些上下文送出本机的能力。传统安全工具关心连接是否存在，却很少回答：是谁、在什么时候、把什么内容、送到了哪里。</p>
+      <div class="section-head reveal">
+        <span class="eyebrow">01 / 盲区</span>
+        <h2>问题不在模型，<br>而在看不见的出站路径。</h2>
+        <p>当 Agent 获得文件系统、终端和代码库的访问权，它同时获得了把这些上下文送出本机的能力。传统安全工具关心连接是否存在，却很少回答：是谁、在什么时候、把什么内容、送到了哪里。</p>
       </div>
-      <div class="problem-grid">
-        <article class="problem reveal">
-          <div class="p-num">01 / CONTEXT</div>
-          <div class="p-icon"><svg class="ic"><use href="#i-cpu"/></svg></div>
+      <div class="card-grid">
+        <article class="card reveal">
+          <div class="num">01 / CONTEXT</div>
+          <div class="card-icon"><svg class="ic" aria-hidden="true"><use href="#i-cpu"/></svg></div>
           <h3>Agent 自动装载上下文</h3>
           <p>工作区文件、终端输出、环境变量和密钥可能在一次会话里被装入提示词。会话日志能告诉你会话内容，却不能证明这些内容是否、何时、向何处发生了外发。</p>
         </article>
-        <article class="problem reveal">
-          <div class="p-num">02 / ENCRYPTION</div>
-          <div class="p-icon"><svg class="ic"><use href="#i-globe"/></svg></div>
+        <article class="card reveal">
+          <div class="num">02 / ENCRYPTION</div>
+          <div class="card-icon"><svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg></div>
           <h3>HTTPS 让异常失去内容</h3>
           <p>流氓软件、被劫持的编辑器插件与合法 Agent 使用同一条加密通道。流量面板只显示字节数；没有应用配合与本地 TLS 终止，你无法判断上传的是遥测、代码，还是客户数据。</p>
         </article>
-        <article class="problem reveal">
-          <div class="p-num">03 / ATTRIBUTION</div>
-          <div class="p-icon"><svg class="ic"><use href="#i-link"/></svg></div>
+        <article class="card reveal">
+          <div class="num">03 / ATTRIBUTION</div>
+          <div class="card-icon"><svg class="ic" aria-hidden="true"><use href="#i-link"/></svg></div>
           <h3>连接不等于发起者</h3>
           <p>日志里的一条 <code>POST /v1/chat</code> 没有意义，如果不知道它来自哪个进程、哪条父进程链。没有归因，风险告警只会变成噪声；有了归因，才能定位到具体工具与工作流。</p>
         </article>
       </div>
       <div class="insight reveal">
-        <div class="insight-mark">“</div>
+        <div class="insight-mark" aria-hidden="true">“</div>
         <p>真正的空白不是“有没有网络监控”，而是<strong>网络元数据与内容、进程、文件线索之间缺少一条连续的证据链</strong>。EgressScope 选择在这条链上做工程，而不是再做一个流量计数器。</p>
         <div class="insight-note">DESIGN PRINCIPLE / 01</div>
       </div>
     </div>
   </section>
 
-  <section class="section arch-section" id="architecture">
+  <section class="section section--tint" id="architecture">
     <div class="wrap">
-      <div class="reveal">
-        <div class="kicker">Architecture / chosen path</div>
-        <h2 class="h2">本地代理 + 本地 CA +<br>进程归因，是最可落地的组合。</h2>
-        <p class="lead">我们比较了透明重定向、浏览器扩展、Agent 会话旁路和内核级采集。最终选择用户态本地代理作为第一版主干：它不要求驱动签名，不依赖某个 Agent 的私有格式，能在应用配合时还原内容，也允许用户清楚知道审计边界在哪里。</p>
+      <div class="section-head reveal">
+        <span class="eyebrow">02 / 架构取舍</span>
+        <h2>本地代理 + 本地 CA +<br>进程归因，是最可落地的组合。</h2>
+        <p>我们比较了透明重定向、浏览器扩展、Agent 会话旁路和内核级采集。最终选择用户态本地代理作为第一版主干：它不要求驱动签名，不依赖某个 Agent 的私有格式，能在应用配合时还原内容，也允许用户清楚知道审计边界在哪里。</p>
       </div>
-      <div class="arch reveal">
-        <div class="arch-row">
-          <div class="arch-node">
-            <div class="arch-ic"><svg class="ic"><use href="#i-box"/></svg></div>
+
+      <div class="arch-card reveal">
+        <div class="pipeline">
+          <div class="pipe-node">
+            <div class="pipe-icon"><svg class="ic" aria-hidden="true"><use href="#i-box"/></svg></div>
             <h4>应用 / Agent</h4>
             <p>Claude Code、Codex、编辑器、SDK 或普通桌面程序发起 HTTPS 请求。</p>
-            <div class="arch-arrow"><svg class="ic"><use href="#i-arrow"/></svg></div>
           </div>
-          <div class="arch-node">
-            <div class="arch-ic"><svg class="ic"><use href="#i-server"/></svg></div>
+          <div class="pipe-node">
+            <div class="pipe-icon"><svg class="ic" aria-hidden="true"><use href="#i-server"/></svg></div>
             <h4>本地转发代理</h4>
             <p>仅监听 127.0.0.1。系统代理或进程环境变量把流量引到这里，不影响局域网。</p>
-            <div class="arch-arrow"><svg class="ic"><use href="#i-arrow"/></svg></div>
           </div>
-          <div class="arch-node highlight">
-            <div class="arch-ic"><svg class="ic"><use href="#i-key"/></svg></div>
+          <div class="pipe-node highlight">
+            <div class="pipe-icon"><svg class="ic" aria-hidden="true"><use href="#i-key"/></svg></div>
             <h4>TLS 终止</h4>
             <p>使用当前用户信任的本地 CA，对应用配合的 TLS 1.2 / 1.3 连接还原 HTTP 语义。</p>
-            <div class="arch-arrow"><svg class="ic"><use href="#i-arrow"/></svg></div>
           </div>
-          <div class="arch-node">
-            <div class="arch-ic"><svg class="ic"><use href="#i-cpu"/></svg></div>
+          <div class="pipe-node">
+            <div class="pipe-icon"><svg class="ic" aria-hidden="true"><use href="#i-cpu"/></svg></div>
             <h4>进程归因</h4>
             <p>客户端临时端口匹配本机 TCP 表，缓存 PID + 创建时间，避免 PID 复用误判。</p>
-            <div class="arch-arrow"><svg class="ic"><use href="#i-arrow"/></svg></div>
           </div>
-          <div class="arch-node">
-            <div class="arch-ic"><svg class="ic"><use href="#i-sliders"/></svg></div>
+          <div class="pipe-node">
+            <div class="pipe-icon"><svg class="ic" aria-hidden="true"><use href="#i-sliders"/></svg></div>
             <h4>策略与证据</h4>
             <p>端点分类、DLP 信号、风险分；正文加密、审计链、脱敏预览与策略处置。</p>
           </div>
         </div>
-        <div class="arch-flow">
-          <span><svg class="ic"><use href="#i-box"/></svg><span class="strong">进程流量</span></span>
-          <span><svg class="ic"><use href="#i-arrow"/></svg></span>
-          <span><svg class="ic"><use href="#i-shield"/></svg><span class="strong">内容可读</span></span>
-          <span><svg class="ic"><use href="#i-arrow"/></svg></span>
-          <span><svg class="ic"><use href="#i-cpu"/></svg><span class="strong">是谁发起</span></span>
-          <span class="strong" style="color:#71958c">→</span>
-          <span><svg class="ic"><use href="#i-database"/></svg><span class="strong">可验证证据</span></span>
-          <span class="strong" style="color:#71958c">→</span>
-          <span><svg class="ic"><use href="#i-eye"/></svg><span class="strong">本机审计台</span></span>
-        </div>
-        <div class="arch-note">
-          <div class="arch-why"><span>WHY LOCAL PROXY</span><p><b>失败模式清晰。</b>应用不配合，就看不到；不会假装全量可见。系统代理修改前备份，退出时尝试恢复。已有 Clash 等回环代理时自动串联，避免接管后断网。</p></div>
-          <div class="arch-why"><span>WHY MITMPROXY</span><p><b>不重复造 TLS。</b>成熟的开源代理负责 HTTP/2、证书签发与流式转发，项目把精力放在归因、策略与证据链。</p></div>
-          <div class="arch-why"><span>WHY LOCAL CA</span><p><b>内容需要应用同意。</b>CA 只安装到当前用户信任根，且不会自动安装；固定证书、mTLS、E2EE 不被攻破。</p></div>
+        <div class="pipeline-caption" aria-label="审计流程">
+          <b>进程流量</b><span class="arr">→</span>
+          <b>内容可读</b><span class="arr">→</span>
+          <b>是谁发起</b><span class="arr">→</span>
+          <b>可验证证据</b><span class="arr">→</span>
+          <b>本机审计台</b>
         </div>
       </div>
 
-      <div class="compare-wrap reveal">
-        <table class="compare">
-          <thead><tr><th>技术路径</th><th>内容可见性</th><th>部署与维护</th><th>覆盖面</th><th>用户可解释性</th></tr></thead>
-          <tbody>
-            <tr class="chosen"><td>本地代理 + 本地 CA <span class="badge-chosen">本版</span></td><td class="yes">高：协议语义、正文、进程</td><td class="yes">中低：用户态、无驱动签名</td><td class="mid">中：需应用遵循代理 / 信任 CA</td><td class="yes">高：授权与边界可见</td></tr>
-            <tr><td>WFP / WinDivert 透明重定向</td><td class="mid">中：仍受 TLS 固定与信任限制</td><td class="no">高：驱动、签名、兼容性</td><td class="yes">较高：不依赖应用代理设置</td><td class="mid">中：用户不易感知</td></tr>
-            <tr><td>Agent 会话 / MCP 旁路</td><td class="yes">高：可读会话内容</td><td class="yes">低：只需读本地数据</td><td class="no">窄：只覆盖特定 Agent，不看真实外发</td><td class="mid">中：依赖私有格式</td></tr>
-            <tr><td>浏览器扩展</td><td class="mid">中：仅浏览器内页面与请求</td><td class="yes">低：无需系统权限</td><td class="no">窄：桌面 Agent、CLI、后台服务不可见</td><td class="yes">高</td></tr>
-            <tr><td>ETW / 内核文件审计</td><td class="no">不提供内容</td><td class="no">高：需要管理员与规则工程</td><td class="yes">广：网络 / 文件系统事件</td><td class="mid">中：事件量大、噪声高</td></tr>
-          </tbody>
-        </table>
-        <div class="compare-foot"><span>选择标准：在可交付、可解释、可撤销的前提下，获得最高的单机内容可见性。</span><span>透明重定向与 ETW / SACL 已列入路线图。</span></div>
+      <div class="why-grid">
+        <div class="why reveal">
+          <span class="label">WHY LOCAL PROXY</span>
+          <p><b>失败模式清晰。</b>应用不配合，就看不到；不会假装全量可见。系统代理修改前备份，退出时尝试恢复。已有 Clash 等回环代理时自动串联，避免接管后断网。</p>
+        </div>
+        <div class="why reveal">
+          <span class="label">WHY MITMPROXY</span>
+          <p><b>不重复造 TLS。</b>成熟的开源代理负责 HTTP/2、证书签发与流式转发，项目把精力放在归因、策略与证据链。</p>
+        </div>
+        <div class="why reveal">
+          <span class="label">WHY LOCAL CA</span>
+          <p><b>内容需要应用同意。</b>CA 只安装到当前用户信任根，且不会自动安装；固定证书、mTLS、E2EE 不被攻破。</p>
+        </div>
+      </div>
+
+      <div class="table-card reveal">
+        <div class="table-scroll">
+          <table class="compare">
+            <thead><tr><th>技术路径</th><th>内容可见性</th><th>部署与维护</th><th>覆盖面</th><th>用户可解释性</th></tr></thead>
+            <tbody>
+              <tr class="chosen"><td>本地代理 + 本地 CA <span class="tag-now">本版</span></td><td class="yes">高：协议语义、正文、进程</td><td class="yes">中低：用户态、无驱动签名</td><td class="mid">中：需应用遵循代理 / 信任 CA</td><td class="yes">高：授权与边界可见</td></tr>
+              <tr><td>WFP / WinDivert 透明重定向</td><td class="mid">中：仍受 TLS 固定与信任限制</td><td class="no">高：驱动、签名、兼容性</td><td class="yes">较高：不依赖应用代理设置</td><td class="mid">中：用户不易感知</td></tr>
+              <tr><td>Agent 会话 / MCP 旁路</td><td class="yes">高：可读会话内容</td><td class="yes">低：只需读本地数据</td><td class="no">窄：只覆盖特定 Agent，不看真实外发</td><td class="mid">中：依赖私有格式</td></tr>
+              <tr><td>浏览器扩展</td><td class="mid">中：仅浏览器内页面与请求</td><td class="yes">低：无需系统权限</td><td class="no">窄：桌面 Agent、CLI、后台服务不可见</td><td class="yes">高</td></tr>
+              <tr><td>ETW / 内核文件审计</td><td class="no">不提供内容</td><td class="no">高：需要管理员与规则工程</td><td class="yes">广：网络 / 文件系统事件</td><td class="mid">中：事件量大、噪声高</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="table-foot"><span>选择标准：在可交付、可解释、可撤销的前提下，获得最高的单机内容可见性。</span><span>透明重定向与 ETW / SACL 已列入路线图。</span></div>
       </div>
     </div>
   </section>
 
   <section class="section">
     <div class="wrap">
-      <div class="reveal">
-        <div class="kicker">What it solves</div>
-        <h2 class="h2">从“有一条连接”，到<br>“这一次外发是什么”。</h2>
-        <p class="lead">审计结果不是要制造恐慌，而是让安全判断建立在可复核的事实上：进程、端点、内容信号、处置动作和存储完整性。</p>
+      <div class="section-head reveal">
+        <span class="eyebrow">03 / 审计结果</span>
+        <h2>从“有一条连接”，到<br>“这一次外发是什么”。</h2>
+        <p>审计结果不是要制造恐慌，而是让安全判断建立在可复核的事实上：进程、端点、内容信号、处置动作和存储完整性。</p>
       </div>
       <div class="outcome-grid">
-        <article class="outcome reveal"><div class="o-label">01 / ATTRIBUTION</div><h3>精确到进程</h3><p>缓存进程创建时间，减少 PID 复用带来的错误归属；同时保留父进程链与脱敏命令行，帮助识别 Agent、编辑器子进程和脚本运行时。</p><div class="example"><b>python.exe</b> · PID 18240<br>parent: code.exe → chrome.exe<br>endpoint: api.openai.com/v1/chat</div></article>
-        <article class="outcome reveal"><div class="o-label">02 / DLP SIGNALS</div><h3>内容级风险信号</h3><p>识别 AI 服务端点与常见 API 密钥、私钥、证件号、银行卡、手机号和代码块。风险分可解释，证据保留脱敏，避免审计本身成为密钥泄露源。</p><div class="example">secret.openai_key <b>+55</b><br>pii.cn_id <b>+40</b><br>egress.unknown_destination <b>+15</b></div></article>
-        <article class="outcome reveal"><div class="o-label">03 / ACTION</div><h3>可观察，也可阻断</h3><p>默认只观察。需要时对达到阈值的请求返回 403，让“是否放行”成为显式策略，而不是事后的猜测。阻断开关默认关闭，避免误伤。</p><div class="example">risk ≥ 85 <b>→ BLOCK</b><br>risk ≥ 45 <b>→ ALERT</b><br>default <b>→ OBSERVE</b></div></article>
-        <article class="outcome reveal"><div class="o-label">04 / EVIDENCE</div><h3>脱敏在前，解密在后</h3><p>列表与导出只展示脱敏预览。原始正文仅有选择地加密保存，在详情中再次确认后才于当前会话解密。导出的 JSONL 不包含正文。</p><div class="example">list/export <b>redacted</b><br>raw body <b>AES-256-GCM</b><br>master key <b>Windows DPAPI</b></div></article>
-        <article class="outcome reveal"><div class="o-label">05 / INTEGRITY</div><h3>证据链可验证</h3><p>每条流量写库时，将关键摘要与上一条哈希链接。审计台可随时校验链条是否断裂，为事后取证提供一个廉价的完整性基线。</p><div class="example">entry 0421 <b>prev: 9f2c…</b><br>sha256(prev + summary)<br>chain <b>valid</b></div></article>
-        <article class="outcome reveal"><div class="o-label">06 / CORRELATION</div><h3>网络 × 文件线索</h3><p>Beta 版把近期外发进程与其打开的文件句柄做时间关联，并用虚构诱饵文件观察异常触达。只记录元数据，不读取用户文件内容。</p><div class="example">PID 18240 · .ssh/id_rsa <b>high</b><br>canary · aws_credentials <b>hit</b><br>content read <b>not claimed</b></div></article>
+        <article class="outcome reveal">
+          <div class="o-label">01 / ATTRIBUTION</div>
+          <h3>精确到进程</h3>
+          <p>缓存进程创建时间，减少 PID 复用带来的错误归属；同时保留父进程链与脱敏命令行，帮助识别 Agent、编辑器子进程和脚本运行时。</p>
+          <div class="example"><b>python.exe</b> · PID 18240<br>parent: code.exe → chrome.exe<br>endpoint: api.openai.com/v1/chat</div>
+        </article>
+        <article class="outcome reveal">
+          <div class="o-label">02 / DLP SIGNALS</div>
+          <h3>内容级风险信号</h3>
+          <p>识别 AI 服务端点与常见 API 密钥、私钥、证件号、银行卡、手机号和代码块。风险分可解释，证据保留脱敏，避免审计本身成为密钥泄露源。</p>
+          <div class="example">secret.openai_key <b>+55</b><br>pii.cn_id <b>+40</b><br>egress.unknown_destination <b>+15</b></div>
+        </article>
+        <article class="outcome reveal">
+          <div class="o-label">03 / ACTION</div>
+          <h3>可观察，也可阻断</h3>
+          <p>默认只观察。需要时对达到阈值的请求返回 403，让“是否放行”成为显式策略，而不是事后的猜测。阻断开关默认关闭，避免误伤。</p>
+          <div class="example">risk ≥ 85 <b>→ BLOCK</b><br>risk ≥ 45 <b>→ ALERT</b><br>default <b>→ OBSERVE</b></div>
+        </article>
+        <article class="outcome reveal">
+          <div class="o-label">04 / EVIDENCE</div>
+          <h3>脱敏在前，解密在后</h3>
+          <p>列表与导出只展示脱敏预览。原始正文仅有选择地加密保存，在详情中再次确认后才于当前会话解密。导出的 JSONL 不包含正文。</p>
+          <div class="example">list/export <b>redacted</b><br>raw body <b>AES-256-GCM</b><br>master key <b>Windows DPAPI</b></div>
+        </article>
+        <article class="outcome reveal">
+          <div class="o-label">05 / INTEGRITY</div>
+          <h3>证据链可验证</h3>
+          <p>每条流量写库时，将关键摘要与上一条哈希链接。审计台可随时校验链条是否断裂，为事后取证提供一个廉价的完整性基线。</p>
+          <div class="example">entry 0421 <b>prev: 9f2c…</b><br>sha256(prev + summary)<br>chain <b>valid</b></div>
+        </article>
+        <article class="outcome reveal">
+          <div class="o-label">06 / CORRELATION</div>
+          <h3>网络 × 文件线索</h3>
+          <p>Beta 版把近期外发进程与其打开的文件句柄做时间关联，并用虚构诱饵文件观察异常触达。只记录元数据，不读取用户文件内容。</p>
+          <div class="example">PID 18240 · .ssh/id_rsa <b>high</b><br>canary · aws_credentials <b>hit</b><br>content read <b>not claimed</b></div>
+        </article>
       </div>
     </div>
   </section>
 
-  <section class="section" id="coverage" style="background:rgba(8,16,25,.34);border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <section class="section section--tint" id="coverage">
     <div class="wrap">
-      <div class="reveal">
-        <div class="kicker">Coverage / honesty by design</div>
-        <h2 class="h2">我们主动写清楚了<br>“看不到”的部分。</h2>
-        <p class="lead">没有一种用户态方案能看见所有加密流量。一个可信的审计产品，不应该把“代理已启动”宣传成“全部可见”。下面是第一版的真实边界。</p>
+      <div class="section-head reveal">
+        <span class="eyebrow">04 / 覆盖边界</span>
+        <h2>我们主动写清楚了<br>“看不到”的部分。</h2>
+        <p>没有一种用户态方案能看见所有加密流量。一个可信的审计产品，不应该把“代理已启动”宣传成“全部可见”。下面是第一版的真实边界。</p>
       </div>
       <div class="coverage-grid">
-        <div class="cov good reveal">
-          <div class="cov-head"><svg class="ic"><use href="#i-check"/></svg>在配合路径上可以看见</div>
+        <div class="coverage good reveal">
+          <div class="cov-head"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>在配合路径上可以看见</div>
           <ul>
-            <li><svg class="ic"><use href="#i-check"/></svg><span>经过本地代理的 HTTP/HTTPS 请求与响应元数据；系统代理、环境变量代理和手动指定的代理都属于这个范围。</span></li>
-            <li><svg class="ic"><use href="#i-check"/></svg><span>启动时自动继承本机回环 HTTP 代理（如 Clash 的 127.0.0.1:7890）并串联转发；只转发重新加密后的 TLS 字节，上游看不到审计器已解密的正文。</span></li>
-            <li><svg class="ic"><use href="#i-check"/></svg><span>应用信任本地 CA 且未启用证书固定的 TLS 1.2 / 1.3 流量，可还原请求方法、路径、头、正文和响应。</span></li>
-            <li><svg class="ic"><use href="#i-check"/></svg><span>正文保存有体积上限；AI 请求或风险分 ≥ 25 的流量才加密保留原始正文，其他流量保留脱敏预览。</span></li>
-            <li><svg class="ic"><use href="#i-check"/></svg><span>客户端进程 PID、父进程链、脱敏命令行与进程创建时间，用于区分真实发起者与 PID 复用。</span></li>
-            <li><svg class="ic"><use href="#i-check"/></svg><span>AI 服务分类、模型名、密钥 / PII / 代码 / 文件引用等规则信号，以及可配置的阻断动作。</span></li>
+            <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span>经过本地代理的 HTTP/HTTPS 请求与响应元数据；系统代理、环境变量代理和手动指定的代理都属于这个范围。</span></li>
+            <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span>启动时自动继承本机回环 HTTP 代理（如 Clash 的 127.0.0.1:7890）并串联转发；只转发重新加密后的 TLS 字节，上游看不到审计器已解密的正文。</span></li>
+            <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span>应用信任本地 CA 且未启用证书固定的 TLS 1.2 / 1.3 流量，可还原请求方法、路径、头、正文和响应。</span></li>
+            <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span>正文保存有体积上限；AI 请求或风险分 ≥ 25 的流量才加密保留原始正文，其他流量保留脱敏预览。</span></li>
+            <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span>客户端进程 PID、父进程链、脱敏命令行与进程创建时间，用于区分真实发起者与 PID 复用。</span></li>
+            <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span>AI 服务分类、模型名、密钥 / PII / 代码 / 文件引用等规则信号，以及可配置的阻断动作。</span></li>
           </ul>
         </div>
-        <div class="cov bad reveal">
-          <div class="cov-head"><svg class="ic"><use href="#i-eye-off"/></svg>不承诺、也看不到</div>
+        <div class="coverage bad reveal">
+          <div class="cov-head"><svg class="ic" aria-hidden="true"><use href="#i-eye-off"/></svg>不承诺、也看不到</div>
           <ul>
-            <li><svg class="ic"><use href="#i-x"/></svg><span><b>未经过代理的直连流量。</b>忽略系统代理的应用必须用环境变量或后续的透明重定向接入。</span></li>
-            <li><svg class="ic"><use href="#i-x"/></svg><span><b>证书固定、mTLS、双向证书校验。</b>这些是应用有意建立的安全边界，不被本项目攻破。</span></li>
-            <li><svg class="ic"><use href="#i-x"/></svg><span><b>QUIC / HTTP3 与非 HTTP 协议。</b>第一版不解析，无法给出内容级结论。</span></li>
-            <li><svg class="ic"><use href="#i-x"/></svg><span><b>应用层端到端加密。</b>没有密钥时，即使流量经过代理也只能看到密文和元数据。</span></li>
-            <li><svg class="ic"><use href="#i-x"/></svg><span><b>Windows 服务 / SYSTEM 会话的完整归因。</b>当前面向登录用户进程，服务账户路径在路线图中。</span></li>
-            <li><svg class="ic"><use href="#i-x"/></svg><span><b>完整文件读取历史。</b>打开句柄抽样无法证明文件已被读取，也不覆盖已经关闭的句柄。</span></li>
+            <li><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg><span><b>未经过代理的直连流量。</b>忽略系统代理的应用必须用环境变量或后续的透明重定向接入。</span></li>
+            <li><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg><span><b>证书固定、mTLS、双向证书校验。</b>这些是应用有意建立的安全边界，不被本项目攻破。</span></li>
+            <li><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg><span><b>QUIC / HTTP3 与非 HTTP 协议。</b>第一版不解析，无法给出内容级结论。</span></li>
+            <li><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg><span><b>应用层端到端加密。</b>没有密钥时，即使流量经过代理也只能看到密文和元数据。</span></li>
+            <li><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg><span><b>Windows 服务 / SYSTEM 会话的完整归因。</b>当前面向登录用户进程，服务账户路径在路线图中。</span></li>
+            <li><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg><span><b>完整文件读取历史。</b>打开句柄抽样无法证明文件已被读取，也不覆盖已经关闭的句柄。</span></li>
           </ul>
         </div>
       </div>
-      <div class="notice reveal"><svg class="ic"><use href="#i-alert"/></svg><span><b>重要安全边界：</b>不要在日常使用、存有真实凭据的设备上分析疑似恶意软件。受信 CA 会扩大本机可被中间人解密的范围。请在隔离虚拟机 / 快照中处理未知样本，分析结束后移除 CA 并恢复系统代理。</span></div>
+      <div class="notice reveal"><svg class="ic" aria-hidden="true"><use href="#i-alert"/></svg><span><b>重要安全边界：</b>不要在日常使用、存有真实凭据的设备上分析疑似恶意软件。受信 CA 会扩大本机可被中间人解密的范围。请在隔离虚拟机 / 快照中处理未知样本，分析结束后移除 CA 并恢复系统代理。</span></div>
     </div>
   </section>
 
-  <section class="section download-section" id="download">
+  <section class="section" id="download">
     <div class="wrap">
-      <div class="reveal">
-        <div class="kicker">Downloads / six native builds</div>
-        <h2 class="h2">按操作系统与架构，<br>选择对应构建。</h2>
-        <p class="lead">每次发布同时提供六个原生构建与 SHA-256 校验。Windows x64 与 ARM64 都是完整桌面版；Linux / macOS 共享审计引擎与本机 Web 审计台，系统代理与 CA 需要手动配置。</p>
+      <div class="section-head reveal">
+        <span class="eyebrow">05 / 下载</span>
+        <h2>六个原生构建，<br>选择你的系统。</h2>
+        <p>每次发布同时提供六个原生构建与 SHA-256 校验。Windows x64 与 ARM64 都是完整桌面版；Linux / macOS 共享审计引擎与本机 Web 审计台，系统代理与 CA 需要手动配置。</p>
       </div>
-      <div class="dl-grid">
-        <article class="dl-card main reveal">
+      <div class="download-grid">
+        <article class="download-card main reveal">
           <span class="dl-badge">主要支持</span>
           <div class="dl-os">WINDOWS · X64</div>
           <h3>Windows 10 / 11</h3>
           <p>完整桌面控制台、系统代理备份与恢复、当前用户 CA 一键安装、进程归因。</p>
           <div class="dl-file">EgressScope-&lt;tag&gt;-windows-x64.exe</div>
-          <div class="dl-meta"><span>Windows x64</span><span class="ok">单文件 EXE</span></div>
+          <div class="dl-chips"><span class="chip">Windows x64</span><span class="chip ok">单文件 EXE</span></div>
         </article>
-        <article class="dl-card reveal">
-          <div class="dl-os">MACOS · APPLE SILICON</div>
-          <h3>macOS Apple Silicon</h3>
-          <p>审计引擎与本机 Web 审计台。需手动信任 CA，并通过环境变量接入目标 Agent。</p>
-          <div class="dl-file">EgressScope-&lt;tag&gt;-macos-arm64.tar.gz</div>
-          <div class="dl-meta"><span>arm64</span><span class="ok">未签名</span></div>
-        </article>
-        <article class="dl-card reveal">
-          <div class="dl-os">MACOS · INTEL</div>
-          <h3>macOS Intel</h3>
-          <p>面向 Intel Mac 的审计引擎与 Web 审计台，使用兼容的 cryptography 版本构建。</p>
-          <div class="dl-file">EgressScope-&lt;tag&gt;-macos-x64.tar.gz</div>
-          <div class="dl-meta"><span>x86_64</span><span class="ok">未签名</span></div>
-        </article>
-        <article class="dl-card reveal">
-          <div class="dl-os">LINUX · X64</div>
-          <h3>Linux x64</h3>
-          <p>审计引擎与 Web 审计台；PID 归因依赖 /proc/net/tcp，手动配置代理与 CA。</p>
-          <div class="dl-file">EgressScope-&lt;tag&gt;-linux-x64.tar.gz</div>
-          <div class="dl-meta"><span>x86_64</span><span class="ok">glibc</span></div>
-        </article>
-        <article class="dl-card reveal">
-          <div class="dl-os">LINUX · ARM64</div>
-          <h3>Linux arm64</h3>
-          <p>面向 ARM64 Linux 服务器与开发机的审计引擎，能力与 Linux x64 一致。</p>
-          <div class="dl-file">EgressScope-&lt;tag&gt;-linux-arm64.tar.gz</div>
-          <div class="dl-meta"><span>aarch64</span><span class="ok">glibc</span></div>
-        </article>
-        <article class="dl-card reveal">
+        <article class="download-card reveal">
+          <span class="dl-badge">原生 ARM64</span>
           <div class="dl-os">WINDOWS · ARM64</div>
           <h3>Windows on ARM</h3>
           <p>原生 Windows 11 ARM64 桌面版；在 GitHub 的 ARM runner 上编译依赖，并完成源码冒烟与打包验收。</p>
           <div class="dl-file">EgressScope-&lt;tag&gt;-windows-arm64.exe</div>
-          <div class="dl-meta"><span>ARM64</span><span class="ok">单文件 EXE</span></div>
+          <div class="dl-chips"><span class="chip">ARM64</span><span class="chip ok">单文件 EXE</span></div>
+        </article>
+        <article class="download-card reveal">
+          <div class="dl-os">MACOS · APPLE SILICON</div>
+          <h3>macOS Apple Silicon</h3>
+          <p>审计引擎与本机 Web 审计台。需手动信任 CA，并通过环境变量接入目标 Agent。</p>
+          <div class="dl-file">EgressScope-&lt;tag&gt;-macos-arm64.tar.gz</div>
+          <div class="dl-chips"><span class="chip">arm64</span><span class="chip warm">未签名</span></div>
+        </article>
+        <article class="download-card reveal">
+          <div class="dl-os">MACOS · INTEL</div>
+          <h3>macOS Intel</h3>
+          <p>面向 Intel Mac 的审计引擎与 Web 审计台，使用兼容的 cryptography 版本构建。</p>
+          <div class="dl-file">EgressScope-&lt;tag&gt;-macos-x64.tar.gz</div>
+          <div class="dl-chips"><span class="chip">x86_64</span><span class="chip warm">未签名</span></div>
+        </article>
+        <article class="download-card reveal">
+          <div class="dl-os">LINUX · X64</div>
+          <h3>Linux x64</h3>
+          <p>审计引擎与 Web 审计台；PID 归因依赖 /proc/net/tcp，手动配置代理与 CA。</p>
+          <div class="dl-file">EgressScope-&lt;tag&gt;-linux-x64.tar.gz</div>
+          <div class="dl-chips"><span class="chip">x86_64</span><span class="chip ok">glibc</span></div>
+        </article>
+        <article class="download-card reveal">
+          <div class="dl-os">LINUX · ARM64</div>
+          <h3>Linux arm64</h3>
+          <p>面向 ARM64 Linux 服务器与开发机的审计引擎，能力与 Linux x64 一致。</p>
+          <div class="dl-file">EgressScope-&lt;tag&gt;-linux-arm64.tar.gz</div>
+          <div class="dl-chips"><span class="chip">aarch64</span><span class="chip ok">glibc</span></div>
         </article>
       </div>
-      <div class="dl-actions reveal">
-        <a class="btn primary" data-release href="__REPO_URL__/releases/latest"><span class="cta-label">前往 GitHub Releases</span> <svg class="ic"><use href="#i-arrow"/></svg></a>
-        <a class="btn" href="#coverage">查看平台能力边界</a>
+      <div class="release-bar reveal">
+        <p><b>每个产物附带独立校验。</b>发布页提供 <span class="mono">.sha256</span> 与 <span class="mono">SHA256SUMS.txt</span>，下载后可先校验再运行。</p>
+        <div class="release-actions">
+          <a class="btn btn-primary" data-release href="__REPO_URL__/releases/latest">
+            <span class="cta-label">前往 GitHub Releases</span>
+            <svg class="ic" aria-hidden="true"><use href="#i-arrow-up"/></svg>
+          </a>
+          <a class="btn btn-ghost" href="#coverage">查看平台边界</a>
+        </div>
       </div>
-      <div class="dl-foot reveal"><svg class="ic"><use href="#i-info"/></svg><span>发布页为每个产物附带 <b>.sha256</b> 校验文件。Windows ARM64 是原生构建，不是 x64 模拟运行；桌面 Tk 控制台尚未做 ARM64 实机 UI 验收。</span></div>
+      <div class="dl-note reveal"><svg class="ic" aria-hidden="true"><use href="#i-info"/></svg><span><b>构建说明：</b>Windows ARM64 是原生构建，不是 x64 模拟运行；桌面 Tk 控制台尚未做 ARM64 实机 UI 验收。macOS 与 Linux 二进制未签名，Gatekeeper 与 SmartScreen 可能要求手动放行。</span></div>
     </div>
   </section>
 
-  <section class="section" id="start">
+  <section class="section section--tint" id="start">
     <div class="wrap">
       <div class="start-grid">
         <div class="reveal">
-          <div class="kicker">Quick start</div>
-          <h2 class="h2">三步接入，<br>不自动接管系统。</h2>
-          <p class="lead">桌面控制台和本地审计台会同时启动。系统代理、根证书与阻断策略都需要显式确认；你可以随时暂停采集或恢复原代理设置。</p>
-          <div class="steps" style="margin-top:33px">
-            <div class="step"><div class="step-num">1</div><div><h4>启动 EgressScope</h4><p>双击可执行文件，或使用 <code>EgressScope.exe --headless</code> 运行无窗口模式。代理默认监听 <code>127.0.0.1:8899</code>，审计台绑定回环地址。</p></div></div>
-            <div class="step"><div class="step-num">2</div><div><h4>确认根证书</h4><p>在控制台点击“安装根证书”，将公开 CA 加入当前用户信任根。私钥始终留在本机数据目录，不会分发；安装后可随时移除。</p></div></div>
-            <div class="step"><div class="step-num">3</div><div><h4>选择流量入口</h4><p>开启系统代理，或只给目标 Agent 注入 <code>HTTPS_PROXY</code> 与 <code>NODE_EXTRA_CA_CERTS</code> 等变量。环境变量方式影响面更小，适合先验证单个工作流。若本机原本通过 Clash 等回环代理上网，程序会在启动时自动串联，避免接管后断网。</p></div></div>
+          <div class="section-head left">
+            <span class="eyebrow">06 / 快速开始</span>
+            <h2>三步接入，<br>不自动接管系统。</h2>
+            <p>桌面控制台和本地审计台会同时启动。系统代理、根证书与阻断策略都需要显式确认；你可以随时暂停采集或恢复原代理设置。</p>
+          </div>
+          <div class="steps">
+            <div class="step">
+              <div class="step-num">1</div>
+              <div>
+                <h4>启动 EgressScope</h4>
+                <p>双击可执行文件，或使用 <code>EgressScope.exe --headless</code> 运行无窗口模式。代理默认监听 <code>127.0.0.1:8899</code>，审计台绑定回环地址。</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">2</div>
+              <div>
+                <h4>确认根证书</h4>
+                <p>在控制台点击“安装根证书”，将公开 CA 加入当前用户信任根。私钥始终留在本机数据目录，不会分发；安装后可随时移除。</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">3</div>
+              <div>
+                <h4>选择流量入口</h4>
+                <p>开启系统代理，或只给目标 Agent 注入 <code>HTTPS_PROXY</code> 与 <code>NODE_EXTRA_CA_CERTS</code> 等变量。若本机原本通过 Clash 等回环代理（如 <code>127.0.0.1:7890</code>）上网，程序会在启动时自动串联，避免接管后断网。</p>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="control-mock reveal">
-          <div class="cm-bar"><span class="win-dot"></span><span class="win-dot"></span><span class="win-dot"></span><span class="cm-title">EgressScope · control window</span></div>
-          <div class="cm-body">
-            <div class="cm-head"><div class="cm-logo"><svg class="ic"><use href="#i-lock"/></svg></div><div><h4>本机数据外发审计</h4><span>EgressScope v0.1 · Windows</span></div><span class="cm-state"><i></i>运行中</span></div>
-            <div class="cm-cards">
-              <div class="cm-card"><div class="top">本地代理 <svg class="ic"><use href="#i-server"/></svg></div><div class="val"><i></i>127.0.0.1:8899</div></div>
-              <div class="cm-card"><div class="top">本地 CA <svg class="ic"><use href="#i-key"/></svg></div><div class="val warn"><i></i>等待信任</div></div>
-              <div class="cm-card"><div class="top">系统代理 <svg class="ic"><use href="#i-globe"/></svg></div><div class="val warn"><i></i>未启用</div></div>
-              <div class="cm-card"><div class="top">文件触达 <svg class="ic"><use href="#i-file"/></svg></div><div class="val"><i></i>Beta 抽样中</div></div>
+
+        <div class="control reveal" role="img" aria-label="EgressScope 桌面控制台示意：本地代理运行中，根证书等待信任，系统代理未启用">
+          <div class="window-bar">
+            <span class="win-dot"></span><span class="win-dot"></span><span class="win-dot"></span>
+            <span class="window-title">EgressScope · 控制窗口</span>
+          </div>
+          <div class="control-body">
+            <div class="control-head">
+              <div class="control-logo"><svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg></div>
+              <div><h4>本机数据外发审计</h4><span>EgressScope v0.1.1 · Windows</span></div>
+              <span class="control-state"><i></i>运行中</span>
             </div>
-            <div class="cm-banner"><svg class="ic"><use href="#i-check"/></svg>本机审计已就绪。下一步：安装 CA，再启用系统代理或使用 Agent 环境变量。</div>
-            <div class="cm-actions">
-              <div class="cm-btn primary"><svg class="ic"><use href="#i-shield"/></svg>安装根证书</div>
-              <div class="cm-btn">启用系统代理</div>
-              <div class="cm-btn"><svg class="ic"><use href="#i-terminal"/></svg>复制环境变量</div>
-              <div class="cm-btn">打开审计台</div>
+            <div class="control-cards">
+              <div class="control-card"><div class="label">本地代理 <svg class="ic" aria-hidden="true"><use href="#i-server"/></svg></div><div class="value"><i></i>127.0.0.1:8899</div></div>
+              <div class="control-card"><div class="label">本地 CA <svg class="ic" aria-hidden="true"><use href="#i-key"/></svg></div><div class="value warn"><i></i>等待信任</div></div>
+              <div class="control-card"><div class="label">系统代理 <svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg></div><div class="value warn"><i></i>未启用</div></div>
+              <div class="control-card"><div class="label">文件触达 <svg class="ic" aria-hidden="true"><use href="#i-file"/></svg></div><div class="value"><i></i>Beta 抽样中</div></div>
             </div>
-            <div class="cm-foot"><span>仅限授权设备</span><span>LOCAL · NO CLOUD</span></div>
+            <div class="control-banner"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>本机审计已就绪。下一步：安装 CA，再启用系统代理或使用 Agent 环境变量。</div>
+            <div class="control-actions">
+              <div class="mock-btn primary"><svg class="ic" aria-hidden="true"><use href="#i-shield"/></svg>安装根证书</div>
+              <div class="mock-btn">启用系统代理</div>
+              <div class="mock-btn"><svg class="ic" aria-hidden="true"><use href="#i-terminal"/></svg>复制环境变量</div>
+              <div class="mock-btn">打开审计台</div>
+            </div>
+            <div class="control-foot"><span>仅限授权设备</span><span>LOCAL · NO CLOUD</span></div>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <section class="section privacy-section" id="privacy">
+  <section class="section" id="privacy">
     <div class="wrap privacy-grid">
       <div class="reveal">
-        <div class="kicker">Privacy by construction</div>
-        <h2 class="h2">审计工具本身，<br>不应该成为新的泄露面。</h2>
-        <p class="lead">数据边界不是靠一句“我们很重视隐私”。它需要落实在密钥位置、导出格式、默认设置和系统变更的撤销路径上。</p>
+        <div class="section-head left">
+          <span class="eyebrow">07 / 隐私设计</span>
+          <h2>审计工具本身，<br>不应该成为新的泄露面。</h2>
+          <p>数据边界不是靠一句“我们很重视隐私”。它需要落实在密钥位置、导出格式、默认设置和系统变更的撤销路径上。</p>
+        </div>
         <ul class="privacy-list">
-          <li><svg class="ic"><use href="#i-lock"/></svg><div><b>正文加密存储</b><p>AES-256-GCM 加密请求 / 响应正文；主密钥由当前 Windows 用户的 DPAPI 保护。更换用户或离线拷走数据库都无法直接解密。</p></div></li>
-          <li><svg class="ic"><use href="#i-eye-off"/></svg><div><b>脱敏是默认值</b><p>列表、搜索、预览和 JSONL 导出只包含脱敏后的内容与哈希。原始正文需要显式的二次确认才会解密显示，且不回写数据库。</p></div></li>
-          <li><svg class="ic"><use href="#i-shield"/></svg><div><b>最小化系统变更</b><p>CA 只装当前用户，不自动安装；系统代理修改前备份，检测到 PAC 时拒绝接管；退出时仅在设置仍属于本工具时恢复。</p></div></li>
-          <li><svg class="ic"><use href="#i-database"/></svg><div><b>本地回环服务</b><p>Web 审计台只绑定 127.0.0.1，使用每次启动随机生成的会话令牌，校验 Host 并应用严格 CSP。没有云同步，没有外部字体或脚本。</p></div></li>
+          <li><svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg><div><b>正文加密存储</b><p>AES-256-GCM 加密请求 / 响应正文；主密钥由当前 Windows 用户的 DPAPI 保护。更换用户或离线拷走数据库都无法直接解密。</p></div></li>
+          <li><svg class="ic" aria-hidden="true"><use href="#i-eye-off"/></svg><div><b>脱敏是默认值</b><p>列表、搜索、预览和 JSONL 导出只包含脱敏后的内容与哈希。原始正文需要显式的二次确认才会解密显示，且不回写数据库。</p></div></li>
+          <li><svg class="ic" aria-hidden="true"><use href="#i-shield"/></svg><div><b>最小化系统变更</b><p>CA 只装当前用户，不自动安装；系统代理修改前备份，检测到 PAC 时拒绝接管；退出时仅在设置仍属于本工具时恢复。</p></div></li>
+          <li><svg class="ic" aria-hidden="true"><use href="#i-database"/></svg><div><b>本地回环服务</b><p>Web 审计台只绑定 127.0.0.1，使用每次启动随机生成的会话令牌，校验 Host 并应用严格 CSP。没有云同步，没有外部字体或脚本。</p></div></li>
         </ul>
       </div>
-      <div class="privacy-card reveal">
-        <div class="pc-label">DATA BOUNDARY / AT A GLANCE</div>
-        <div class="pc-title">你掌握密钥、<br>保留期与删除权。</div>
-        <div class="pc-row"><span>数据库位置</span><b>%LOCALAPPDATA%\EgressScope</b></div>
-        <div class="pc-row"><span>原始正文</span><b>AES-256-GCM</b></div>
-        <div class="pc-row"><span>主密钥保护</span><b>Windows DPAPI</b></div>
-        <div class="pc-row"><span>内容上云</span><b class="good">不启用</b></div>
-        <div class="pc-row"><span>上游链路</span><b class="good">仅回环 · 可关闭</b></div>
-        <div class="pc-row"><span>默认审计动作</span><b>观察，不阻断</b></div>
-        <div class="pc-row"><span>证据保留</span><b>默认 7 天 · 可配置</b></div>
-        <div class="pc-row"><span>删除</span><b class="good">本地一键清空</b></div>
-        <div class="pc-note"><svg class="ic"><use href="#i-info"/></svg><span>EgressScope 是审计工具，不是杀毒软件。它不保证发现所有恶意行为，也不对证书固定、端到端加密或未经过本地代理的流量提供内容可见性。</span></div>
+
+      <div class="boundary reveal">
+        <div class="label">DATA BOUNDARY / AT A GLANCE</div>
+        <h3>你掌握密钥、<br>保留期与删除权。</h3>
+        <div class="boundary-row"><span>数据库位置</span><b>%LOCALAPPDATA%\EgressScope</b></div>
+        <div class="boundary-row"><span>原始正文</span><b>AES-256-GCM</b></div>
+        <div class="boundary-row"><span>主密钥保护</span><b>Windows DPAPI</b></div>
+        <div class="boundary-row"><span>内容上云</span><b class="good">不启用</b></div>
+        <div class="boundary-row"><span>上游链路</span><b class="good">仅回环 · 可关闭</b></div>
+        <div class="boundary-row"><span>默认审计动作</span><b>观察，不阻断</b></div>
+        <div class="boundary-row"><span>证据保留</span><b>默认 7 天 · 可配置</b></div>
+        <div class="boundary-row"><span>删除</span><b class="good">本地一键清空</b></div>
+        <div class="boundary-note"><svg class="ic" aria-hidden="true"><use href="#i-info"/></svg><span>EgressScope 是审计工具，不是杀毒软件。它不保证发现所有恶意行为，也不对证书固定、端到端加密或未经过本地代理的流量提供内容可见性。</span></div>
       </div>
     </div>
   </section>
 
-  <section class="section">
+  <section class="section section--tint">
     <div class="wrap">
-      <div class="reveal">
-        <div class="kicker">Roadmap / incremental, not magical</div>
-        <h2 class="h2">第一版把闭环跑通，<br>再把覆盖面做深。</h2>
-        <p class="lead">路线图按“可验证的收益 / 增加的信任成本”排序。不会承诺破解加密，也不以驱动或隐蔽手段扩张采集范围。</p>
+      <div class="section-head reveal">
+        <span class="eyebrow">08 / 路线图</span>
+        <h2>第一版把闭环跑通，<br>再把覆盖面做深。</h2>
+        <p>路线图按“可验证的收益 / 增加的信任成本”排序。不会承诺破解加密，也不以驱动或隐蔽手段扩张采集范围。</p>
       </div>
-      <div class="roadmap">
+      <div class="roadmap-grid">
         <article class="road done reveal">
-          <div class="road-tag"><svg class="ic"><use href="#i-check"/></svg>DELIVERED · P0</div>
+          <div class="road-tag"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>DELIVERED · P0</div>
           <h3>可交付的本机闭环</h3>
           <p>嵌入式代理、本地 CA、TLS 解密、PID 归因、AI/敏感数据规则、风险评分与阻断、加密证据、哈希链、桌面控制台与本地 Web 审计台。</p>
           <ul><li>Windows 当前用户路径</li><li>系统代理备份 / 恢复</li><li>Agent 环境变量接入</li><li>回环上游代理自动串联</li><li>文件句柄抽样 Beta</li></ul>
         </article>
-        <article class="road plan reveal">
+        <article class="road reveal">
           <div class="road-tag">NEXT · P1</div>
           <h3>扩大流量入口</h3>
           <p>以 WFP / WinDivert 做显式的透明重定向，支持不遵循系统代理的应用；补充 QUIC 元数据策略与代理链路健康诊断。</p>
           <ul><li>驱动签名与兼容性测试</li><li>按进程 / 端口重定向</li><li>QUIC 无法解密时明确降级</li><li>接入安装器与服务账户入口</li></ul>
         </article>
-        <article class="road plan reveal">
+        <article class="road reveal">
           <div class="road-tag">LATER · P2</div>
           <h3>补齐系统与文件视角</h3>
           <p>通过 ETW / SACL / 文件系统微过滤完善读取事件，与网络外发时间线合并；加入策略包、告警导出与团队级只读审计视图。</p>
@@ -828,72 +1163,139 @@ section[id]{scroll-margin-top:82px}
 
   <section class="final">
     <div class="wrap">
-      <div class="final-box reveal">
+      <div class="final-inner reveal">
         <div>
-          <div class="kicker">Local audit, on your terms</div>
-          <h2>从第一条可解释的外发记录开始。</h2>
+          <span class="eyebrow">LOCAL AUDIT, ON YOUR TERMS</span>
+          <h2>从第一条可解释的<br>外发记录开始。</h2>
           <p>打开本机审计台，查看代理、CA 与证据链状态。仅在你拥有或明确获授权的设备上使用。</p>
         </div>
         <div class="final-actions">
-          <a class="btn primary" href="/"><span class="cta-label">打开审计台</span> <svg class="ic"><use href="#i-arrow"/></svg></a>
-          <a class="btn" href="#coverage">再次查看边界</a>
+          <a class="btn btn-invert" data-release href="__REPO_URL__/releases/latest">
+            <span class="cta-label">免费下载</span>
+            <svg class="ic" aria-hidden="true"><use href="#i-download"/></svg>
+          </a>
+          <a class="btn btn-ghost-light" href="#coverage">再次查看边界</a>
         </div>
       </div>
+      <div class="final-note">v0.1.1 · WINDOWS / MACOS / LINUX · 仅用于拥有或明确获授权的设备</div>
     </div>
   </section>
 </main>
 
 <footer class="footer">
-  <div class="footer-inner">
-    <div>
-      <a class="brand" href="#top"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="18" fill="none" stroke="#1b534d" stroke-width="1"/><circle cx="20" cy="20" r="12.5" fill="none" stroke="rgba(60,232,194,.42)" stroke-width="1" stroke-dasharray="3 4"/><circle cx="20" cy="20" r="2.8" fill="#3ce8c2"/><path d="M21.8 18.2L32 8" stroke="#3ce8c2" stroke-width="1.6" stroke-linecap="round"/></svg><span class="brand-name">EgressScope</span></a>
-      <p>本机数据外发审计。为授权的 Windows 设备提供完整的桌面控制与系统代理接入；Linux / macOS 版本提供审计引擎与本机 Web 审计台。界面与数据均在此设备上运行。</p>
+  <div class="wrap">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a class="brand" href="#top" aria-label="EgressScope 首页">
+          <svg class="logo-mark" aria-hidden="true"><use href="#i-logo"/></svg>
+          <span>EgressScope</span>
+        </a>
+        <p class="footer-desc">本机数据外发审计。为授权的 Windows 设备提供完整的桌面控制与系统代理接入；Linux / macOS 版本提供审计引擎与本机 Web 审计台。界面与数据均在此设备上运行。</p>
+        <span class="footer-badge"><i></i>LOCAL-FIRST · 无云同步</span>
+      </div>
+      <div>
+        <h4>产品</h4>
+        <div class="footer-col">
+          <a href="#problem">为什么需要审计</a>
+          <a href="#architecture">架构与取舍</a>
+          <a href="#coverage">覆盖边界</a>
+          <a href="#privacy">隐私设计</a>
+        </div>
+      </div>
+      <div>
+        <h4>获取</h4>
+        <div class="footer-col">
+          <a data-release href="__REPO_URL__/releases/latest"><span class="cta-label">GitHub Releases</span></a>
+          <a href="#download">六平台构建</a>
+          <a href="#start">快速开始</a>
+          <a data-repo href="__REPO_URL__" target="_blank" rel="noopener">GitHub 仓库</a>
+        </div>
+      </div>
+      <div>
+        <h4>使用前提</h4>
+        <div class="footer-col">
+          <span>仅限拥有或明确获授权的设备</span>
+          <span>不要在日常主机分析未知样本</span>
+          <span>不承诺攻破证书固定 / mTLS / E2EE</span>
+          <span>CA 与系统代理均可撤销</span>
+        </div>
+      </div>
     </div>
-    <div class="footer-right">
-      <div class="footer-links"><a href="/"><span class="cta-label">审计台</span></a><a href="#architecture">架构</a><a href="#coverage">覆盖边界</a></div>
-      <div>v0.1 · LOCAL-FIRST · WINDOWS-FIRST</div>
-      <div>仅用于拥有或明确获授权的设备</div>
+    <div class="footer-bottom">
+      <span>© 2026 EgressScope · v0.1.1</span>
+      <span>WINDOWS-FIRST · LOCAL-FIRST · NO CLOUD</span>
     </div>
   </div>
 </footer>
 
 <script>
 const REPO_URL = "__REPO_URL__";
-const consoleLinks = document.querySelectorAll('a[href="/"]');
-const localHost = ["127.0.0.1", "localhost", "::1"].includes(location.hostname);
-if (location.protocol === "file:") {
-  consoleLinks.forEach((link) => { link.href = "http://127.0.0.1:8898/"; });
-} else if (!localHost && REPO_URL.startsWith("https://")) {
-  consoleLinks.forEach((link) => {
-    link.href = REPO_URL + "/releases/latest";
-    const label = link.querySelector(".cta-label");
-    if (label) label.textContent = "下载发布版本";
-  });
-}
-document.querySelectorAll("a[data-release]").forEach((link) => {
-  const label = link.querySelector(".cta-label");
-  if (REPO_URL.startsWith("https://")) {
-    link.href = REPO_URL + "/releases/latest";
-  } else if (location.protocol === "file:") {
-    link.href = "http://127.0.0.1:8898/";
-    if (label) label.textContent = "打开本机审计台";
-  } else if (localHost) {
-    link.href = "/";
-    if (label) label.textContent = "打开本机审计台";
+const hasRepo = REPO_URL.startsWith("https://");
+const isFile = location.protocol === "file:";
+const isLocal = ["127.0.0.1", "localhost", "::1"].includes(location.hostname);
+
+document.querySelectorAll("[data-repo]").forEach((link) => {
+  if (hasRepo) {
+    link.href = REPO_URL;
+  } else {
+    link.hidden = true;
   }
 });
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach((entry) => {
-    if (entry.isIntersecting) { entry.target.classList.add("in"); observer.unobserve(entry.target); }
-  });
-}, {threshold:0.08, rootMargin:"0px 0px -40px 0px"});
-document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
-document.querySelectorAll('a[href^="#"]').forEach((link) => {
-  link.addEventListener("click", (event) => {
-    const target = document.querySelector(link.getAttribute("href"));
-    if (target) { event.preventDefault(); target.scrollIntoView({behavior:"smooth", block:"start"}); }
-  });
+
+document.querySelectorAll("[data-release]").forEach((link) => {
+  const label = link.querySelector(".cta-label");
+  if (hasRepo) {
+    link.href = REPO_URL + "/releases/latest";
+  } else if (isFile) {
+    link.href = "http://127.0.0.1:8898/";
+    if (label) label.textContent = "打开本机审计台";
+  } else if (isLocal) {
+    link.href = "/";
+    if (label) label.textContent = "打开审计台";
+  }
 });
+
+const root = document.documentElement;
+const themeToggle = document.getElementById("theme-toggle");
+const themeMeta = document.querySelector('meta[name="theme-color"]');
+function applyTheme(theme) {
+  root.dataset.theme = theme;
+  if (themeToggle) {
+    themeToggle.setAttribute("aria-label", theme === "dark" ? "切换浅色模式" : "切换深色模式");
+    themeToggle.setAttribute("aria-pressed", theme === "dark" ? "true" : "false");
+  }
+  if (themeMeta) themeMeta.setAttribute("content", theme === "dark" ? "#1d1915" : "#efeae1");
+}
+applyTheme(root.dataset.theme === "dark" ? "dark" : "light");
+if (themeToggle) {
+  themeToggle.addEventListener("click", () => {
+    const next = root.dataset.theme === "dark" ? "light" : "dark";
+    applyTheme(next);
+    try { localStorage.setItem("egressscope-theme", next); } catch (error) {}
+  });
+}
+
+const nav = document.querySelector(".nav");
+function onScroll() {
+  if (nav) nav.classList.toggle("scrolled", window.scrollY > 8);
+}
+onScroll();
+window.addEventListener("scroll", onScroll, { passive: true });
+
+const revealItems = document.querySelectorAll(".reveal");
+if ("IntersectionObserver" in window) {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("in");
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.08, rootMargin: "0px 0px -40px 0px" });
+  revealItems.forEach((item) => observer.observe(item));
+} else {
+  revealItems.forEach((item) => item.classList.add("in"));
+}
 </script>
 </body>
 </html>
