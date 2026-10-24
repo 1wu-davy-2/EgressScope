@@ -1,0 +1,95 @@
+name: Windows ARM64 build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "ci/windows-arm64**"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build / windows-arm64
+    runs-on: windows-11-arm
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          architecture: arm64
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+
+      - name: Show toolchain
+        shell: pwsh
+        run: |
+          python -c "import platform,sys; print(sys.version); print(sys.executable); print(platform.machine()); print(platform.architecture())"
+          rustc -V
+          cargo -V
+          rustup show
+
+      - name: Add Rust ARM64 target
+        shell: pwsh
+        run: rustup target add aarch64-pc-windows-msvc
+
+      - name: Install dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip 2>&1 | Tee-Object -FilePath pip-install.log
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          python -m pip install -r requirements-dev.txt 2>&1 | Tee-Object -FilePath pip-install.log -Append
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+
+      - name: Verify native modules
+        shell: pwsh
+        run: |
+          python -c "import platform, psutil, cryptography, mitmproxy_rs, brotli, aioquic; from cryptography.hazmat.primitives.ciphers.aead import AESGCM; print('machine', platform.machine()); print('cryptography', cryptography.__version__); print('mitmproxy_rs', mitmproxy_rs.__version__ if hasattr(mitmproxy_rs,'__version__') else 'ok'); print('psutil', psutil.__version__)"
+
+      - name: Smoke test
+        shell: pwsh
+        run: python tests/smoke_test.py
+
+      - name: Build executable
+        shell: pwsh
+        run: |
+          python -m PyInstaller build.spec --noconfirm --clean 2>&1 | Tee-Object -FilePath pyinstaller.log
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+
+      - name: Packaged acceptance test
+        shell: pwsh
+        run: python tests/packaged_test.py
+
+      - name: Package artifact
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force release | Out-Null
+          $asset = "EgressScope-dev-windows-arm64.exe"
+          Copy-Item dist/EgressScope.exe "release/$asset"
+          $hash = (Get-FileHash -Algorithm SHA256 "release/$asset").Hash.ToLower()
+          Set-Content "release/$asset.sha256" "$hash *$asset"
+          Get-ChildItem release | Format-Table Name, Length
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: EgressScope-windows-arm64
+          path: release/*
+          if-no-files-found: error
+
+      - name: Report failures
+        if: failure()
+        shell: pwsh
+        run: |
+          foreach ($log in @("pip-install.log", "pyinstaller.log")) {
+            if (Test-Path $log) {
+              Get-Content $log -Tail 40 | ForEach-Object {
+                $m = (($_ -replace '%', '%25') -replace "`r", '') -replace "`n", '%0A'
+                Write-Output "::error title=$log::$m"
+              }
+            }
+          }

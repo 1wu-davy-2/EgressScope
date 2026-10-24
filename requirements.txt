@@ -1,4 +1,10 @@
 mitmproxy==12.3.0
 psutil==7.2.2
-cryptography==50.0.2; sys_platform != "darwin" or platform_machine == "arm64"
+# cryptography 46.0.3 is the last release with a Windows ARM64 wheel; the
+# pyOpenSSL/service-identity pins below keep the resolver on that wheel.
+cryptography==46.0.3; sys_platform == "win32" and platform_machine == "ARM64"
+pyOpenSSL==26.2.0; sys_platform == "win32" and platform_machine == "ARM64"
+service-identity==24.2.0; sys_platform == "win32" and platform_machine == "ARM64"
+cryptography==50.0.2; sys_platform != "darwin" and not (sys_platform == "win32" and platform_machine == "ARM64")
 cryptography==47.0.0; sys_platform == "darwin" and platform_machine == "x86_64"
+cryptography==50.0.2; sys_platform == "darwin" and platform_machine == "arm64"
