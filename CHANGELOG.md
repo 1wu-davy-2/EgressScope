@@ -7,12 +7,14 @@
 - 关机 / 注销恢复修复：此前的钩子有两处实现错误——窗口类引用了 `ctypes.wintypes` 中不存在的 `HCURSOR`，窗口实际从未创建；即使创建，消息专用窗口也不属于顶层窗口且消息泵跑在另一个线程，收不到 Windows 的会话结束通知。GUI 构建因此无法执行关机恢复。
 - 现在的实现：在独立消息线程上创建隐藏的顶层窗口并注册 `WM_QUERYENDSESSION` / `WM_ENDSESSION`；恢复前调用 `ShutdownBlockReasonCreate`，让 Windows 在写回代理期间显示等待原因，完成后立即释放。控制台构建同时修复 `SetConsoleCtrlHandler` 的缺失导入。
 - 回归测试：新增隐藏窗口、顶层属性、`WM_QUERYENDSESSION` 与 `WM_ENDSESSION` 回调检查；Windows 上 `tests/recovery_test.py` 47 项全部通过。
+- 发布流水线修复：`publish` job 增加仓库 checkout，才能读取标签对应的 `CHANGELOG.md` 提取版本说明；说明文件不可用时回退为通用提示，不再阻断 Release 创建。
 
 **English**
 
 - Shutdown/logoff restore fix: the previous hook had two implementation errors — the window class referenced `ctypes.wintypes.HCURSOR`, which does not exist, so the window was never created; and even if it had been, a message-only window is not top-level and its message pump ran on a different thread, so Windows never delivered the session-end notification. GUI builds therefore could not restore the proxy at shutdown.
 - The guard now creates a hidden top-level window on its own message thread and handles `WM_QUERYENDSESSION` / `WM_ENDSESSION`; it calls `ShutdownBlockReasonCreate` while the proxy is being written back and releases the block immediately afterwards. The console handler now imports the types it uses.
 - Regression coverage: hidden-window, top-level, `WM_QUERYENDSESSION` and `WM_ENDSESSION` callback checks; `tests/recovery_test.py` passes 47 checks on Windows.
+- Release pipeline fix: the publish job now checks out the repository so it can read the tagged `CHANGELOG.md`; if the notes are unavailable it falls back to a generic line instead of blocking the release.
 
 ## v0.3.1
 

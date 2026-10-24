@@ -153,6 +153,8 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
+
       - uses: actions/download-artifact@v4
         with:
           path: release
@@ -180,13 +182,16 @@ jobs:
           set -euo pipefail
           python - <<'PY'
           import os, sys
-          sys.path.insert(0, ".")
-          from ai_audit.release_notes import notes_for_version
           tag = os.environ["TAG"]
-          text = open("CHANGELOG.md", encoding="utf-8").read()
-          notes = notes_for_version(text, tag)
-          if not notes:
-              notes = f"See CHANGELOG.md for the {tag} notes."
+          fallback = f"See CHANGELOG.md for the {tag} notes."
+          try:
+              sys.path.insert(0, ".")
+              from ai_audit.release_notes import notes_for_version
+              text = open("CHANGELOG.md", encoding="utf-8").read()
+              notes = notes_for_version(text, tag) or fallback
+          except Exception as exc:
+              print(f"release notes unavailable: {exc}")
+              notes = fallback
           with open("release-notes.md", "w", encoding="utf-8") as fh:
               fh.write(notes + "\n")
           print(notes[:500])
