@@ -901,92 +901,169 @@ WM_QUERYENDSESSION = 0x0018
 WM_ENDSESSION = 0x0016
 CTRL_LOGOFF_EVENT = 5
 CTRL_SHUTDOWN_EVENT = 6
-HWND_MESSAGE = -3
+WS_POPUP = 0x80000000
+WS_EX_TOOLWINDOW = 0x00000080
+WS_EX_NOACTIVATE = 0x08000000
+GA_ROOT = 2
 
 _shutdown_hook_installed = False
+_shutdown_hook_state: dict[str, Any] = {}
+_shutdown_window_refs: list[Any] = []
 
 
 def install_shutdown_hook(on_shutdown) -> dict[str, Any]:
     """Run ``on_shutdown`` when Windows shuts down or the user logs off.
 
-    Two best-effort channels: a message-only window (GUI subsystem builds) and
-    a console control handler (console builds). Both must return quickly, so
-    the callback is expected to only touch the registry and WinINET.
+    The GUI channel uses a hidden top-level window created on its own message
+    thread. Message-only windows are not top-level and do not receive session
+    end notifications, so they cannot observe shutdown or logoff. A console
+    control handler covers console builds. Both channels must return quickly;
+    the callback only touches the registry and WinINET.
     """
     global _shutdown_hook_installed
-    if sys.platform != "win32" or _shutdown_hook_installed:
-        return {"supported": sys.platform == "win32", "window": False, "console": False}
+    if sys.platform != "win32":
+        return {"supported": False, "window": False, "top_level": False, "hwnd": 0, "console": False}
+    if _shutdown_hook_installed:
+        return dict(_shutdown_hook_state)
     _shutdown_hook_installed = True
-    window_ok = _install_message_hook(on_shutdown)
+    window = _install_window_hook(on_shutdown)
     console_ok = _install_console_hook(on_shutdown)
-    return {"supported": True, "window": window_ok, "console": console_ok}
+    _shutdown_hook_state.update(
+        supported=True,
+        window=bool(window.get("ok")),
+        top_level=bool(window.get("top_level")),
+        hwnd=int(window.get("hwnd") or 0),
+        console=console_ok,
+        error=str(window.get("error") or ""),
+    )
+    return dict(_shutdown_hook_state)
 
 
-def _install_message_hook(on_shutdown) -> bool:
+def _install_window_hook(on_shutdown) -> dict[str, Any]:
     try:
         import ctypes
         from ctypes import wintypes
+    except Exception:
+        return {"ok": False, "hwnd": 0, "top_level": False}
 
-        user32 = ctypes.windll.user32
-        kernel32 = ctypes.windll.kernel32
+    user32 = ctypes.windll.user32
+    kernel32 = ctypes.windll.kernel32
+    WNDPROC = ctypes.WINFUNCTYPE(ctypes.c_ssize_t, wintypes.HWND, wintypes.UINT, wintypes.WPARAM, wintypes.LPARAM)
 
-        WNDPROC = ctypes.WINFUNCTYPE(ctypes.c_longlong, wintypes.HWND, wintypes.UINT, wintypes.WPARAM, wintypes.LPARAM)
+    kernel32.GetModuleHandleW.restype = wintypes.HMODULE
+    kernel32.GetModuleHandleW.argtypes = [wintypes.LPCWSTR]
+    user32.CreateWindowExW.restype = wintypes.HWND
+    user32.CreateWindowExW.argtypes = [
+        wintypes.DWORD,
+        wintypes.LPCWSTR,
+        wintypes.LPCWSTR,
+        wintypes.DWORD,
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.c_int,
+        wintypes.HWND,
+        wintypes.HMENU,
+        wintypes.HINSTANCE,
+        wintypes.LPVOID,
+    ]
+    user32.DefWindowProcW.restype = ctypes.c_ssize_t
+    user32.DefWindowProcW.argtypes = [wintypes.HWND, wintypes.UINT, wintypes.WPARAM, wintypes.LPARAM]
+    user32.GetAncestor.restype = wintypes.HWND
+    user32.GetAncestor.argtypes = [wintypes.HWND, wintypes.UINT]
+    user32.ShutdownBlockReasonCreate.restype = wintypes.BOOL
+    user32.ShutdownBlockReasonCreate.argtypes = [wintypes.HWND, wintypes.LPCWSTR]
+    user32.ShutdownBlockReasonDestroy.restype = wintypes.BOOL
+    user32.ShutdownBlockReasonDestroy.argtypes = [wintypes.HWND]
 
-        def wndproc(hwnd, msg, wparam, lparam):
-            if msg == WM_QUERYENDSESSION:
-                _run_shutdown_callback(on_shutdown, "queryendsession")
-                return 1
-            if msg == WM_ENDSESSION:
-                if wparam:
-                    _run_shutdown_callback(on_shutdown, "endsession")
-                return 0
-            return user32.DefWindowProcW(hwnd, msg, wparam, lparam)
+    def wndproc(hwnd, msg, wparam, lparam):
+        if msg == WM_QUERYENDSESSION:
+            try:
+                user32.ShutdownBlockReasonCreate(hwnd, "EgressScope is restoring the system proxy")
+            except Exception:
+                pass
+            _run_shutdown_callback(on_shutdown, "queryendsession")
+            try:
+                user32.ShutdownBlockReasonDestroy(hwnd)
+            except Exception:
+                pass
+            return 1
+        if msg == WM_ENDSESSION:
+            if wparam:
+                _run_shutdown_callback(on_shutdown, "endsession")
+            return 0
+        return user32.DefWindowProcW(hwnd, msg, wparam, lparam)
 
-        callback = WNDPROC(wndproc)
-        ctypes.windll.user32._egress_wndproc = callback  # keep the thunk alive
+    callback = WNDPROC(wndproc)
+    ready = threading.Event()
+    result: dict[str, Any] = {"ok": False, "hwnd": 0, "top_level": False}
 
-        class WNDCLASSW(ctypes.Structure):
-            _fields_ = [
-                ("style", wintypes.UINT),
-                ("lpfnWndProc", WNDPROC),
-                ("cbClsExtra", ctypes.c_int),
-                ("cbWndExtra", ctypes.c_int),
-                ("hInstance", wintypes.HINSTANCE),
-                ("hIcon", wintypes.HICON),
-                ("hCursor", wintypes.HCURSOR),
-                ("hbrBackground", wintypes.HBRUSH),
-                ("lpszMenuName", wintypes.LPCWSTR),
-                ("lpszClassName", wintypes.LPCWSTR),
-            ]
+    def pump() -> None:
+        global _shutdown_window_refs
+        try:
+            class WNDCLASSW(ctypes.Structure):
+                _fields_ = [
+                    ("style", wintypes.UINT),
+                    ("lpfnWndProc", WNDPROC),
+                    ("cbClsExtra", ctypes.c_int),
+                    ("cbWndExtra", ctypes.c_int),
+                    ("hInstance", wintypes.HINSTANCE),
+                    ("hIcon", wintypes.HICON),
+                    ("hCursor", ctypes.c_void_p),
+                    ("hbrBackground", wintypes.HBRUSH),
+                    ("lpszMenuName", wintypes.LPCWSTR),
+                    ("lpszClassName", wintypes.LPCWSTR),
+                ]
 
-        wc = WNDCLASSW()
-        wc.lpfnWndProc = callback
-        wc.hInstance = kernel32.GetModuleHandleW(None)
-        wc.lpszClassName = "EgressScopeShutdownHook"
-        if not user32.RegisterClassW(ctypes.byref(wc)):
-            return False
-        hwnd = user32.CreateWindowExW(
-            0, wc.lpszClassName, "EgressScope", 0, 0, 0, 0, 0, wintypes.HWND(HWND_MESSAGE), None, wc.hInstance, None
-        )
-        if not hwnd:
-            return False
-
-        def pump() -> None:
+            wc = WNDCLASSW()
+            wc.lpfnWndProc = callback
+            wc.hInstance = kernel32.GetModuleHandleW(None)
+            wc.lpszClassName = "EgressScopeShutdownGuard"
+            if not user32.RegisterClassW(ctypes.byref(wc)):
+                error = kernel32.GetLastError()
+                if error != 1410:
+                    result["error"] = f"RegisterClassW failed: {error}"
+                    ready.set()
+                    return
+            hwnd = user32.CreateWindowExW(
+                WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE,
+                wc.lpszClassName,
+                "EgressScope Shutdown Guard",
+                WS_POPUP,
+                0,
+                0,
+                0,
+                0,
+                None,
+                None,
+                wc.hInstance,
+                None,
+            )
+            if not hwnd:
+                result["error"] = f"CreateWindowExW failed: {kernel32.GetLastError()}"
+                ready.set()
+                return
+            root = user32.GetAncestor(hwnd, GA_ROOT)
+            result.update(ok=True, hwnd=int(hwnd), top_level=root is not None and int(root) == int(hwnd))
+            _shutdown_window_refs = [callback, wc, hwnd]
+            ready.set()
             msg = wintypes.MSG()
             while user32.GetMessageW(ctypes.byref(msg), None, 0, 0) > 0:
                 user32.TranslateMessage(ctypes.byref(msg))
                 user32.DispatchMessageW(ctypes.byref(msg))
+        except Exception as exc:
+            result["error"] = f"{type(exc).__name__}: {exc}"
+            ready.set()
 
-        thread = threading.Thread(target=pump, name="egressscope-shutdown", daemon=True)
-        thread.start()
-        return True
-    except Exception:
-        return False
+    threading.Thread(target=pump, name="egressscope-shutdown", daemon=True).start()
+    ready.wait(5)
+    return result
 
 
 def _install_console_hook(on_shutdown) -> bool:
     try:
         import ctypes
+        from ctypes import wintypes
 
         kernel32 = ctypes.windll.kernel32
         if not kernel32.GetConsoleWindow():

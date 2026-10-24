@@ -290,14 +290,42 @@ def test_config_hot_reload() -> None:
         )
 
 
+def test_shutdown_hook() -> None:
+    if sys.platform != "win32":
+        return
+    import ctypes
+    from ctypes import wintypes
+
+    seen: list[str] = []
+    hook = system.install_shutdown_hook(lambda source: seen.append(source))
+    check(
+        "shutdown hook creates a hidden top-level window",
+        hook.get("window") is True and hook.get("top_level") is True and not hook.get("error"),
+        str(hook),
+    )
+    hwnd = hook.get("hwnd") or 0
+    if not hwnd:
+        return
+    user32 = ctypes.windll.user32
+    user32.IsWindowVisible.argtypes = [wintypes.HWND]
+    user32.IsWindowVisible.restype = wintypes.BOOL
+    user32.SendMessageW.argtypes = [wintypes.HWND, wintypes.UINT, wintypes.WPARAM, wintypes.LPARAM]
+    user32.SendMessageW.restype = ctypes.c_ssize_t
+    check("shutdown guard window stays hidden", not user32.IsWindowVisible(hwnd), str(hwnd))
+    user32.SendMessageW(hwnd, system.WM_QUERYENDSESSION, 0, 0)
+    check("WM_QUERYENDSESSION invokes the restore callback", seen == ["queryendsession"], str(seen))
+    user32.SendMessageW(hwnd, system.WM_ENDSESSION, 1, 0)
+    check("WM_ENDSESSION invokes the restore callback", seen[-1:] == ["endsession"], str(seen))
+
+
 def test_release_notes() -> None:
     from ai_audit import __version__
     from ai_audit.release_notes import notes_for_version
 
     text = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
     notes = notes_for_version(text, __version__)
-    check("changelog provides notes for the current version", bool(notes) and "配置热更新" in notes, notes[:120])
-    check("notes stop before the next version heading", "## v0.3.0" not in notes)
+    check("changelog provides notes for the current version", len(notes) > 40, notes[:120])
+    check("notes stop before the next version heading", "## v" not in notes)
     check("unknown version yields empty notes", notes_for_version(text, "9.9.9") == "")
 
 
@@ -312,6 +340,7 @@ def run() -> None:
     test_guard_status()
     test_autostart()
     test_config_hot_reload()
+    test_shutdown_hook()
     test_release_notes()
     print("\n==============================")
     print(f"{len(PASSED)} passed, {len(FAILED)} failed")

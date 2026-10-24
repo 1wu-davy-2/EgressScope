@@ -93,6 +93,8 @@ class EgressApp:
         hook = system.install_shutdown_hook(self._on_os_shutdown)
         if hook.get("window") or hook.get("console"):
             log.info("shutdown/logoff proxy restore hook installed (%s)", hook)
+        elif hook.get("supported") and hook.get("error"):
+            log.warning("shutdown/logoff proxy restore hook unavailable: %s", hook.get("error"))
         threading.Thread(target=self._config_watch_loop, name="egressscope-config", daemon=True).start()
 
     def _ensure_autostart(self) -> None:

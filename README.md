@@ -158,7 +158,7 @@ Windows 会把“当前用户的手动代理”持久保存在 WinINet 注册表
 
 EgressScope 提供四层处理，其中前三层不需要你手动执行任何命令：
 
-1. **关机 / 注销时优雅恢复**：程序通过消息窗口注册 `WM_QUERYENDSESSION` / `WM_ENDSESSION`（控制台构建同时注册 `SetConsoleCtrlHandler` 处理 `CTRL_LOGOFF_EVENT` / `CTRL_SHUTDOWN_EVENT`）。你点击关机、重启或注销时，Windows 会先投递会话结束消息，程序在会话真正结束前把系统代理写回启用前的备份值并刷新 WinINet，因此下一次开机不会继承一个指向已停止端口的代理。
+1. **关机 / 注销时优雅恢复**：程序在独立消息线程上创建一个隐藏的**顶层窗口**（消息专用窗口不属于顶层窗口，收不到会话结束通知），注册 `WM_QUERYENDSESSION` / `WM_ENDSESSION`；控制台构建同时注册 `SetConsoleCtrlHandler` 处理 `CTRL_LOGOFF_EVENT` / `CTRL_SHUTDOWN_EVENT`。你点击关机、重启或注销时，Windows 会先投递会话结束消息，程序在恢复期间调用 `ShutdownBlockReasonCreate` 让系统显示等待原因，把系统代理写回启用前的备份值并刷新 WinINet 后立即释放，因此下一次开机不会继承一个指向已停止端口的代理。
 2. **启动校准**：代理成功启动后读取代理备份。如果系统代理仍指向上一实例的端口，自动改指当前监听端口；如果新代理启动失败，立即恢复原始系统代理，避免把机器留在断网状态。配合默认开启的开机自启，登录后这条链路会重新建立。
 3. **独立断网保护看门狗（默认勾选）**：启用系统代理时的确认对话框默认勾选“注册断网保护看门狗（推荐）”，注册一个仅作用于当前用户的计划任务，不需要管理员权限：
    - `EgressScope Proxy Recovery`：登录时以及每 2 分钟检查一次。发现系统代理指向的回环端口已停止监听时，最多等待 30 秒；仍未恢复就写回启用前的 `ProxyEnable` / `ProxyServer` / `ProxyOverride` / `AutoConfigURL`，刷新 WinINet，删除备份并停用自身。
@@ -253,8 +253,8 @@ git push -u origin main
 4. 打 tag 并推送：
 
 ```bash
-git tag v0.3.1
-git push origin v0.3.1
+git tag v0.3.2
+git push origin v0.3.2
 ```
 
 ### GitHub Pages 官网
@@ -486,7 +486,7 @@ ai-agent-audit/
 │  └─ intro.html           产品介绍官网页面
 ├─ tests/
 │  ├─ smoke_test.py        端到端冒烟测试（不修改系统设置）
-│  ├─ recovery_test.py     断网保护、端口校准、开机自启、配置热更新与发布说明测试
+│  ├─ recovery_test.py     断网保护、关机钩子、端口校准、开机自启、配置热更新与发布说明测试
 │  ├─ upstream_test.py     上游代理串联与自动继承识别测试
 │  ├─ packaged_test.py     打包后可执行文件的端到端验证
 │  └─ site_check.py        官网页面静态门禁（i18n 覆盖、ARIA、JSON-LD、无外部依赖）
@@ -538,7 +538,7 @@ ai-agent-audit/
 .venv\Scripts\python.exe tests\recovery_test.py
 ```
 
-覆盖代理端口精确匹配、外部代理不被覆盖、端口变化后的自动改指、失效代理的恢复、守护脚本语法与备份恢复路径、计划任务注册权限、“守护脚本缺失”降级状态、开机自启 Run 键的写入/查询/撤销（且不删除其他程序的自启项）、配置文件外部编辑后的热更新（按内容摘要检测、非白名单键被忽略、非法配置与删除文件时保留原设置），以及从 `CHANGELOG.md` 截取当前版本发布说明。当前基线：43 项检查全部通过。测试**不读写**真实代理注册表与真实 Run 键（winreg 被替换为内存假实现）；Windows 上会创建一个指向 `cmd.exe /c exit 0` 的临时计划任务并在测试结束时删除，用于验证当前用户的 Task Scheduler 权限和触发器结构。
+覆盖代理端口精确匹配、外部代理不被覆盖、端口变化后的自动改指、失效代理的恢复、守护脚本语法与备份恢复路径、计划任务注册权限、“守护脚本缺失”降级状态、开机自启 Run 键的写入/查询/撤销（且不删除其他程序的自启项）、配置文件外部编辑后的热更新（按内容摘要检测、非白名单键被忽略、非法配置与删除文件时保留原设置）、关机钩子的隐藏顶层窗口与 `WM_QUERYENDSESSION` / `WM_ENDSESSION` 回调，以及从 `CHANGELOG.md` 截取当前版本发布说明。Windows 基线：47 项检查全部通过；Linux / macOS 会跳过关机窗口、计划任务等 Windows 专属检查。测试**不读写**真实代理注册表与真实 Run 键（winreg 被替换为内存假实现）；Windows 上会创建一个指向 `cmd.exe /c exit 0` 的临时计划任务并在测试结束时删除，用于验证当前用户的 Task Scheduler 权限和触发器结构；还会在当前进程创建隐藏的关机守卫窗口并发送模拟的会话结束消息，不触发真实关机。
 
 上游链路测试：
 
@@ -597,8 +597,8 @@ certutil -hashfile dist\EgressScope.exe SHA256
 4. 发送一段包含测试密钥（如 `sk-proj-` 前缀的假值）的请求，验证风险发现、预览脱敏与显式解密。
 5. 开启阻断，重复请求，确认返回 `403` 且证据库标记为已阻断。
 6. 勾选断网保护后启用系统代理，打开「任务计划程序」确认存在 `EgressScope Proxy Recovery`，并在「注册表编辑器」中确认 `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` 下有 `EgressScope` 值；手动结束程序进程，2 分钟内观察 `%LOCALAPPDATA%\EgressScope\logs\proxy-recovery.log` 中系统代理被恢复、任务被自动停用。
-7. 保持系统代理启用，执行一次 Windows 注销或重启，重新登录后确认系统代理已被还原为启用前的值（优雅恢复），且程序已随登录最小化启动。
-8. 程序运行时直接编辑 `%LOCALAPPDATA%\EgressScope\data\config.json`（例如把 `retention_days` 改成 30），2 秒后在审计台“策略与设置 → 接入与代理”确认 `config_reload` 显示了本次生效的键名。
+7. 保持系统代理启用，确认启动日志包含 `shutdown/logoff proxy restore hook installed` 且其中 `window=True`；执行一次 Windows 注销或重启，重新登录后确认系统代理已被还原为启用前的值（优雅恢复），且程序已随登录最小化启动。
+8. 程序运行时直接编辑 `%LOCALAPPDATA%\EgressScope\data\config.json`（例如把 `retention_days` 改成 30），2 秒后在审计台“策略与设置 → 接入与代理”确认 `config_reload` 显示了本次生效的键名；再把文件改成非法 JSON，确认控制台热更新卡片标红为“配置有误 · 保留原设置”，且当前设置没有被重置。
 9. 结束后移除 CA、恢复系统代理、关闭开机自启并清空测试数据。
 
 ---

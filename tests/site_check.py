@@ -127,7 +127,7 @@ def run() -> None:
           and not re.search(r'<script[^>]+src="http', page))
     check("theme toggle exists", 'id="theme-toggle"' in page)
     check("language toggle exists", 'id="lang-toggle"' in page and 'data-lang-set="en"' in page)
-    check("version is current", "0.3.1" in page and "0.2.0" not in page)
+    check("version is current", "0.3.2" in page and "0.2.0" not in page)
 
     print("\n=============================")
     print(f"{len(PASSED)} passed, {len(FAILED)} failed")
