@@ -13,7 +13,7 @@ jobs:
   build:
     name: Build / windows-arm64
     runs-on: windows-11-arm
-    timeout-minutes: 60
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
 
@@ -38,25 +38,21 @@ jobs:
         shell: pwsh
         run: rustup target add aarch64-pc-windows-msvc
 
-      - name: Probe OpenSSL toolchain
+      - name: Build OpenSSL for ARM64
         shell: pwsh
         run: |
-          Write-Output "VCPKG_INSTALLATION_ROOT=$env:VCPKG_INSTALLATION_ROOT"
-          $found = @()
-          $roots = @("C:\Program Files\OpenSSL*", "$env:VCPKG_INSTALLATION_ROOT", "C:\Strawberry")
-          foreach ($root in $roots) {
-            if ($root -and (Test-Path $root)) {
-              $found += Get-ChildItem -Path $root -Filter libcrypto.lib -Recurse -Depth 6 -ErrorAction SilentlyContinue |
-                Select-Object -First 10 -ExpandProperty FullName
-            }
-          }
-          $found | ForEach-Object { Write-Output "libcrypto: $_" }
-          "### OpenSSL probe" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
-          '```' | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
-          "VCPKG_INSTALLATION_ROOT=$env:VCPKG_INSTALLATION_ROOT" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
-          if ($found) { $found | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8 }
-          else { "no libcrypto.lib found" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8 }
-          '```' | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+          if (-not $env:VCPKG_INSTALLATION_ROOT) { throw "vcpkg is not available on this runner" }
+          & "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe" install openssl:arm64-windows --clean-after-build 2>&1 |
+            Tee-Object -FilePath openssl-build.log
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          $installed = Join-Path $env:VCPKG_INSTALLATION_ROOT "installed\arm64-windows"
+          $dll = Get-ChildItem "$installed\bin\libcrypto*.dll" -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $dll) { throw "libcrypto DLL not found under $installed\bin" }
+          "INCLUDE=$installed\include;$env:INCLUDE" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "LIB=$installed\lib;$env:LIB" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "PATH=$installed\bin;$env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "EGRESS_SCOPE_OPENSSL_DLL=$($dll.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          Write-Output "Using $($dll.FullName)"
 
       - name: Install aioquic from source
         shell: pwsh
@@ -115,7 +111,7 @@ jobs:
           "## Failure diagnostics" | Out-File -FilePath $summary -Append -Encoding utf8
           $pattern = 'error|fatal|failed|LNK\d+|C1083|C2065|C2059|undefined|cannot open'
           $matched = @()
-          foreach ($log in @("aioquic-install.log", "pip-install.log", "pyinstaller.log")) {
+          foreach ($log in @("openssl-build.log", "aioquic-install.log", "pip-install.log", "pyinstaller.log")) {
             if (Test-Path $log) {
               $lines = Get-Content $log
               $hits = $lines | Select-String -Pattern $pattern | Select-Object -First 120

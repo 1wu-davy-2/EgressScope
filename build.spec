@@ -1,4 +1,5 @@
 # -*- mode: python ; coding: utf-8 -*-
+import os
 import sys
 
 from PyInstaller.utils.hooks import collect_all, copy_metadata
@@ -19,6 +20,9 @@ hiddenimports = [
 ]
 if IS_WINDOWS:
     hiddenimports.append("winreg")
+    openssl_dll = os.environ.get("EGRESS_SCOPE_OPENSSL_DLL")
+    if openssl_dll:
+        binaries.append((openssl_dll, "."))
 
 for package in ("mitmproxy", "mitmproxy_rs"):
     package_datas, package_binaries, package_hidden = collect_all(package)
