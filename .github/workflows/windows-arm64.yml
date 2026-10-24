@@ -38,11 +38,29 @@ jobs:
         shell: pwsh
         run: rustup target add aarch64-pc-windows-msvc
 
-      - name: Install dependencies
+      - name: Probe OpenSSL toolchain
+        shell: pwsh
+        run: |
+          Write-Output "VCPKG_INSTALLATION_ROOT=$env:VCPKG_INSTALLATION_ROOT"
+          $roots = @("C:\Program Files\OpenSSL*", "$env:VCPKG_INSTALLATION_ROOT", "C:\Strawberry")
+          foreach ($root in $roots) {
+            if ($root -and (Test-Path $root)) {
+              Get-ChildItem -Path $root -Filter libcrypto.lib -Recurse -Depth 6 -ErrorAction SilentlyContinue |
+                Select-Object -First 10 -ExpandProperty FullName
+            }
+          }
+
+      - name: Install aioquic from source
         shell: pwsh
         run: |
           python -m pip install --upgrade pip 2>&1 | Tee-Object -FilePath pip-install.log
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          python -m pip install --no-cache-dir aioquic==1.2.0 2>&1 | Tee-Object -FilePath aioquic-install.log
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+
+      - name: Install dependencies
+        shell: pwsh
+        run: |
           python -m pip install -r requirements-dev.txt 2>&1 | Tee-Object -FilePath pip-install.log -Append
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
 
@@ -85,11 +103,29 @@ jobs:
         if: failure()
         shell: pwsh
         run: |
-          foreach ($log in @("pip-install.log", "pyinstaller.log")) {
+          $summary = $env:GITHUB_STEP_SUMMARY
+          "## Failure diagnostics" | Out-File -FilePath $summary -Append -Encoding utf8
+          $pattern = 'error|fatal|failed|LNK\d+|C1083|C2065|C2059|undefined|cannot open'
+          $matched = @()
+          foreach ($log in @("aioquic-install.log", "pip-install.log", "pyinstaller.log")) {
             if (Test-Path $log) {
-              Get-Content $log -Tail 40 | ForEach-Object {
-                $m = (($_ -replace '%', '%25') -replace "`r", '') -replace "`n", '%0A'
-                Write-Output "::error title=$log::$m"
+              $lines = Get-Content $log
+              $hits = $lines | Select-String -Pattern $pattern | Select-Object -First 120
+              "### $log (last 30 lines)" | Out-File -FilePath $summary -Append -Encoding utf8
+              '```' | Out-File -FilePath $summary -Append -Encoding utf8
+              $lines | Select-Object -Last 30 | Out-File -FilePath $summary -Append -Encoding utf8
+              '```' | Out-File -FilePath $summary -Append -Encoding utf8
+              if ($hits) {
+                "### $log matching lines" | Out-File -FilePath $summary -Append -Encoding utf8
+                '```' | Out-File -FilePath $summary -Append -Encoding utf8
+                $hits | ForEach-Object { $_.Line } | Out-File -FilePath $summary -Append -Encoding utf8
+                '```' | Out-File -FilePath $summary -Append -Encoding utf8
+                $matched += $hits | ForEach-Object { $_.Line }
               }
             }
           }
+          $compact = (($matched | Select-Object -Last 12) -join "`n") -replace '%', '%25'
+          $compact = $compact -replace "`r", ''
+          $compact = $compact -replace "`n", '%0A'
+          if ($compact.Length -gt 3500) { $compact = $compact.Substring($compact.Length - 3500) }
+          if ($compact) { Write-Output "::error title=Build diagnostics::$compact" }
