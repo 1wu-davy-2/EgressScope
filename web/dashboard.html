@@ -1,0 +1,1996 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>EgressScope · 本机数据外发审计</title>
+<style>
+:root{
+  --bg:#060a10;
+  --bg-soft:#080e17;
+  --panel:rgba(13,22,35,.82);
+  --panel-solid:#0d1623;
+  --panel-2:#111c2c;
+  --line:rgba(128,160,195,.14);
+  --line-strong:rgba(128,160,195,.24);
+  --text:#edf6ff;
+  --muted:#8b9db3;
+  --dim:#60748c;
+  --mint:#3ce8c2;
+  --mint-2:#19bfa1;
+  --mint-soft:rgba(60,232,194,.10);
+  --blue:#7c9cff;
+  --blue-soft:rgba(124,156,255,.12);
+  --amber:#ffbe6b;
+  --amber-soft:rgba(255,190,107,.12);
+  --rose:#ff7590;
+  --rose-soft:rgba(255,117,144,.12);
+  --violet:#b79cff;
+  --violet-soft:rgba(183,156,255,.12);
+  --font:"Microsoft YaHei UI","Microsoft YaHei","Segoe UI",system-ui,sans-serif;
+  --mono:"Cascadia Code","JetBrains Mono","SFMono-Regular",Consolas,monospace;
+  --radius:16px;
+  --sidebar:236px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;min-height:100vh;color:var(--text);font-family:var(--font);
+  background:
+    radial-gradient(1100px 700px at 82% -10%,rgba(22,95,87,.20),transparent 62%),
+    radial-gradient(900px 640px at 18% 108%,rgba(28,54,112,.20),transparent 60%),
+    var(--bg);
+  font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.38;
+  background-image:linear-gradient(rgba(115,150,185,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(115,150,185,.035) 1px,transparent 1px);
+  background-size:48px 48px;
+  mask-image:linear-gradient(to bottom,black,transparent 85%);
+}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:inherit;text-decoration:none}
+svg.ic{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+::selection{background:rgba(60,232,194,.25);color:#fff}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:#223146;border-radius:20px;border:2px solid var(--bg)}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ------- shell ------- */
+.app{position:relative;z-index:1;min-height:100vh}
+.sidebar{
+  position:fixed;inset:0 auto 0 0;width:var(--sidebar);padding:25px 17px 18px;
+  border-right:1px solid var(--line);background:rgba(6,11,18,.78);backdrop-filter:blur(18px);
+  display:flex;flex-direction:column;z-index:40;
+}
+.brand{display:flex;align-items:center;gap:11px;padding:0 8px;margin-bottom:27px}
+.brand-mark{width:38px;height:38px;position:relative;flex:none}
+.brand-mark svg{width:38px;height:38px;overflow:visible}
+.brand-name{font-size:17px;font-weight:700;letter-spacing:.2px;line-height:1.1}
+.brand-sub{margin-top:5px;color:var(--dim);font-size:9px;letter-spacing:1.5px;font-family:var(--mono);text-transform:uppercase}
+.nav-label{margin:20px 11px 8px;color:#52657b;font-size:10px;letter-spacing:1.5px;font-weight:600}
+.nav-label:first-of-type{margin-top:0}
+.nav{display:flex;flex-direction:column;gap:3px}
+.nav-item{
+  width:100%;border:0;background:transparent;color:#8fa2b8;display:flex;align-items:center;gap:11px;
+  padding:10px 11px;border-radius:10px;text-align:left;font-size:13px;transition:.16s ease;position:relative;
+}
+.nav-item:hover{color:#dce9f6;background:rgba(130,165,200,.06)}
+.nav-item.active{color:var(--mint);background:linear-gradient(90deg,rgba(60,232,194,.12),rgba(60,232,194,.03));box-shadow:inset 0 0 0 1px rgba(60,232,194,.09)}
+.nav-item.active::before{content:"";position:absolute;left:-17px;top:9px;bottom:9px;width:2px;border-radius:2px;background:var(--mint);box-shadow:0 0 12px var(--mint)}
+.nav-item .ic{opacity:.85}
+.nav-badge{margin-left:auto;min-width:22px;padding:2px 6px;border-radius:20px;background:rgba(139,157,179,.10);color:#8fa2b8;font-family:var(--mono);font-size:10px;text-align:center}
+.nav-item.active .nav-badge{background:rgba(60,232,194,.12);color:var(--mint)}
+.sidebar-foot{margin-top:auto;padding-top:22px}
+.privacy-card{
+  border:1px solid var(--line);border-radius:13px;padding:12px;background:linear-gradient(145deg,rgba(18,33,46,.75),rgba(9,17,27,.5));
+}
+.privacy-top{display:flex;align-items:center;gap:8px;color:#bdd0e2;font-size:11px;font-weight:600}
+.privacy-top .ic{width:15px;height:15px;color:var(--mint)}
+.privacy-sub{margin:7px 0 0;color:var(--dim);font-size:10px;line-height:1.6}
+.chain-line{display:flex;align-items:center;justify-content:space-between;margin-top:11px;padding-top:10px;border-top:1px solid var(--line);font-size:10px;color:var(--dim)}
+.chain-line b{font-weight:500;color:#9db0c3;font-family:var(--mono)}
+.side-links{display:flex;gap:14px;margin:14px 3px 0;color:#60748b;font-size:11px}
+.side-links a:hover{color:var(--mint)}
+
+.workspace{margin-left:var(--sidebar);min-width:0;min-height:100vh;display:flex;flex-direction:column}
+.topbar{
+  height:67px;flex:none;display:flex;align-items:center;gap:18px;padding:0 34px;
+  border-bottom:1px solid var(--line);background:rgba(6,11,18,.68);backdrop-filter:blur(16px);
+  position:sticky;top:0;z-index:30;
+}
+.crumb{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--dim);white-space:nowrap}
+.crumb strong{color:#d4e1ee;font-weight:500}
+.top-spacer{flex:1}
+.live-pill{
+  display:flex;align-items:center;gap:8px;padding:7px 11px;border:1px solid var(--line);border-radius:30px;
+  color:#9fb2c5;font-size:11px;background:rgba(10,18,29,.7);white-space:nowrap;
+}
+.live-pill .dot{width:6px;height:6px;border-radius:50%;background:var(--mint);box-shadow:0 0 0 3px rgba(60,232,194,.10),0 0 12px rgba(60,232,194,.65);animation:pulse 2.4s infinite}
+.live-pill.warn .dot{background:var(--amber);box-shadow:0 0 0 3px rgba(255,190,107,.1)}
+.live-pill.down .dot{background:var(--rose);box-shadow:0 0 0 3px rgba(255,117,144,.1);animation:none}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.top-actions{display:flex;align-items:center;gap:8px}
+.icon-btn{
+  width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:rgba(13,22,35,.7);
+  display:grid;place-items:center;color:#91a5ba;transition:.16s;
+}
+.icon-btn:hover{color:var(--text);border-color:var(--line-strong);background:var(--panel-2)}
+.top-intro{display:flex;align-items:center;gap:6px;padding:8px 11px;border-radius:9px;color:#93a6ba;font-size:12px;border:1px solid transparent}
+.top-intro:hover{color:#dceaf7;border-color:var(--line);background:rgba(14,24,38,.7)}
+.top-intro .ic{width:14px;height:14px}
+
+.main{width:100%;max-width:1560px;margin:0 auto;padding:28px 34px 64px;flex:1}
+.view{display:none;animation:fadeUp .34s ease both}
+.view.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:22px;margin-bottom:22px}
+.page-title{margin:0;font-size:25px;font-weight:680;letter-spacing:-.4px}
+.page-desc{margin:7px 0 0;color:var(--muted);font-size:12.5px;max-width:700px}
+.page-actions{display:flex;align-items:center;gap:9px;flex:none}
+
+/* ------- primitives ------- */
+.btn{
+  border:1px solid var(--line);background:rgba(16,27,43,.76);color:#c2d2e2;height:35px;padding:0 13px;
+  border-radius:9px;display:inline-flex;align-items:center;justify-content:center;gap:7px;font-size:12px;
+  transition:.16s;white-space:nowrap;
+}
+.btn:hover{background:#152237;border-color:var(--line-strong);color:#fff}
+.btn .ic{width:15px;height:15px}
+.btn.primary{background:linear-gradient(135deg,#4df0cd,#28cdb0);border-color:#45e8ca;color:#03201b;font-weight:700;box-shadow:0 7px 24px rgba(38,210,177,.16)}
+.btn.primary:hover{filter:brightness(1.08);background:linear-gradient(135deg,#5af5d4,#31d8ba)}
+.btn.ghost{background:transparent}
+.btn.danger{border-color:rgba(255,117,144,.30);color:#ff9aab;background:rgba(255,117,144,.07)}
+.btn.danger:hover{background:rgba(255,117,144,.13);border-color:rgba(255,117,144,.5)}
+.btn.sm{height:29px;padding:0 10px;font-size:11px;border-radius:7px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.panel{border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);backdrop-filter:blur(12px);box-shadow:0 18px 55px rgba(0,0,0,.10)}
+.panel-head{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:17px 19px;border-bottom:1px solid var(--line)}
+.panel-title{margin:0;font-size:13px;font-weight:620;letter-spacing:.1px}
+.panel-hint{color:var(--dim);font-size:10.5px}
+.panel-link{color:#7f95aa;font-size:11px;display:flex;align-items:center;gap:4px;border:0;background:none;padding:0}
+.panel-link:hover{color:var(--mint)}
+.panel-link .ic{width:13px;height:13px}
+.mono{font-family:var(--mono)}
+.muted{color:var(--muted)}
+.dim{color:var(--dim)}
+.hidden{display:none!important}
+
+/* ------- hero ------- */
+.hero{
+  position:relative;overflow:hidden;border:1px solid var(--line);border-radius:20px;
+  padding:28px 30px;margin-bottom:18px;min-height:178px;
+  background:
+    radial-gradient(600px 260px at 85% 110%,rgba(32,160,139,.15),transparent 65%),
+    linear-gradient(125deg,rgba(16,28,42,.92),rgba(8,15,24,.85));
+}
+.hero::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background-image:radial-gradient(rgba(128,170,200,.10) 1px,transparent 1px);background-size:24px 24px;
+  mask-image:radial-gradient(circle at 80% 50%,black,transparent 55%);opacity:.6;
+}
+.hero-copy{position:relative;z-index:2;max-width:640px}
+.eyebrow{display:flex;align-items:center;gap:8px;color:var(--mint);font-family:var(--mono);font-size:9.5px;letter-spacing:2px;font-weight:600;text-transform:uppercase}
+.eyebrow::before{content:"";width:20px;height:1px;background:linear-gradient(90deg,var(--mint),transparent)}
+.hero h1{margin:12px 0 8px;font-size:30px;line-height:1.22;letter-spacing:-.8px;font-weight:700}
+.hero h1 span{color:var(--mint);text-shadow:0 0 30px rgba(60,232,194,.18)}
+.hero p{margin:0;color:#91a4b9;font-size:12.5px;max-width:560px;line-height:1.7}
+.hero-actions{display:flex;align-items:center;gap:10px;margin-top:17px}
+.hero-side{position:absolute;right:34px;top:50%;transform:translateY(-50%);width:238px;height:154px;z-index:2}
+.scope-visual{position:absolute;right:25px;top:50%;transform:translateY(-50%);width:124px;height:124px}
+.scope-ring{position:absolute;border:1px solid rgba(60,232,194,.16);border-radius:50%}
+.scope-ring.r1{inset:0}
+.scope-ring.r2{inset:19px;border-style:dashed;animation:spin 26s linear infinite}
+.scope-ring.r3{inset:38px;border-color:rgba(60,232,194,.36)}
+.scope-core{position:absolute;inset:50px;border-radius:50%;background:var(--mint);box-shadow:0 0 30px rgba(60,232,194,.55);display:grid;place-items:center;color:#03211c}
+.scope-core .ic{width:15px;height:15px;stroke-width:2.2}
+.scope-sweep{
+  position:absolute;inset:0;border-radius:50%;
+  background:conic-gradient(from 0deg,rgba(60,232,194,.28),transparent 26%);
+  mask-image:radial-gradient(circle,transparent 32%,black 33%);
+  animation:spin 4s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.scope-tag{
+  position:absolute;padding:5px 9px;border:1px solid var(--line-strong);border-radius:6px;
+  background:rgba(8,15,24,.85);color:#a8bbcd;font-size:9.5px;font-family:var(--mono);white-space:nowrap;
+}
+.scope-tag.t1{top:4px;left:0}.scope-tag.t2{bottom:18px;left:6px}.scope-tag.t3{top:56px;left:0}
+.scope-tag b{color:var(--mint);font-weight:500}
+
+/* ------- onboarding ------- */
+.onboard{
+  display:grid;grid-template-columns:1fr auto;gap:25px;align-items:center;
+  border:1px solid rgba(60,232,194,.20);border-radius:15px;padding:17px 20px;margin-bottom:18px;
+  background:linear-gradient(100deg,rgba(21,56,52,.52),rgba(12,24,34,.62));position:relative;overflow:hidden;
+}
+.onboard::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--mint);box-shadow:0 0 20px var(--mint)}
+.onboard-top{display:flex;align-items:center;gap:9px}
+.onboard-title{font-size:13px;font-weight:650;color:#e0f8f1}
+.onboard-desc{color:#879cae;font-size:11px;margin-top:5px}
+.onboard-steps{display:flex;gap:20px;margin-top:12px;flex-wrap:wrap}
+.ob-step{display:flex;align-items:center;gap:7px;color:#6f8296;font-size:10.5px}
+.ob-step .num{width:17px;height:17px;border-radius:50%;border:1px solid var(--line-strong);display:grid;place-items:center;font-family:var(--mono);font-size:9px}
+.ob-step.done{color:#b7eadd}
+.ob-step.done .num{background:var(--mint);border-color:var(--mint);color:#04221d}
+.ob-step .ic{width:12px;height:12px}
+.onboard-actions{display:flex;gap:8px;align-items:center;flex:none}
+
+/* ------- stats ------- */
+.stat-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-bottom:17px}
+.stat{
+  border:1px solid var(--line);border-radius:14px;padding:16px 17px 14px;min-width:0;
+  background:linear-gradient(160deg,rgba(16,27,42,.88),rgba(9,17,28,.82));position:relative;overflow:hidden;
+}
+.stat:hover{border-color:var(--line-strong)}
+.stat::after{content:"";position:absolute;right:-34px;top:-45px;width:110px;height:110px;border-radius:50%;background:radial-gradient(circle,rgba(60,232,194,.06),transparent 68%)}
+.stat-top{display:flex;align-items:center;justify-content:space-between;color:#8194a8;font-size:10.5px}
+.stat-ic{width:27px;height:27px;border-radius:8px;display:grid;place-items:center;background:rgba(124,156,255,.09);color:var(--blue)}
+.stat-ic .ic{width:14px;height:14px}
+.stat:nth-child(2) .stat-ic{background:var(--mint-soft);color:var(--mint)}
+.stat:nth-child(3) .stat-ic{background:var(--amber-soft);color:var(--amber)}
+.stat:nth-child(4) .stat-ic{background:var(--rose-soft);color:var(--rose)}
+.stat-value{font-family:var(--mono);font-size:29px;line-height:1;letter-spacing:-1.4px;margin:13px 0 7px;font-weight:600;color:#f2f8fe}
+.stat-value .unit{font-family:var(--font);font-size:10px;color:var(--dim);letter-spacing:0;margin-left:5px;font-weight:400}
+.stat-foot{display:flex;align-items:center;gap:6px;color:#687d92;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stat-foot b{color:#9fb3c7;font-weight:500}
+.mini-bars{display:flex;align-items:flex-end;gap:2px;height:17px;margin-top:10px;opacity:.65}
+.mini-bars i{flex:1;background:rgba(124,156,255,.36);border-radius:1px;min-height:2px}
+.stat:nth-child(2) .mini-bars i{background:rgba(60,232,194,.34)}
+.stat:nth-child(3) .mini-bars i{background:rgba(255,190,107,.34)}
+.stat:nth-child(4) .mini-bars i{background:rgba(255,117,144,.34)}
+
+/* ------- grids ------- */
+.grid-2-1{display:grid;grid-template-columns:minmax(0,1.9fr) minmax(280px,.78fr);gap:14px;margin-bottom:14px}
+.grid-1-1{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;margin-bottom:14px}
+.chart-wrap{padding:14px 16px 9px;position:relative;min-height:245px}
+.chart-wrap svg{display:block;width:100%;height:auto;overflow:visible}
+.chart-legend{display:flex;align-items:center;gap:16px;padding:0 19px 15px;color:#70859b;font-size:10px}
+.legend{display:flex;align-items:center;gap:6px}
+.legend i{width:6px;height:6px;border-radius:50%;background:var(--mint)}
+.legend.ai i{background:var(--blue)}.legend.high i{background:var(--amber)}
+.chart-empty{position:absolute;inset:0;display:grid;place-items:center;color:var(--dim);font-size:11px;pointer-events:none}
+.risk-body{padding:16px 19px}
+.risk-label{display:flex;justify-content:space-between;font-size:10.5px;color:#879bad;margin-bottom:7px}
+.risk-label b{font-family:var(--mono);font-weight:500;color:#b7c7d7}
+.risk-bar{height:5px;border-radius:5px;background:rgba(135,155,175,.09);overflow:hidden;margin-bottom:14px}
+.risk-bar i{display:block;height:100%;border-radius:5px;min-width:2px;transition:width .5s ease}
+.risk-bar i.critical{background:var(--rose)}.risk-bar i.high{background:#ff9b65}.risk-bar i.medium{background:var(--amber)}.risk-bar i.low{background:var(--blue)}.risk-bar i.info{background:#52677f}
+.risk-foot{border-top:1px solid var(--line);margin-top:3px;padding-top:13px;display:flex;align-items:center;justify-content:space-between}
+.risk-foot .k{color:var(--dim);font-size:10px}
+.risk-foot .v{font-size:12px;color:#c6d7e7;font-family:var(--mono)}
+.mini-list{padding:5px 10px 10px}
+.mini-row{display:flex;align-items:center;gap:9px;padding:9px 9px;border-radius:8px;font-size:11px}
+.mini-row:hover{background:rgba(130,160,195,.05)}
+.mini-rank{width:17px;color:#52677e;font-size:9px;font-family:var(--mono)}
+.mini-main{min-width:0;flex:1}
+.mini-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#b8c9d9}
+.mini-sub{color:#5e7288;font-size:9.5px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mini-count{color:#8ea3b8;font-family:var(--mono);font-size:10px;flex:none}
+.mini-risk{font-family:var(--mono);font-size:9px;padding:2px 5px;border-radius:4px;background:rgba(255,190,107,.09);color:var(--amber);flex:none}
+.empty{padding:42px 24px;text-align:center;color:#657a90}
+.empty .ic{width:28px;height:28px;margin:0 auto 10px;opacity:.5}
+.empty p{margin:0;font-size:11px}
+.section-sub{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--line)}
+.section-sub > div:first-child{border-right:1px solid var(--line)}
+.pad{padding:14px 18px}
+.sub-title{font-size:10px;color:#687d93;letter-spacing:.8px;margin:0 0 8px;font-weight:500;text-transform:uppercase}
+
+/* ------- tables ------- */
+.table-wrap{overflow:auto}
+table{width:100%;border-collapse:collapse;min-width:840px}
+th{
+  text-align:left;padding:10px 14px;color:#586d83;font-size:9.5px;font-weight:500;letter-spacing:.5px;
+  border-bottom:1px solid var(--line);white-space:nowrap;background:rgba(8,15,24,.28);
+}
+td{padding:12px 14px;border-bottom:1px solid rgba(128,160,195,.07);font-size:11px;color:#9caec0;vertical-align:middle}
+tbody tr{transition:.12s;cursor:pointer;outline:none}
+tbody tr:hover{background:rgba(93,142,158,.055)}
+tbody tr:last-child td{border-bottom:0}
+.t-time{font-family:var(--mono);font-size:10px;color:#7a8ea4;white-space:nowrap}
+.t-time small{display:block;color:#4f6479;font-size:8.5px;margin-top:2px}
+.proc-cell{display:flex;align-items:center;gap:9px;min-width:145px}
+.proc-avatar{width:27px;height:27px;flex:none;border-radius:7px;border:1px solid var(--line);background:linear-gradient(145deg,#172436,#0e1825);display:grid;place-items:center;color:#8fa6ba;font-size:9px;font-family:var(--mono);text-transform:uppercase}
+.proc-name{color:#c1d1e0;font-size:11px;line-height:1.2;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.proc-id{font-family:var(--mono);font-size:8.5px;color:#5b7086;margin-top:3px}
+.endpoint{min-width:210px;max-width:360px}
+.endpoint-host{color:#c3d4e3;font-family:var(--mono);font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:330px}
+.endpoint-path{color:#5f748a;font-family:var(--mono);font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:330px;margin-top:3px}
+.tagline{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:5px}
+.tag{display:inline-flex;align-items:center;padding:2px 5px;border-radius:4px;font-size:8.5px;border:1px solid var(--line);color:#72879c;line-height:1.3}
+.tag.ai{border-color:rgba(60,232,194,.2);color:#69cbb6;background:var(--mint-soft)}
+.tag.warn{border-color:rgba(255,190,107,.18);color:#cf9f5f;background:var(--amber-soft)}
+.tag.block{border-color:rgba(255,117,144,.25);color:#e28b9b;background:var(--rose-soft)}
+.sev{display:inline-flex;align-items:center;gap:5px;font-size:9.5px;font-family:var(--mono);padding:3px 6px;border-radius:5px;white-space:nowrap}
+.sev::before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor}
+.sev.info{color:#7f96ad;background:rgba(127,150,173,.08)}
+.sev.low{color:#84a9ff;background:rgba(124,156,255,.09)}
+.sev.medium{color:#e3b36d;background:rgba(255,190,107,.09)}
+.sev.high{color:#ff9d6e;background:rgba(255,157,110,.09)}
+.sev.critical{color:#ff758d;background:rgba(255,117,141,.10)}
+.risk-value{display:flex;align-items:center;gap:7px}
+.risk-num{font-family:var(--mono);font-size:11px;color:#b7c8d9;width:22px}
+.risk-line{width:34px;height:3px;background:rgba(130,155,180,.1);border-radius:3px;overflow:hidden}
+.risk-line i{display:block;height:100%;border-radius:3px}
+.action{font-size:9px;color:#7c91a7}
+.action.blocked{color:#ff9bad}
+.toolbar{display:flex;align-items:center;gap:9px;padding:14px 17px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+.search{position:relative;flex:1;min-width:190px;max-width:330px}
+.search .ic{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:#60758b}
+.search input{width:100%;height:32px;border-radius:8px;border:1px solid var(--line);background:rgba(5,11,18,.58);padding:0 11px 0 32px;font-size:11px;outline:none;color:#d3e1ee}
+.search input::placeholder{color:#52667b}
+.search input:focus{border-color:rgba(60,232,194,.36);box-shadow:0 0 0 3px rgba(60,232,194,.05)}
+.select{height:32px;border-radius:8px;border:1px solid var(--line);background:#0c1522;padding:0 25px 0 9px;font-size:10.5px;color:#91a4b9;outline:none;appearance:none;
+  background-image:linear-gradient(45deg,transparent 50%,#60758b 50%),linear-gradient(135deg,#60758b 50%,transparent 50%);
+  background-position:calc(100% - 13px) 14px,calc(100% - 9px) 14px;background-size:4px 4px;background-repeat:no-repeat;
+}
+.select:focus{border-color:var(--line-strong)}
+.check-pill{display:flex;align-items:center;gap:6px;border:1px solid var(--line);height:32px;padding:0 10px;border-radius:8px;color:#8196ab;font-size:10.5px;cursor:pointer;user-select:none;background:rgba(10,18,29,.5)}
+.check-pill input{appearance:none;width:12px;height:12px;border-radius:3px;border:1px solid #3a4d62;margin:0;position:relative;cursor:pointer;background:#0a131f}
+.check-pill input:checked{background:var(--mint);border-color:var(--mint)}
+.check-pill input:checked::after{content:"";position:absolute;left:3px;top:1px;width:3px;height:6px;border:solid #06251f;border-width:0 1.5px 1.5px 0;transform:rotate(45deg)}
+.check-pill:has(input:checked){border-color:rgba(60,232,194,.3);color:#a8ded3;background:rgba(60,232,194,.06)}
+.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;height:32px;padding:2px;background:rgba(7,13,21,.5)}
+.seg button{border:0;background:transparent;color:#698096;border-radius:6px;padding:0 9px;font-size:10px;transition:.15s}
+.seg button.active{background:rgba(60,232,194,.1);color:var(--mint)}
+.table-foot{display:flex;align-items:center;justify-content:space-between;padding:12px 17px;border-top:1px solid var(--line);font-size:10px;color:#63788e}
+.pager{display:flex;align-items:center;gap:7px}
+.pager button{height:27px;min-width:27px;padding:0 8px;border:1px solid var(--line);border-radius:6px;background:rgba(12,21,34,.8);color:#8397ab;font-size:10px}
+.pager button:hover:not(:disabled){border-color:var(--line-strong);color:#d5e5f3}
+.pager button:disabled{opacity:.35;cursor:not-allowed}
+.pager .page-now{color:#9bb0c4;font-family:var(--mono);margin:0 3px}
+
+/* ------- finding page ------- */
+.filter-chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:rgba(10,18,29,.5);border-radius:20px;height:28px;padding:0 11px;color:#7c91a7;font-size:10.5px}
+.chip.active{border-color:rgba(60,232,194,.3);background:rgba(60,232,194,.07);color:var(--mint)}
+.finding-list{display:flex;flex-direction:column}
+.finding-card{display:grid;grid-template-columns:36px minmax(0,1fr) auto auto;gap:13px;align-items:center;padding:15px 19px;border-bottom:1px solid var(--line);cursor:pointer;transition:.12s}
+.finding-card:hover{background:rgba(95,145,160,.05)}
+.finding-card:last-child{border-bottom:0}
+.finding-icon{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;background:var(--amber-soft);color:var(--amber);border:1px solid rgba(255,190,107,.12)}
+.finding-card[data-sev="critical"] .finding-icon,.finding-card[data-sev="high"] .finding-icon{background:var(--rose-soft);color:var(--rose);border-color:rgba(255,117,144,.13)}
+.finding-card[data-sev="low"] .finding-icon{background:var(--blue-soft);color:var(--blue);border-color:rgba(124,156,255,.13)}
+.finding-icon .ic{width:16px;height:16px}
+.finding-title{font-size:12px;color:#cfddea;font-weight:600;margin-bottom:3px}
+.finding-meta{display:flex;gap:9px;flex-wrap:wrap;color:#5f7489;font-size:9.5px}
+.finding-meta b{color:#8fa4b9;font-weight:500;font-family:var(--mono)}
+.finding-score{text-align:right}
+.finding-score b{font-family:var(--mono);font-size:16px;color:#dbe9f5;font-weight:500;display:block;line-height:1}
+.finding-score span{font-size:8px;color:#60758b;letter-spacing:.5px}
+.finding-arrow{color:#42566b}
+.finding-arrow .ic{width:15px;height:15px}
+.summary-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.summary-cell{border:1px solid var(--line);border-radius:12px;padding:13px 16px;background:rgba(11,20,32,.64)}
+.summary-cell span{color:#6c8197;font-size:10px}
+.summary-cell b{display:block;font-family:var(--mono);font-size:21px;font-weight:500;margin-top:5px;color:#dcebf7}
+.summary-cell.crit b{color:var(--rose)}
+.summary-cell.warn b{color:var(--amber)}
+.summary-cell.good b{color:var(--mint)}
+
+/* ------- files / coverage ------- */
+.two-col{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(280px,.85fr);gap:14px;align-items:start}
+.timeline{padding:9px 18px 17px}
+.tl-item{display:grid;grid-template-columns:9px minmax(0,1fr) auto;gap:12px;padding:12px 0;border-bottom:1px solid rgba(128,160,195,.07);position:relative}
+.tl-item:last-child{border-bottom:0}
+.tl-dot{width:7px;height:7px;border-radius:50%;background:#526a80;margin-top:6px;position:relative}
+.tl-dot::after{content:"";position:absolute;left:3px;top:11px;width:1px;height:calc(100% + 30px);background:linear-gradient(var(--line-strong),transparent)}
+.tl-item:last-child .tl-dot::after{display:none}
+.tl-item.sens-high .tl-dot{background:var(--rose);box-shadow:0 0 9px rgba(255,117,144,.5)}
+.tl-item.sens-medium .tl-dot{background:var(--amber)}
+.tl-item.canary .tl-dot{background:var(--violet);box-shadow:0 0 9px rgba(183,156,255,.5)}
+.tl-main{min-width:0}
+.tl-title{font-size:11px;color:#c0d1e0;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.tl-path{font-family:var(--mono);font-size:9.5px;color:#667c91;word-break:break-all;margin-top:4px}
+.tl-meta{font-size:9px;color:#52677c;margin-top:4px}
+.tl-time{color:#52677c;font-family:var(--mono);font-size:8.5px;white-space:nowrap}
+.sens{padding:2px 5px;border-radius:4px;font-size:8px;border:1px solid var(--line)}
+.sens.high{color:var(--rose);border-color:rgba(255,117,144,.2);background:var(--rose-soft)}
+.sens.medium{color:var(--amber);border-color:rgba(255,190,107,.2);background:var(--amber-soft)}
+.sens.low{color:#7f94a9}
+.canary-list{padding:8px 12px 14px}
+.canary-row{display:flex;align-items:center;gap:10px;padding:10px 8px;border-bottom:1px solid rgba(128,160,195,.07)}
+.canary-row:last-child{border:0}
+.canary-status{width:7px;height:7px;border-radius:50%;background:#4d6175;flex:none}
+.canary-status.hit{background:var(--violet);box-shadow:0 0 8px rgba(183,156,255,.6)}
+.canary-main{min-width:0;flex:1}
+.canary-name{font-size:10.5px;color:#b9cbdb;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.canary-sub{font-family:var(--mono);font-size:8.5px;color:#596e84;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.canary-hit{font-size:8.5px;color:var(--violet);flex:none}
+.beta-callout{border:1px solid rgba(183,156,255,.2);background:rgba(183,156,255,.055);border-radius:12px;padding:14px 16px;margin-top:14px}
+.beta-callout .head{display:flex;align-items:center;gap:7px;font-size:11px;color:#c9b8fa;font-weight:600}
+.beta-callout .head .ic{width:14px;height:14px}
+.beta-callout p{color:#788ba1;font-size:10px;line-height:1.7;margin:7px 0 0}
+.file-stats{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line)}
+.file-stats div{padding:13px 16px;border-right:1px solid var(--line)}
+.file-stats div:last-child{border-right:0}
+.file-stats span{font-size:9px;color:#5f7489;display:block}
+.file-stats b{display:block;font-family:var(--mono);font-size:17px;font-weight:500;color:#cbdbea;margin-top:3px}
+.coverage-hero{padding:24px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(120deg,rgba(18,31,46,.85),rgba(9,17,27,.8));margin-bottom:15px;display:flex;justify-content:space-between;align-items:center;gap:20px;overflow:hidden;position:relative}
+.coverage-hero::after{content:"";position:absolute;right:-40px;top:-70px;width:260px;height:260px;border:1px solid rgba(60,232,194,.08);border-radius:50%;box-shadow:0 0 0 35px rgba(60,232,194,.02),0 0 0 70px rgba(60,232,194,.012)}
+.coverage-hero h3{margin:0 0 6px;font-size:17px;letter-spacing:-.2px}
+.coverage-hero p{margin:0;color:#8195aa;font-size:11px;max-width:640px}
+.coverage-badge{border:1px solid rgba(60,232,194,.2);background:rgba(60,232,194,.07);border-radius:10px;padding:10px 14px;color:#9fe4d5;font-size:10px;flex:none;z-index:1;display:flex;align-items:center;gap:7px}
+.coverage-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.cov-panel{border:1px solid var(--line);border-radius:14px;background:var(--panel);overflow:hidden}
+.cov-head{padding:15px 18px;display:flex;align-items:center;gap:9px;border-bottom:1px solid var(--line);font-size:12px;font-weight:600}
+.cov-head.good{color:#9ee6d6;border-bottom-color:rgba(60,232,194,.13);background:rgba(60,232,194,.035)}
+.cov-head.bad{color:#c6a9ad;background:rgba(255,117,144,.025)}
+.cov-head .ic{width:15px;height:15px}
+.cov-list{list-style:none;margin:0;padding:9px 17px 16px}
+.cov-list li{display:flex;gap:9px;color:#8ca0b4;font-size:10.5px;padding:8px 0;line-height:1.55;border-bottom:1px solid rgba(128,160,195,.055)}
+.cov-list li:last-child{border-bottom:0}
+.cov-list li .ic{width:13px;height:13px;margin-top:1px;color:#5f8e84;flex:none}
+.cov-head.bad + .cov-list li .ic{color:#8f666d}
+.cov-note{grid-column:1/-1;color:#6f8499;font-size:10px;padding:2px 3px}
+.state-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:14px}
+.state-cell{background:#0b1420;padding:13px 15px}
+.state-cell span{display:block;color:#5f748a;font-size:9px;margin-bottom:4px}
+.state-cell b{font-size:10.5px;color:#aabccd;font-weight:500;display:flex;align-items:center;gap:5px}
+.state-cell b .dot{width:5px;height:5px;border-radius:50%;background:var(--amber)}
+.state-cell b .dot.ok{background:var(--mint)}
+.state-cell b .dot.bad{background:var(--rose)}
+
+/* ------- settings ------- */
+.settings-grid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(300px,.8fr);gap:14px;align-items:start}
+.settings-col{display:flex;flex-direction:column;gap:14px}
+.set-row{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;padding:15px 18px;border-bottom:1px solid var(--line)}
+.set-row:last-child{border-bottom:0}
+.set-copy{min-width:0}
+.set-name{font-size:11.5px;color:#c7d6e5;font-weight:600;display:flex;align-items:center;gap:7px}
+.set-desc{color:#687d92;font-size:9.5px;line-height:1.6;margin-top:4px;max-width:480px}
+.set-control{flex:none;display:flex;align-items:center;gap:9px;min-height:22px}
+.switch{position:relative;display:inline-block;width:35px;height:20px;flex:none}
+.switch input{opacity:0;width:0;height:0}
+.switch span{position:absolute;cursor:pointer;inset:0;border-radius:20px;background:#1a2838;border:1px solid #2b3c50;transition:.2s}
+.switch span::before{content:"";position:absolute;width:14px;height:14px;left:2px;top:2px;border-radius:50%;background:#71869b;transition:.2s}
+.switch input:checked + span{background:rgba(60,232,194,.18);border-color:rgba(60,232,194,.45)}
+.switch input:checked + span::before{transform:translateX(15px);background:var(--mint);box-shadow:0 0 8px rgba(60,232,194,.4)}
+.switch input:focus-visible + span{outline:2px solid rgba(60,232,194,.4);outline-offset:2px}
+input[type=range]{appearance:none;width:135px;height:3px;border-radius:3px;background:#233246;outline:none}
+input[type=range]::-webkit-slider-thumb{appearance:none;width:12px;height:12px;border-radius:50%;background:var(--mint);cursor:pointer;box-shadow:0 0 8px rgba(60,232,194,.35)}
+.range-wrap{display:flex;align-items:center;gap:9px}
+.range-val{font-family:var(--mono);font-size:11px;color:#b9cddf;min-width:26px;text-align:right}
+.num-input{width:74px;height:30px;border:1px solid var(--line);background:rgba(5,11,18,.6);border-radius:7px;padding:0 9px;font-family:var(--mono);font-size:10.5px;color:#c2d4e4;outline:none}
+.proxy-input{width:220px;height:32px;border:1px solid var(--line);background:rgba(5,11,18,.6);border-radius:8px;padding:0 9px;font-family:var(--mono);font-size:10.5px;color:#c2d4e4;outline:none}
+.proxy-input:focus{border-color:rgba(60,232,194,.36);box-shadow:0 0 0 3px rgba(60,232,194,.05)}
+.proxy-input::placeholder{color:#52667b}
+.settings-side .panel{margin-bottom:14px}
+.meta-list{padding:7px 18px 14px}
+.meta-row{display:flex;justify-content:space-between;gap:16px;padding:8px 0;border-bottom:1px solid rgba(128,160,195,.06);font-size:10px}
+.meta-row:last-child{border:0}
+.meta-row span{color:#63788d;flex:none}
+.meta-row b{color:#9fb4c8;font-weight:400;font-family:var(--mono);font-size:9.5px;text-align:right;word-break:break-all}
+.meta-row b.ok{color:var(--mint)}.meta-row b.warn{color:var(--amber)}.meta-row b.bad{color:var(--rose)}
+.action-stack{padding:14px 18px;display:flex;flex-direction:column;gap:8px}
+.action-stack .btn{width:100%;justify-content:flex-start}
+.warn-callout{border:1px solid rgba(255,190,107,.17);background:rgba(255,190,107,.045);border-radius:9px;margin:5px 18px 15px;padding:10px 12px;color:#a58b66;font-size:9.5px;line-height:1.6;display:flex;gap:8px}
+.warn-callout .ic{width:13px;height:13px;flex:none;margin-top:1px}
+.code-block{font-family:var(--mono);font-size:9.5px;background:rgba(4,10,17,.72);border:1px solid var(--line);border-radius:7px;padding:10px;color:#8fb3ad;white-space:pre-wrap;word-break:break-all;line-height:1.65}
+.section-title{font-size:14px;margin:0 0 11px;display:flex;align-items:center;gap:8px}
+.section-title .ic{width:15px;height:15px;color:var(--mint)}
+
+/* ------- drawer / modal ------- */
+.scrim{position:fixed;inset:0;background:rgba(2,6,11,.62);backdrop-filter:blur(3px);z-index:50;opacity:0;pointer-events:none;transition:.25s}
+.scrim.show{opacity:1;pointer-events:auto}
+.drawer{
+  position:fixed;top:0;right:0;bottom:0;width:min(690px,94vw);z-index:60;background:#0a121d;
+  border-left:1px solid var(--line-strong);transform:translateX(102%);transition:transform .28s cubic-bezier(.22,.8,.3,1);
+  display:flex;flex-direction:column;box-shadow:-30px 0 100px rgba(0,0,0,.4);
+}
+.drawer.open{transform:none}
+.drawer-head{padding:18px 22px;border-bottom:1px solid var(--line);display:flex;align-items:flex-start;gap:16px;flex:none}
+.drawer-crumb{color:#5f748a;font-size:9px;letter-spacing:1px;font-family:var(--mono);margin-bottom:6px}
+.drawer-title{font-size:14px;font-weight:600;color:#dbeaf6;word-break:break-all;line-height:1.5}
+.drawer-title .method{color:var(--mint);font-family:var(--mono);font-size:11px;margin-right:5px}
+.drawer-close{margin-left:auto;flex:none;width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:rgba(13,23,36,.8);display:grid;place-items:center;color:#8296ab}
+.drawer-close:hover{color:#fff;border-color:var(--line-strong)}
+.drawer-scroll{overflow:auto;padding:18px 22px 40px;flex:1}
+.detail-risk{display:flex;align-items:center;gap:13px;padding:14px 16px;border:1px solid var(--line);border-radius:12px;background:rgba(14,25,39,.7);margin-bottom:14px}
+.risk-orb{width:49px;height:49px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 40% 35%,rgba(255,190,107,.23),rgba(255,190,107,.04));border:1px solid rgba(255,190,107,.24);flex:none}
+.risk-orb.critical,.risk-orb.high{background:radial-gradient(circle at 40% 35%,rgba(255,117,144,.26),rgba(255,117,144,.04));border-color:rgba(255,117,144,.3)}
+.risk-orb.low{background:radial-gradient(circle at 40% 35%,rgba(124,156,255,.22),rgba(124,156,255,.03));border-color:rgba(124,156,255,.28)}
+.risk-orb b{font-family:var(--mono);font-size:18px;font-weight:600;color:#f2f8ff;line-height:1}
+.risk-orb small{font-size:8px;color:#8da2b8;margin-top:3px}
+.detail-risk h3{margin:0 0 3px;font-size:13px;color:#d6e5f1}
+.detail-risk p{margin:0;color:#758aa0;font-size:10px}
+.detail-risk .sev{margin-left:auto;align-self:flex-start}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:18px}
+.detail-cell{background:#0b1521;padding:10px 12px;min-width:0}
+.detail-cell span{display:block;color:#596f85;font-size:8.5px;letter-spacing:.4px;margin-bottom:3px}
+.detail-cell b{display:block;color:#aebfd0;font-size:10px;font-weight:400;font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.detail-section{margin-bottom:19px}
+.detail-section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.detail-section-head h4{margin:0;font-size:10.5px;color:#9eb0c2;font-weight:600;display:flex;align-items:center;gap:6px}
+.detail-section-head h4 .ic{width:13px;height:13px;color:#6d8499}
+.detail-section-head span{font-size:9px;color:#53687d}
+.finding-mini{display:flex;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:rgba(12,21,34,.55);margin-bottom:6px;align-items:flex-start}
+.finding-mini .sev{flex:none;margin-top:1px}
+.finding-mini-main{flex:1;min-width:0}
+.finding-mini-title{color:#c4d4e2;font-size:10.5px;font-weight:500}
+.finding-mini-detail{color:#657b90;font-size:9.5px;line-height:1.55;margin-top:2px}
+.finding-mini-score{font-family:var(--mono);color:#8da3b8;font-size:10px;flex:none}
+.evidence{display:inline-block;margin-top:3px;font-family:var(--mono);font-size:8.5px;color:#7b8fa4;background:rgba(5,11,18,.6);padding:2px 5px;border-radius:3px;word-break:break-all}
+.body-toolbar{display:flex;align-items:center;gap:7px;margin-bottom:6px;flex-wrap:wrap}
+.body-toolbar .btn{height:27px;font-size:9.5px}
+.body-toolbar .spacer{flex:1}
+.body-meta{font-family:var(--mono);font-size:8.5px;color:#50657b}
+pre.body{
+  margin:0;background:rgba(4,10,17,.78);border:1px solid var(--line);border-radius:9px;padding:13px 14px;
+  max-height:285px;overflow:auto;color:#a5bcc9;font-family:var(--mono);font-size:9.8px;line-height:1.68;
+  white-space:pre-wrap;word-break:break-word;tab-size:2;
+}
+pre.body.empty-body{color:#52667c;font-style:normal}
+.privacy-note{display:flex;gap:8px;padding:10px 11px;background:rgba(60,232,194,.035);border:1px solid rgba(60,232,194,.10);border-radius:8px;color:#6d938b;font-size:9px;line-height:1.6;margin-top:8px}
+.privacy-note .ic{width:12px;height:12px;flex:none;margin-top:1px}
+.reveal-strip{display:flex;align-items:center;justify-content:space-between;gap:14px;border:1px solid rgba(255,190,107,.19);background:rgba(255,190,107,.045);border-radius:9px;padding:11px 13px;margin-top:8px}
+.reveal-strip p{margin:0;color:#9d8c73;font-size:9.5px;line-height:1.55}
+.reveal-strip .btn{flex:none}
+.related-file{display:flex;gap:8px;align-items:flex-start;padding:7px 0;border-bottom:1px solid rgba(128,160,195,.06);font-size:9px}
+.related-file:last-child{border:0}
+.related-file .ic{width:12px;height:12px;color:#687f94;flex:none;margin-top:1px}
+.related-file div{min-width:0;flex:1}
+.related-file b{display:block;font-family:var(--mono);font-weight:400;color:#8fa5b7;word-break:break-all;line-height:1.5}
+.related-file span{color:#52677c;font-size:8.5px}
+.related-file .sens{flex:none}
+.metadata{font-family:var(--mono);font-size:8.8px;color:#70869b;line-height:1.8;white-space:pre-wrap;word-break:break-all}
+.drawer-loading{padding:60px 20px;text-align:center;color:#6c8196;font-size:11px}
+.skeleton{height:12px;border-radius:4px;background:linear-gradient(90deg,#111e2c,#17283a,#111e2c);background-size:200% 100%;animation:shimmer 1.5s infinite;margin-bottom:10px}
+@keyframes shimmer{to{background-position:-200% 0}}
+
+.modal-overlay{position:fixed;inset:0;z-index:90;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(2,6,11,.72);backdrop-filter:blur(7px)}
+.modal-overlay.show{display:flex}
+.modal{
+  width:min(610px,96vw);max-height:87vh;display:flex;flex-direction:column;border:1px solid var(--line-strong);border-radius:16px;
+  background:#0b1420;box-shadow:0 40px 140px rgba(0,0,0,.55);animation:modalIn .22s ease both;overflow:hidden;
+}
+@keyframes modalIn{from{opacity:0;transform:translateY(10px) scale(.99)}to{opacity:1;transform:none}}
+.modal-head{display:flex;align-items:flex-start;gap:15px;padding:20px 22px 15px;border-bottom:1px solid var(--line)}
+.modal-kicker{font-family:var(--mono);color:var(--mint);font-size:8.5px;letter-spacing:1.3px;margin-bottom:5px}
+.modal-title{margin:0;font-size:16px;font-weight:650;letter-spacing:-.2px}
+.modal-close{margin-left:auto;width:28px;height:28px;border:1px solid var(--line);border-radius:7px;background:transparent;color:#71869b;display:grid;place-items:center;flex:none}
+.modal-close:hover{color:#fff}
+.modal-body{padding:19px 22px;overflow:auto}
+.modal-foot{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:14px 22px;border-top:1px solid var(--line);background:rgba(8,15,24,.45)}
+.modal-copy{color:#8499ad;font-size:11px;line-height:1.7}
+.modal-copy p{margin:0 0 10px}
+.modal-copy p:last-child{margin-bottom:0}
+.guide-step{display:grid;grid-template-columns:25px minmax(0,1fr);gap:12px;padding:13px 0;border-bottom:1px solid var(--line)}
+.guide-step:first-of-type{padding-top:0}
+.guide-step:last-of-type{border-bottom:0;padding-bottom:5px}
+.step-num{width:23px;height:23px;border-radius:50%;display:grid;place-items:center;border:1px solid rgba(60,232,194,.25);color:var(--mint);font-family:var(--mono);font-size:9.5px;background:rgba(60,232,194,.05)}
+.step-title{font-size:11.5px;color:#cddce9;font-weight:600;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.step-desc{color:#72879c;font-size:10px;line-height:1.65;margin-top:4px}
+.step-actions{display:flex;gap:7px;margin-top:8px;flex-wrap:wrap}
+.guide-status{font-size:8.5px;padding:2px 5px;border-radius:4px;border:1px solid var(--line);color:#758a9f;font-weight:400}
+.guide-status.ok{color:var(--mint);border-color:rgba(60,232,194,.25);background:var(--mint-soft)}
+.guide-status.warn{color:var(--amber);border-color:rgba(255,190,107,.25);background:var(--amber-soft)}
+.modal-danger{border:1px solid rgba(255,117,144,.2);background:rgba(255,117,144,.045);border-radius:9px;padding:11px 13px;color:#b08b92;font-size:10px;line-height:1.65;margin-bottom:16px}
+.text-input{width:100%;height:36px;border-radius:8px;border:1px solid var(--line);background:rgba(4,10,17,.7);padding:0 11px;font-family:var(--mono);font-size:11px;color:#dbe8f3;outline:none;margin-top:8px}
+.text-input:focus{border-color:rgba(255,117,144,.35)}
+.toast-root{position:fixed;right:24px;bottom:24px;z-index:120;display:flex;flex-direction:column;gap:8px;align-items:flex-end;pointer-events:none}
+.toast{
+  pointer-events:auto;display:flex;align-items:center;gap:9px;padding:10px 14px;border:1px solid var(--line-strong);
+  background:#101c2b;color:#c4d5e4;border-radius:9px;font-size:10.5px;box-shadow:0 15px 45px rgba(0,0,0,.3);
+  animation:toastIn .22s ease both;max-width:390px;
+}
+.toast .ic{width:14px;height:14px;color:var(--mint);flex:none}
+.toast.err .ic{color:var(--rose)}
+.toast.err{border-color:rgba(255,117,144,.3)}
+@keyframes toastIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+@media(max-width:1250px){
+  .hero-side{width:180px}
+  .scope-tag.t2{display:none}
+}
+@media(max-width:1120px){
+  :root{--sidebar:74px}
+  .brand{padding:0;justify-content:center}
+  .brand-text{display:none}
+  .nav-label{display:none}
+  .nav-item{justify-content:center;padding:11px 0}
+  .nav-item span:not(.nav-badge){display:none}
+  .nav-item .nav-badge{display:none}
+  .nav-item.active::before{left:-17px}
+  .sidebar-foot .privacy-card,.side-links{display:none}
+  .sidebar{padding:22px 13px}
+  .topbar{padding:0 25px}
+  .main{padding:25px}
+  .hero-side{display:none}
+  .hero h1{font-size:27px}
+  .stat-grid{grid-template-columns:1fr 1fr}
+  .grid-2-1{grid-template-columns:1fr}
+  .two-col{grid-template-columns:1fr}
+  .settings-grid{grid-template-columns:1fr}
+  .coverage-grid{grid-template-columns:1fr}
+  .cov-note{grid-column:auto}
+}
+@media(max-width:760px){
+  :root{--sidebar:0px}
+  .sidebar{display:none}
+  .workspace{margin-left:0}
+  .topbar{height:58px;padding:0 16px;gap:9px}
+  .crumb span:first-child,.crumb .sep{display:none}
+  .top-intro{display:none}
+  .main{padding:18px 15px 50px}
+  .hero{padding:22px 20px}
+  .hero h1{font-size:23px}
+  .stat-grid{grid-template-columns:1fr 1fr;gap:9px}
+  .stat{padding:13px}
+  .stat-value{font-size:24px}
+  .page-head{align-items:flex-start;flex-direction:column;gap:12px}
+  .summary-strip{grid-template-columns:1fr 1fr}
+  .onboard{grid-template-columns:1fr;gap:13px}
+  .section-sub{grid-template-columns:1fr}
+  .section-sub > div:first-child{border-right:0;border-bottom:1px solid var(--line)}
+  .finding-card{grid-template-columns:32px minmax(0,1fr) auto}
+  .finding-arrow{display:none}
+  .finding-score{display:none}
+  .state-row{grid-template-columns:1fr 1fr}
+  .detail-grid{grid-template-columns:1fr 1fr}
+  .modal-foot{flex-wrap:wrap}
+  .toast-root{left:15px;right:15px;bottom:15px;align-items:stretch}
+  .toast{max-width:none}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+  <symbol id="i-activity" viewBox="0 0 24 24"><path d="M3 12h4l2.5-7 5 14 2.5-7h4"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.5-3 7.7-7 9-4-1.3-7-4.5-7-9V6z"/><path d="M9.5 12l1.8 1.8 3.5-3.7"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6z"/><circle cx="12" cy="12" r="2.5"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h2M10 12h10M4 18h9M17 18h3"/><circle cx="16" cy="6" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="15" cy="18" r="2"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 016.5 3H20v17H6.5A2.5 2.5 0 004 22z"/><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/></symbol>
+  <symbol id="i-external" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-8.5 8.5"/><path d="M19 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1h5"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5L21 21"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 7v5h-5"/><path d="M19 12a7 7 0 10-2 5"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12M7.5 10.5L12 15l4.5-4.5"/><path d="M4 20h16"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></symbol>
+  <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M4 12h15M14 7l5 5-5 5"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3l9.5 17H2.5z"/><path d="M12 9v4.5M12 17h.01"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 00-1-1H5a1 1 0 00-1 1v10a1 1 0 001 1h3"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14"/><path d="M10 11v6M14 11v6"/></symbol>
+  <symbol id="i-server" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="6" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/><path d="M7 7h.01M7 17h.01"/></symbol>
+  <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9S14.5 18.4 12 21c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l2 2M14 9l2 2"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></symbol>
+  <symbol id="i-terminal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3M13 15h4"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 10-5.7-5.7l-1.7 1.7"/><path d="M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 105.7 5.7l1.7-1.7"/></symbol>
+  <symbol id="i-pie" viewBox="0 0 24 24"><path d="M21 12A9 9 0 1112 3v9z"/><path d="M15 3.5A9 9 0 0120.5 9H15z"/></symbol>
+</svg>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="none" stroke="#1b534d" stroke-width="1"/><circle cx="20" cy="20" r="12.5" fill="none" stroke="rgba(60,232,194,.42)" stroke-width="1" stroke-dasharray="3 4"/><circle cx="20" cy="20" r="6" fill="#3ce8c2" opacity=".14"/><circle cx="20" cy="20" r="2.8" fill="#3ce8c2"/><path d="M21.8 18.2L32 8" stroke="#3ce8c2" stroke-width="1.6" stroke-linecap="round"/><circle cx="33" cy="7" r="2" fill="#060a10" stroke="#3ce8c2"/></svg>
+      </div>
+      <div class="brand-text">
+        <div class="brand-name">EgressScope</div>
+        <div class="brand-sub">Local Egress Audit</div>
+      </div>
+    </div>
+    <div class="nav-label">监测</div>
+    <nav class="nav">
+      <button class="nav-item active" data-page="overview"><svg class="ic"><use href="#i-grid"/></svg><span>态势总览</span></button>
+      <button class="nav-item" data-page="traffic"><svg class="ic"><use href="#i-activity"/></svg><span>流量审计</span><span class="nav-badge" id="nav-flow-count">0</span></button>
+      <button class="nav-item" data-page="findings"><svg class="ic"><use href="#i-shield"/></svg><span>风险发现</span></button>
+    </nav>
+    <div class="nav-label">关联</div>
+    <nav class="nav">
+      <button class="nav-item" data-page="files"><svg class="ic"><use href="#i-file"/></svg><span>文件触达</span></button>
+      <button class="nav-item" data-page="coverage"><svg class="ic"><use href="#i-eye"/></svg><span>覆盖范围</span></button>
+    </nav>
+    <div class="nav-label">系统</div>
+    <nav class="nav">
+      <button class="nav-item" data-page="settings"><svg class="ic"><use href="#i-sliders"/></svg><span>策略与设置</span></button>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="privacy-card">
+        <div class="privacy-top"><svg class="ic"><use href="#i-lock"/></svg><span>本地优先的数据边界</span></div>
+        <div class="privacy-sub">证据以 AES-GCM 加密存储，密钥由 Windows DPAPI 保护。不上传云端。</div>
+        <div class="chain-line"><span>证据链</span><b id="side-chain">校验中…</b></div>
+      </div>
+      <div class="side-links">
+        <a href="/intro" target="_blank">产品介绍</a>
+        <a href="#" data-open-guide>接入指南</a>
+      </div>
+    </div>
+  </aside>
+
+  <main class="workspace">
+    <header class="topbar">
+      <div class="crumb"><span>本机审计台</span><span class="sep">/</span><strong id="page-title">态势总览</strong></div>
+      <div class="top-spacer"></div>
+      <div class="live-pill" id="health-pill"><span class="dot"></span><span id="health-text">正在连接本地服务</span></div>
+      <div class="top-actions">
+        <button class="icon-btn" data-open-guide title="接入指南" aria-label="接入指南"><svg class="ic"><use href="#i-book"/></svg></button>
+        <a class="top-intro" href="/intro" target="_blank"><svg class="ic"><use href="#i-external"/></svg><span>产品介绍</span></a>
+      </div>
+    </header>
+
+    <div class="main">
+      <!-- OVERVIEW -->
+      <section class="view active" id="view-overview">
+        <div class="hero">
+          <div class="hero-copy">
+            <div class="eyebrow">Windows · Local Egress Audit</div>
+            <h1>把每一次外发，<span>看清再放行。</span></h1>
+            <p>从进程到端点，从请求正文到风险信号。EgressScope 在本机拦截可代理流量，识别 AI Agent 与桌面应用的数据外发行为，并把证据留在你自己的设备上。</p>
+            <div class="hero-actions">
+              <button class="btn primary" data-open-guide>开始接入 <svg class="ic"><use href="#i-arrow-right"/></svg></button>
+              <a class="btn ghost" href="/intro" target="_blank">阅读架构设计</a>
+            </div>
+          </div>
+          <div class="hero-side" aria-hidden="true">
+            <div class="scope-visual">
+              <div class="scope-ring r1"></div>
+              <div class="scope-ring r2"></div>
+              <div class="scope-ring r3"></div>
+              <div class="scope-sweep"></div>
+              <div class="scope-core"><svg class="ic"><use href="#i-lock"/></svg></div>
+            </div>
+            <div class="scope-tag t1">PID <b id="hero-pid">归因中</b></div>
+            <div class="scope-tag t2">TLS <b>本地解密</b></div>
+            <div class="scope-tag t3">SHA-256 <b>证据链</b></div>
+          </div>
+        </div>
+
+        <div id="onboard-banner"></div>
+        <div class="stat-grid" id="stat-grid"></div>
+
+        <div class="grid-2-1">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h3 class="panel-title">外发活动趋势</h3>
+                <div class="panel-hint" style="margin-top:3px">过去 24 小时 · 按小时聚合</div>
+              </div>
+              <button class="panel-link" data-goto="traffic">查看全部 <svg class="ic"><use href="#i-chevron-right"/></svg></button>
+            </div>
+            <div class="chart-wrap" id="chart-wrap"><div class="chart-empty">正在读取本地证据库…</div></div>
+            <div class="chart-legend">
+              <span class="legend"><i></i>全部请求</span>
+              <span class="legend ai"><i></i>AI 相关</span>
+              <span class="legend high"><i></i>高风险 / 已阻断</span>
+              <span style="margin-left:auto" id="chart-total"></span>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-head">
+              <h3 class="panel-title">风险构成</h3>
+              <span class="panel-hint">今日</span>
+            </div>
+            <div class="risk-body" id="risk-body"></div>
+            <div class="risk-foot" style="padding:0 19px 16px;border:0">
+              <div><div class="k">文件触达事件（Beta）</div><div class="v" id="risk-file-events">—</div></div>
+              <button class="panel-link" data-goto="files">查看 <svg class="ic"><use href="#i-chevron-right"/></svg></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-2-1">
+          <div class="panel">
+            <div class="panel-head">
+              <h3 class="panel-title">最近外发流量</h3>
+              <div style="display:flex;align-items:center;gap:12px">
+                <span class="panel-hint" id="recent-updated">等待数据</span>
+                <button class="panel-link" data-goto="traffic">流量审计 <svg class="ic"><use href="#i-chevron-right"/></svg></button>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>时间</th><th>发起进程</th><th>目标端点</th><th>风险</th><th>处置</th></tr></thead>
+                <tbody id="recent-body"><tr><td colspan="5" class="empty">加载中…</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-head">
+              <h3 class="panel-title">观察窗口</h3>
+              <span class="panel-hint">今日活跃对象</span>
+            </div>
+            <div class="section-sub">
+              <div>
+                <div class="pad">
+                  <p class="sub-title">出站进程</p>
+                  <div id="top-procs" class="mini-list" style="padding:0"></div>
+                </div>
+              </div>
+              <div>
+                <div class="pad">
+                  <p class="sub-title">命中规则</p>
+                  <div id="top-rules" class="mini-list" style="padding:0"></div>
+                </div>
+              </div>
+            </div>
+            <div class="section-sub" style="grid-template-columns:1fr">
+              <div style="border-right:0">
+                <div class="pad" style="padding-top:13px;padding-bottom:13px">
+                  <p class="sub-title">高频目标主机</p>
+                  <div id="top-hosts" class="mini-list" style="padding:0"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TRAFFIC -->
+      <section class="view" id="view-traffic">
+        <div class="page-head">
+          <div>
+            <h1 class="page-title">流量审计</h1>
+            <p class="page-desc">按进程、端点与风险条件检索已归因的网络请求。默认只展示脱敏预览，原始正文需在详情中显式解密。</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn" id="traffic-refresh"><svg class="ic"><use href="#i-refresh"/></svg>刷新</button>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="toolbar">
+            <div class="search"><svg class="ic"><use href="#i-search"/></svg><input id="f-q" type="search" placeholder="搜索主机、路径、进程或模型…" autocomplete="off"></div>
+            <select class="select" id="f-category" aria-label="分类">
+              <option value="">全部类别</option>
+              <option value="ai_service">云端 AI 服务</option>
+              <option value="ai_local">本地模型</option>
+              <option value="ai_candidate">AI 候选端点</option>
+              <option value="other">普通网络流量</option>
+            </select>
+            <select class="select" id="f-severity" aria-label="风险等级">
+              <option value="">全部等级</option>
+              <option value="critical">严重</option>
+              <option value="high">高</option>
+              <option value="medium">中</option>
+              <option value="low">低</option>
+              <option value="info">信息</option>
+            </select>
+            <select class="select" id="f-risk" aria-label="最低风险分">
+              <option value="">风险分不限</option>
+              <option value="85">≥ 85 严重</option>
+              <option value="70">≥ 70 高</option>
+              <option value="45">≥ 45 中</option>
+              <option value="25">≥ 25 低</option>
+            </select>
+            <div class="seg" id="f-since">
+              <button data-hours="24">24 小时</button>
+              <button data-hours="168">7 天</button>
+              <button data-hours="0" class="active">全部</button>
+            </div>
+            <label class="check-pill"><input type="checkbox" id="f-ai">仅 AI</label>
+            <label class="check-pill"><input type="checkbox" id="f-blocked">已阻断</label>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>时间</th><th>发起进程</th><th>目标端点</th><th>模型 / 类别</th><th>风险</th><th>处置</th></tr></thead>
+              <tbody id="flow-body"><tr><td colspan="6" class="empty">正在读取…</td></tr></tbody>
+            </table>
+          </div>
+          <div class="table-foot">
+            <span id="flow-count">—</span>
+            <div class="pager">
+              <button id="prev-page" disabled>上一页</button>
+              <span class="page-now" id="page-now">1 / 1</span>
+              <button id="next-page" disabled>下一页</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FINDINGS -->
+      <section class="view" id="view-findings">
+        <div class="page-head">
+          <div>
+            <h1 class="page-title">风险发现</h1>
+            <p class="page-desc">策略引擎对脱敏后的正文、端点语义与请求元数据进行判定。分数是信号强度，不等同于事实上的数据泄露。</p>
+          </div>
+          <div class="page-actions"><button class="btn" id="findings-refresh"><svg class="ic"><use href="#i-refresh"/></svg>刷新</button></div>
+        </div>
+        <div class="summary-strip" id="findings-summary"></div>
+        <div class="panel">
+          <div class="panel-head">
+            <h3 class="panel-title">最近发现</h3>
+            <div class="filter-chips" id="finding-filters">
+              <button class="chip active" data-find="all">全部</button>
+              <button class="chip" data-find="critical,high">高风险</button>
+              <button class="chip" data-find="medium">中风险</button>
+              <button class="chip" data-find="low,info">低风险</button>
+            </div>
+          </div>
+          <div class="finding-list" id="finding-list"><div class="empty">正在读取…</div></div>
+        </div>
+      </section>
+
+      <!-- FILES -->
+      <section class="view" id="view-files">
+        <div class="page-head">
+          <div>
+            <h1 class="page-title">文件触达</h1>
+            <p class="page-desc">把近期有外发行为的进程与其打开的文件句柄做时间关联。它提供线索，不构成完整的读取历史证明。</p>
+          </div>
+          <div class="page-actions"><button class="btn" id="files-refresh"><svg class="ic"><use href="#i-refresh"/></svg>刷新</button></div>
+        </div>
+        <div class="two-col">
+          <div class="panel">
+            <div class="panel-head">
+              <h3 class="panel-title">关联记录</h3>
+              <span class="panel-hint" id="file-updated">—</span>
+            </div>
+            <div class="timeline" id="file-timeline"><div class="empty">正在读取…</div></div>
+          </div>
+          <div>
+            <div class="panel" style="margin-bottom:14px">
+              <div class="panel-head">
+                <h3 class="panel-title">Canary 诱饵</h3>
+                <span class="panel-hint">需显式启用</span>
+              </div>
+              <div class="canary-list" id="canary-list"></div>
+              <div class="file-stats" id="file-stats"></div>
+            </div>
+            <div class="beta-callout">
+              <div class="head"><svg class="ic"><use href="#i-info"/></svg>Beta：打开句柄抽样</div>
+              <p>当前实现只读取进程打开文件的元数据（路径、时间、敏感级别），不会读取或保存用户文件内容。它无法证明一次读取已经发生，也不能覆盖已关闭的句柄。完整的读取审计需要 ETW / SACL / 文件系统微过滤驱动，属于后续路线。</p>
+              <button class="btn sm" data-goto="settings" style="margin-top:10px">管理诱饵与策略</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- COVERAGE -->
+      <section class="view" id="view-coverage">
+        <div class="page-head">
+          <div>
+            <h1 class="page-title">覆盖范围</h1>
+            <p class="page-desc">一套诚实的观测边界，比一个“全部可见”的承诺更有价值。以下内容根据本机运行状态实时生成。</p>
+          </div>
+          <div class="page-actions"><button class="btn" data-open-guide><svg class="ic"><use href="#i-book"/></svg>如何扩大覆盖</button></div>
+        </div>
+        <div class="coverage-hero">
+          <div>
+            <h3>在用户同意下，看见可代理的明文路径。</h3>
+            <p>EgressScope 不尝试攻破应用安全边界。它通过明确的本地代理与受信 CA，在应用愿意配合的范围内还原请求，再以进程归因和内容策略补上上下文。</p>
+          </div>
+          <div class="coverage-badge"><svg class="ic" style="width:14px;height:14px"><use href="#i-lock"/></svg><span>本地处理 · 显式授权</span></div>
+        </div>
+        <div class="coverage-grid">
+          <div class="cov-panel">
+            <div class="cov-head good"><svg class="ic"><use href="#i-check"/></svg>能够看到</div>
+            <ul class="cov-list">
+              <li><svg class="ic"><use href="#i-check"/></svg><span>系统代理或环境变量代理生效后的 HTTP / HTTPS 元数据与可解密正文</span></li>
+              <li><svg class="ic"><use href="#i-check"/></svg><span>应用主动信任本地 CA、未启用证书固定的 TLS 1.2 / 1.3 流量</span></li>
+              <li><svg class="ic"><use href="#i-check"/></svg><span>请求与响应正文（不超过配置上限，流式响应只保留元数据）</span></li>
+              <li><svg class="ic"><use href="#i-check"/></svg><span>基于本机 TCP 表的客户端进程 PID、父进程链与脱敏命令行</span></li>
+              <li><svg class="ic"><use href="#i-check"/></svg><span>AI 端点分类、模型名、密钥 / PII / 代码 / 文件外发等风险信号</span></li>
+              <li><svg class="ic"><use href="#i-check"/></svg><span>近期外发进程的打开文件句柄抽样（Beta）与 Canary 诱饵触发</span></li>
+            </ul>
+          </div>
+          <div class="cov-panel">
+            <div class="cov-head bad"><svg class="ic"><use href="#i-alert"/></svg>无法看到 / 不承诺</div>
+            <ul class="cov-list">
+              <li><svg class="ic"><use href="#i-x"/></svg><span>未经过本地代理的直连流量，以及忽略系统代理的应用</span></li>
+              <li><svg class="ic"><use href="#i-x"/></svg><span>忽视 / 固定本地 CA 的应用、mTLS、双向证书校验</span></li>
+              <li><svg class="ic"><use href="#i-x"/></svg><span>QUIC / HTTP3、非 HTTP 协议，以及应用层端到端加密内容</span></li>
+              <li><svg class="ic"><use href="#i-x"/></svg><span>加密后的内容本体：没有密钥时只能看到连接元数据</span></li>
+              <li><svg class="ic"><use href="#i-x"/></svg><span>Windows 服务 / SYSTEM 会话进程的完整网络归因</span></li>
+              <li><svg class="ic"><use href="#i-x"/></svg><span>完整文件读取历史；句柄抽样不能证明读取已经发生</span></li>
+            </ul>
+          </div>
+          <p class="cov-note">说明：系统代理只改变遵循 WinINet / 系统设置的进程；对单个 Agent 更可控的方式是使用环境变量或未来路线中的 WFP 透明重定向。透明重定向不解决 TLS 固定或 E2EE。</p>
+        </div>
+        <div class="state-row" id="coverage-state"></div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section class="view" id="view-settings">
+        <div class="page-head">
+          <div>
+            <h1 class="page-title">策略与设置</h1>
+            <p class="page-desc">所有策略即时生效并写入本地配置。涉及系统代理和根证书的变更只从桌面控制台发起，Web 审计台不代你做出系统级授权。</p>
+          </div>
+        </div>
+        <div class="settings-grid">
+          <div class="settings-col">
+            <div class="panel">
+              <div class="panel-head"><h3 class="panel-title">采集与处置</h3><span class="panel-hint">即时生效</span></div>
+              <div class="set-row">
+                <div class="set-copy"><div class="set-name">启用流量采集</div><div class="set-desc">关闭后仍保持代理进程运行，但不再将新流量写入证据库。已产生的证据不受影响。</div></div>
+                <div class="set-control"><label class="switch"><input type="checkbox" data-setting="capture_enabled"><span></span></label></div>
+              </div>
+              <div class="set-row">
+                <div class="set-copy"><div class="set-name">风险阻断 <span class="tag warn">主动</span></div><div class="set-desc">达到阈值的请求会被本地代理直接返回 403。默认关闭；开启前请确认不会中断关键工作流。</div></div>
+                <div class="set-control"><label class="switch"><input type="checkbox" data-setting="blocking_enabled"><span></span></label></div>
+              </div>
+              <div class="set-row">
+                <div class="set-copy"><div class="set-name">阻断阈值</div><div class="set-desc">分数由规则信号累加，85 及以上为严重。阈值越低保守性越强，也越容易误伤。</div></div>
+                <div class="set-control range-wrap"><input type="range" id="set-block-risk" min="40" max="100" step="1" value="85"><span class="range-val" id="set-block-risk-val">85</span></div>
+              </div>
+              <div class="set-row">
+                <div class="set-copy"><div class="set-name">保存原始正文</div><div class="set-desc">仅对 AI 流量或风险分 ≥ 25 的请求加密保存，单请求上限 2 MB。关闭后只保留脱敏预览与元数据。</div></div>
+                <div class="set-control"><label class="switch"><input type="checkbox" data-setting="store_bodies"><span></span></label></div>
+              </div>
+              <div class="set-row">
+                <div class="set-copy"><div class="set-name">证据保留</div><div class="set-desc">超过保留期的流量、发现与文件事件会在启动或清理时删除。</div></div>
+                <div class="set-control">
+                  <select class="select" id="set-retention">
+                    <option value="1">1 天</option><option value="3">3 天</option><option value="7">7 天</option>
+                    <option value="14">14 天</option><option value="30">30 天</option><option value="90">90 天</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><h3 class="panel-title">文件触达（Beta）</h3><span class="panel-hint">不读取文件内容</span></div>
+              <div class="set-row">
+                <div class="set-copy"><div class="set-name">打开句柄抽样</div><div class="set-desc">只对近期外发或活跃 TCP 连接进程采样，记录敏感路径元数据并做 120 秒去重。不是完整读取审计。</div></div>
+                <div class="set-control"><label class="switch"><input type="checkbox" data-setting="file_guard_enabled"><span></span></label></div>
+              </div>
+              <div class="set-row">
+                <div class="set-copy"><div class="set-name">Canary 诱饵文件</div><div class="set-desc">在 Documents 下写入含虚构凭据的诱饵文件，用来观察异常进程是否触达。文件内容为假数据，启用会留下可见文件。</div></div>
+                <div class="set-control"><label class="switch"><input type="checkbox" data-setting="canary_enabled"><span></span></label></div>
+              </div>
+              <div class="set-row">
+                <div class="set-copy"><div class="set-name">抽样间隔</div><div class="set-desc">两次句柄扫描之间的间隔（秒）。更频繁会消耗更多 CPU 与句柄枚举时间。</div></div>
+                <div class="set-control range-wrap"><input type="range" id="set-file-interval" min="2" max="30" step="1" value="4"><span class="range-val" id="set-file-interval-val">4s</span></div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><h3 class="panel-title">上行链路</h3><span class="panel-hint">重启后生效</span></div>
+              <div class="set-row">
+                <div class="set-copy"><div class="set-name">继承系统原代理</div><div class="set-desc">启动时若系统代理指向本机回环 HTTP 代理（例如 Clash 的 127.0.0.1:7890），自动串联它，避免接管后断网。PAC 与非回环代理不会被继承。</div></div>
+                <div class="set-control"><label class="switch"><input type="checkbox" data-setting="inherit_system_proxy"><span></span></label></div>
+              </div>
+              <div class="set-row">
+                <div class="set-copy"><div class="set-name">指定上游代理</div><div class="set-desc">可选，覆盖自动继承。仅支持无认证的 HTTP/HTTPS 代理地址；本机审计仍会解密可见的 TLS 正文，再经上游隧道发出。</div></div>
+                <div class="set-control"><input class="proxy-input" id="set-upstream" placeholder="http://127.0.0.1:7890" autocomplete="off"></div>
+              </div>
+              <div class="meta-list"><div class="meta-row"><span>当前生效</span><b id="cfg-upstream">—</b></div></div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><h3 class="panel-title">接入与代理</h3><span class="panel-hint">只读状态</span></div>
+              <div class="meta-list">
+                <div class="meta-row"><span>本地代理</span><b id="cfg-proxy">—</b></div>
+                <div class="meta-row"><span>系统代理</span><b id="cfg-sysproxy">—</b></div>
+                <div class="meta-row"><span>本地 CA</span><b id="cfg-ca">—</b></div>
+                <div class="meta-row"><span>CA 指纹（SHA-1）</span><b id="cfg-ca-fp">—</b></div>
+                <div class="meta-row"><span>证书到期</span><b id="cfg-ca-exp">—</b></div>
+                <div class="meta-row"><span>审计数据目录</span><b id="cfg-data">—</b></div>
+                <div class="meta-row"><span>证据链</span><b id="cfg-chain">—</b></div>
+                <div class="meta-row"><span>服务版本</span><b id="cfg-version">—</b></div>
+              </div>
+              <div class="action-stack">
+                <button class="btn" data-open-guide><svg class="ic"><use href="#i-book"/></svg>打开接入指南</button>
+                <button class="btn" data-download-ca><svg class="ic"><use href="#i-download"/></svg>下载公开 CA 证书（.pem）</button>
+                <button class="btn" id="copy-env-btn"><svg class="ic"><use href="#i-copy"/></svg>复制 Agent 环境变量</button>
+              </div>
+            </div>
+          </div>
+          <div class="settings-col">
+            <div class="panel">
+              <div class="panel-head"><h3 class="panel-title">证据与隐私</h3></div>
+              <div class="action-stack">
+                <button class="btn" id="export-btn"><svg class="ic"><use href="#i-download"/></svg>导出脱敏证据（JSONL）</button>
+                <button class="btn" data-open-guide><svg class="ic"><use href="#i-key"/></svg>查看密钥与 CA 说明</button>
+                <button class="btn danger" id="clear-btn"><svg class="ic"><use href="#i-trash"/></svg>清空本地审计数据</button>
+              </div>
+              <div class="warn-callout"><svg class="ic"><use href="#i-alert"/></svg><span>原始请求正文使用 AES-GCM 加密存放，主密钥由当前 Windows 用户的 DPAPI 保护。导出的 JSONL 只含脱敏预览、元数据与发现，不包含原始正文。</span></div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><h3 class="panel-title">使用边界</h3></div>
+              <div class="meta-list">
+                <div class="meta-row"><span>适用设备</span><b>仅你拥有或明确获授权的设备</b></div>
+                <div class="meta-row"><span>默认存储</span><b>本机 SQLite（WAL）</b></div>
+                <div class="meta-row"><span>数据上云</span><b class="ok">不启用</b></div>
+                <div class="meta-row"><span>CA 安装</span><b>当前用户信任存储，需显式确认</b></div>
+                <div class="meta-row"><span>系统代理</span><b>需显式确认，可一键恢复</b></div>
+                <div class="meta-row"><span>不承诺</span><b>破解固定 / E2EE / 恶意加密</b></div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><h3 class="panel-title">快速说明</h3></div>
+              <div class="pad" style="padding-top:13px">
+                <p class="modal-copy" style="font-size:10px;color:#74899d">需要查看某个请求的完整正文？在流量详情中选择“解密并显示原文”。解密只发生在当前浏览器会话内，服务端不会把原始正文写回数据库或导出文件。</p>
+                <div class="privacy-note" style="margin-top:12px"><svg class="ic"><use href="#i-lock"/></svg><span>怀疑设备已被未知恶意软件控制时，不要在日常设备上安装受信 CA。请在一台隔离的虚拟机或实验设备中分析样本，避免代理信任边界被滥用。</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<div class="scrim" id="drawer-scrim"></div>
+<aside class="drawer" id="drawer" aria-hidden="true" aria-label="流量详情">
+  <div class="drawer-head">
+    <div style="min-width:0">
+      <div class="drawer-crumb">FLOW EVIDENCE</div>
+      <div class="drawer-title" id="drawer-title">流量详情</div>
+    </div>
+    <button class="drawer-close" id="drawer-close" aria-label="关闭详情"><svg class="ic"><use href="#i-x"/></svg></button>
+  </div>
+  <div class="drawer-scroll" id="drawer-body"><div class="drawer-loading">正在读取加密证据…</div></div>
+</aside>
+
+<div class="modal-overlay" id="modal-root"></div>
+<div class="toast-root" id="toast-root"></div>
+
+<script>
+const BOOT = __EGRESS_BOOTSTRAP__;
+const TOKEN = BOOT && BOOT.token ? BOOT.token : "";
+const state = {
+  page: "overview",
+  status: null,
+  stats: null,
+  settings: Object.assign({}, (BOOT && BOOT.settings) || {}),
+  recentFlows: [],
+  findings: [],
+  findingFilter: "all",
+  fileEvents: [],
+  fileEventTotal: 0,
+  canaries: [],
+  traffic: {rows: [], total: 0, offset: 0, limit: 25, since: 0, loading: false},
+  filters: {q: "", category: "", severity: "", risk: "", ai: false, blocked: false},
+  detail: null,
+  detailRevealed: false,
+  env: "",
+  chartSeries: [],
+  lastUpdated: null,
+};
+const PAGE_TITLES = {overview:"态势总览", traffic:"流量审计", findings:"风险发现", files:"文件触达", coverage:"覆盖范围", settings:"策略与设置"};
+const SEV_LABEL = {info:"信息", low:"低风险", medium:"中风险", high:"高风险", critical:"严重"};
+const CAT_LABEL = {ai_service:"云端 AI", ai_local:"本地模型", ai_candidate:"AI 候选", other:"普通流量"};
+const ACTION_LABEL = {observe:"观察", alert:"告警", blocked:"已阻断"};
+
+const $ = (sel, root=document) => root.querySelector(sel);
+const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+const esc = (value) => String(value === null || value === undefined ? "" : value).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+const fmtNum = (n) => new Intl.NumberFormat("zh-CN").format(Number(n) || 0);
+const fmtBytes = (n) => {
+  n = Number(n) || 0;
+  if (n < 1024) return n + " B";
+  if (n < 1024*1024) return (n/1024).toFixed(n < 10240 ? 1 : 0) + " KB";
+  if (n < 1024*1024*1024) return (n/1048576).toFixed(1) + " MB";
+  return (n/1073741824).toFixed(1) + " GB";
+};
+const fmtClock = (ts) => {
+  if (!ts) return "—";
+  return new Date(ts * 1000).toLocaleTimeString("zh-CN", {hour12:false, hour:"2-digit", minute:"2-digit", second:"2-digit"});
+};
+const fmtDay = (ts) => {
+  if (!ts) return "";
+  const d = new Date(ts * 1000);
+  return d.toLocaleDateString("zh-CN", {month:"2-digit", day:"2-digit"});
+};
+const fmtStamp = (ts) => {
+  if (!ts) return "—";
+  const d = new Date(ts * 1000);
+  return d.toLocaleDateString("zh-CN", {month:"2-digit", day:"2-digit"}) + " " + d.toLocaleTimeString("zh-CN", {hour12:false, hour:"2-digit", minute:"2-digit", second:"2-digit"});
+};
+const relTime = (ts) => {
+  if (!ts) return "—";
+  const diff = Date.now()/1000 - ts;
+  if (diff < 30) return "刚刚";
+  if (diff < 3600) return Math.floor(diff/60) + " 分钟前";
+  if (diff < 86400) return Math.floor(diff/3600) + " 小时前";
+  return Math.floor(diff/86400) + " 天前";
+};
+const fmtMinutes = (seconds) => {
+  const m = Math.max(0, Math.round((Number(seconds)||0)/60));
+  return m < 60 ? m + " 分钟" : (m/60).toFixed(1) + " 小时";
+};
+const short = (s, n=24) => {
+  s = String(s || "");
+  return s.length > n ? s.slice(0, n - 1) + "…" : s;
+};
+const icon = (name, cls="ic") => `<svg class="${cls}"><use href="#i-${name}"/></svg>`;
+const sevClass = (v) => ["info","low","medium","high","critical"].includes(v) ? v : "info";
+const riskColor = (risk) => risk >= 85 ? "var(--rose)" : risk >= 70 ? "#ff9b65" : risk >= 45 ? "var(--amber)" : risk >= 25 ? "var(--blue)" : "#52677f";
+const actionClass = (a, blocked) => blocked ? "action blocked" : "action";
+
+async function api(path, options={}) {
+  const headers = Object.assign({"X-Egress-Token": TOKEN}, options.headers || {});
+  if (options.body && !headers["Content-Type"]) headers["Content-Type"] = "application/json";
+  const res = await fetch(path, Object.assign({}, options, {headers, cache:"no-store"}));
+  let data = null;
+  try { data = await res.json(); } catch (_) {}
+  if (!res.ok) {
+    const message = data && (data.error || data.message) ? (data.error || data.message) : ("请求失败 · HTTP " + res.status);
+    const err = new Error(message); err.status = res.status; throw err;
+  }
+  return data || {};
+}
+
+function toast(message, kind="ok") {
+  const el = document.createElement("div");
+  el.className = "toast" + (kind === "err" ? " err" : "");
+  el.innerHTML = icon(kind === "err" ? "alert" : "check") + `<span>${esc(message)}</span>`;
+  $("#toast-root").appendChild(el);
+  setTimeout(() => { el.style.opacity = "0"; el.style.transition = "opacity .25s"; setTimeout(() => el.remove(), 300); }, 3400);
+}
+
+function setPage(page, updateHash=true) {
+  if (!PAGE_TITLES[page]) page = "overview";
+  state.page = page;
+  $$(".nav-item").forEach(btn => btn.classList.toggle("active", btn.dataset.page === page));
+  $$(".view").forEach(view => view.classList.toggle("active", view.id === "view-" + page));
+  $("#page-title").textContent = PAGE_TITLES[page];
+  if (updateHash && location.hash !== "#" + page) history.replaceState(null, "", "#" + page);
+  window.scrollTo({top:0, behavior:"instant"});
+  if (page === "overview") { loadStats(); loadRecent(); }
+  if (page === "traffic") loadFlows();
+  if (page === "findings") loadFindings();
+  if (page === "files") loadFiles();
+  if (page === "coverage") renderCoverage();
+  if (page === "settings") { syncSettings(); renderSettingsMeta(); }
+}
+
+async function refreshStatus(silent=false) {
+  try {
+    const data = await api("/api/status");
+    state.status = data;
+    state.settings = Object.assign({}, state.settings, data.settings || {});
+    state.lastUpdated = new Date();
+    renderStatus();
+    renderOnboarding();
+    renderOverviewMini();
+    if (state.page === "settings") renderSettingsMeta();
+    if (state.page === "coverage") renderCoverage();
+    return data;
+  } catch (err) {
+    if (!silent) toast("无法连接本地审计服务：" + err.message, "err");
+    throw err;
+  }
+}
+
+function renderStatus() {
+  const s = state.status; if (!s) return;
+  const running = !!(s.proxy && s.proxy.running);
+  const pill = $("#health-pill");
+  pill.classList.remove("warn","down");
+  if (running) { $("#health-text").textContent = "审计运行中 · 127.0.0.1:" + (s.proxy.port || "—"); }
+  else { pill.classList.add("down"); $("#health-text").textContent = "本地代理未运行"; }
+  const chain = s.chain || {};
+  $("#side-chain").textContent = chain.entries ? (chain.valid ? "链完整 · " + chain.entries + " 条" : "校验失败") : "暂无记录";
+  $("#side-chain").style.color = chain.valid === false && chain.entries ? "var(--rose)" : "";
+  const ca = s.ca || {};
+  const sys = s.system_proxy || {};
+  $("#hero-pid").textContent = (s.stats && s.stats.attributed) ? "已归因" : "待归因";
+  if (state.page === "settings") {
+    const proxyEl = $("#cfg-proxy");
+    if (proxyEl) proxyEl.textContent = running ? (BOOT.proxy || ("127.0.0.1:" + s.proxy.port)) : "未运行";
+  }
+}
+
+function renderOverviewMini() {
+  const s = state.status; if (!s) return;
+  if (!state.stats) return;
+  const attr = state.stats.today.attributed || 0;
+  const total = state.stats.today.total || 0;
+  $("#hero-pid").textContent = total ? Math.round(attr/total*100) + "% 已归因" : "等待流量";
+}
+
+async function loadStats() {
+  try {
+    const data = await api("/api/stats");
+    state.stats = data.stats;
+    renderStats();
+    renderChart();
+    renderRisk();
+    renderMiniLists();
+    renderOverviewMini();
+    $("#nav-flow-count").textContent = fmtNum(state.stats.today.total);
+    $("#risk-file-events").textContent = fmtNum(state.stats.today.file_events);
+  } catch (err) { toast("读取统计失败：" + err.message, "err"); }
+}
+
+function renderStats() {
+  if (!state.stats) { $("#stat-grid").innerHTML = ""; return; }
+  const t = state.stats.today;
+  const series = state.stats.series || [];
+  const values = series.map(x => x.total);
+  const max = Math.max(1, ...values);
+  const bars = values.slice(-18).map(v => `<i style="height:${Math.max(2, Math.round(v/max*17))}px"></i>`).join("");
+  const attrPct = t.total ? Math.round(t.attributed/t.total*100) : 0;
+  const cards = [
+    {label:"今日请求", value:fmtNum(t.total), unit:"条", foot:`<b>${fmtNum(t.attributed)}</b> 条已归因 · ${fmtBytes(t.bytes)} 外发`, icon:"activity", bars},
+    {label:"AI 相关外发", value:fmtNum(t.ai), unit:"条", foot:t.total ? `占今日流量 <b>${Math.round(t.ai/t.total*100)}%</b>` : "尚未观测到 AI 流量", icon:"cpu", bars:series.slice(-18).map(x => `<i style="height:${Math.max(2, Math.round(x.ai/max*17))}px"></i>`).join("")},
+    {label:"高风险流量", value:fmtNum(t.high), unit:"条", foot:t.total ? `风险分 ≥ 70 的请求 · <b>${attrPct}%</b> 已归因` : "策略窗口内暂无高风险", icon:"alert", bars:series.slice(-18).map(x => `<i style="height:${Math.max(2, Math.round(x.high/max*17))}px"></i>`).join("")},
+    {label:"已阻断", value:fmtNum(t.blocked), unit:"条", foot:t.blocked ? "由本地代理主动拒绝" : "阻断策略默认关闭", icon:"shield", bars:series.slice(-18).map(x => `<i style="height:${Math.max(2, Math.round((x.high?1:0)) * 12)}px"></i>`).join("")},
+  ];
+  $("#stat-grid").innerHTML = cards.map(c => `
+    <div class="stat">
+      <div class="stat-top"><span>${c.label}</span><span class="stat-ic">${icon(c.icon)}</span></div>
+      <div class="stat-value">${c.value}<span class="unit">${c.unit}</span></div>
+      <div class="stat-foot">${c.foot}</div>
+      <div class="mini-bars">${c.bars || '<i style="height:2px"></i>'}</div>
+    </div>`).join("");
+}
+
+function renderChart() {
+  const wrap = $("#chart-wrap");
+  const series = state.stats ? (state.stats.series || []) : [];
+  state.chartSeries = series;
+  const total = series.reduce((a,b) => a + (b.total || 0), 0);
+  const ai = series.reduce((a,b) => a + (b.ai || 0), 0);
+  $("#chart-total").textContent = total ? `${fmtNum(total)} 条请求 · AI ${fmtNum(ai)} 条` : "暂无流量";
+  if (!series.length || !total) {
+    wrap.innerHTML = `<div class="chart-empty">还没有可绘制的流量。启用系统代理或设置 Agent 环境变量后，请求会出现在这里。</div>`;
+    return;
+  }
+  const W = 760, H = 236, L = 40, R = 14, T = 18, B = 28;
+  const innerW = W - L - R, innerH = H - T - B;
+  const maxValue = Math.max(4, ...series.map(x => Math.max(x.total || 0, x.ai || 0)));
+  const niceMax = Math.ceil(maxValue / 4) * 4;
+  const x = i => L + (series.length <= 1 ? innerW/2 : i * innerW/(series.length-1));
+  const y = v => T + innerH - (v / niceMax) * innerH;
+  const linePath = (key) => series.map((item,i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(item[key]||0).toFixed(1)}`).join(" ");
+  const areaPath = `M${x(0).toFixed(1)},${(T+innerH).toFixed(1)} ` + series.map((item,i) => `L${x(i).toFixed(1)},${y(item.total||0).toFixed(1)}`).join(" ") + ` L${x(series.length-1).toFixed(1)},${(T+innerH).toFixed(1)} Z`;
+  const bars = [1,2,3].map(n => {
+    const gy = T + innerH - (niceMax * n/4 / niceMax) * innerH;
+    return `<line x1="${L}" y1="${gy}" x2="${W-R}" y2="${gy}" stroke="rgba(128,160,195,.09)" stroke-width="1"/><text x="${L-8}" y="${gy+3}" text-anchor="end" fill="#51657b" font-size="8" font-family="Cascadia Code,Consolas,monospace">${Math.round(niceMax*n/4)}</text>`;
+  }).join("");
+  const now = Date.now();
+  const names = ["全部请求","AI 相关","高风险"];
+  const tops = [];
+  series.forEach((item,i) => {
+    const t = new Date(now - (series.length-1-i)*3600*1000);
+    const label = t.toLocaleTimeString("zh-CN", {hour:"2-digit", minute:"2-digit", hour12:false});
+    tops.push(`<g class="chart-point"><rect x="${x(i)-7}" y="${T}" width="14" height="${innerH}" fill="transparent"/><circle cx="${x(i)}" cy="${y(item.total||0)}" r="2" fill="#3ce8c2" opacity="${item.total ? .9 : .2}"/><title>${label} · ${names[0]} ${item.total||0} · ${names[1]} ${item.ai||0} · ${names[2]} ${item.high||0}</title></g>`);
+  });
+  const labels = series.map((item,i) => {
+    if (i % 6 !== 0 && i !== series.length-1) return "";
+    const t = new Date(now - (series.length-1-i)*3600*1000);
+    return `<text x="${x(i)}" y="${H-6}" text-anchor="${i === 0 ? "start" : (i === series.length-1 ? "end" : "middle")}" fill="#52677d" font-size="8" font-family="Cascadia Code,Consolas,monospace">${t.toLocaleTimeString("zh-CN",{hour:"2-digit",minute:"2-digit",hour12:false})}</text>`;
+  }).join("");
+  wrap.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="过去24小时外发流量趋势">
+    <defs><linearGradient id="areaTotal" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#3ce8c2" stop-opacity=".20"/><stop offset=".7" stop-color="#3ce8c2" stop-opacity=".035"/><stop offset="1" stop-color="#3ce8c2" stop-opacity="0"/></linearGradient><linearGradient id="areaAi" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#7c9cff" stop-opacity=".10"/><stop offset="1" stop-color="#7c9cff" stop-opacity="0"/></linearGradient></defs>
+    <line x1="${L}" y1="${T+innerH}" x2="${W-R}" y2="${T+innerH}" stroke="rgba(128,160,195,.16)"/>
+    ${bars}
+    <path d="${areaPath}" fill="url(#areaTotal)"/>
+    <path d="${linePath("total")}" fill="none" stroke="#3ce8c2" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+    <path d="${linePath("ai")}" fill="none" stroke="#7c9cff" stroke-width="1.2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke" opacity=".9"/>
+    ${tops}
+    ${labels}
+  </svg>`;
+}
+
+function renderRisk() {
+  const sev = state.stats ? state.stats.severity : {};
+  const total = Object.values(sev).reduce((a,b) => a + (Number(b)||0), 0);
+  const order = ["critical","high","medium","low","info"];
+  $("#risk-body").innerHTML = order.map(key => {
+    const count = Number(sev[key] || 0);
+    const pct = total ? Math.round(count/total*100) : 0;
+    return `<div class="risk-label"><span>${SEV_LABEL[key]}</span><b>${fmtNum(count)} · ${pct}%</b></div><div class="risk-bar"><i class="${key}" style="width:${pct}%"></i></div>`;
+  }).join("");
+  const riskTotal = total ? `<span class="tag ai">今日共 ${fmtNum(total)} 条</span>` : `<span class="tag">等待首条流量</span>`;
+  $("#risk-body").insertAdjacentHTML("beforeend", `<div style="display:flex;align-items:center;justify-content:space-between;margin-top:-1px">${riskTotal}<button class="panel-link" data-goto="findings">查看发现 ${icon("chevron-right")}</button></div>`);
+}
+
+function renderMiniLists() {
+  const stats = state.stats; if (!stats) return;
+  const procs = stats.top_procs || [];
+  $("#top-procs").innerHTML = procs.length ? procs.map((p,i) => `
+    <div class="mini-row"><span class="mini-rank">${String(i+1).padStart(2,"0")}</span><div class="mini-main"><div class="mini-name">${esc(p.proc_name || "未命名进程")}</div><div class="mini-sub">PID ${esc(p.pid || "—")}</div></div><span class="mini-count">${fmtNum(p.n)}</span></div>`).join("") : `<div class="dim" style="padding:8px;font-size:10px">还没有归因进程</div>`;
+  const rules = stats.top_rules || [];
+  $("#top-rules").innerHTML = rules.length ? rules.map((r,i) => `
+    <div class="mini-row"><span class="mini-rank">${String(i+1).padStart(2,"0")}</span><div class="mini-main"><div class="mini-name">${esc(r.title || r.rule_id)}</div><div class="mini-sub">${esc(r.rule_id)}</div></div><span class="mini-count">${fmtNum(r.n)}</span></div>`).join("") : `<div class="dim" style="padding:8px;font-size:10px">暂无规则命中</div>`;
+  const hosts = stats.top_hosts || [];
+  $("#top-hosts").innerHTML = hosts.length ? hosts.map((h,i) => `
+    <div class="mini-row"><span class="mini-rank">${String(i+1).padStart(2,"0")}</span><div class="mini-main"><div class="mini-name mono" style="font-size:10px">${esc(h.host || "—")}</div><div class="mini-sub">${esc(h.provider || CAT_LABEL[h.category] || "目标端点")}</div></div><span class="mini-risk">${esc(h.max_risk)}</span><span class="mini-count" style="margin-left:5px">${fmtNum(h.n)}</span></div>`).join("") : `<div class="dim" style="padding:8px;font-size:10px">暂无目标主机</div>`;
+  if (rules.length && stats.top_rules[0].title) {
+    const top = stats.top_rules[0];
+    $("#risk-body").setAttribute("data-top-rule", top.title);
+  }
+}
+
+async function loadRecent() {
+  try {
+    const data = await api("/api/flows?limit=7");
+    state.recentFlows = data.flows || [];
+    $("#recent-updated").textContent = "更新于 " + fmtClock(Date.now()/1000);
+    const body = $("#recent-body");
+    if (!state.recentFlows.length) {
+      body.innerHTML = `<tr><td colspan="5"><div class="empty">${icon("activity")}<p>还没有流量记录。完成接入后，第一条请求会在这里出现。</p><div style="margin-top:12px"><button class="btn sm primary" data-open-guide>打开接入指南</button></div></div></td></tr>`;
+      return;
+    }
+    body.innerHTML = state.recentFlows.map(f => `
+      <tr data-flow-id="${f.id}" tabindex="0">
+        <td><div class="t-time">${fmtClock(f.ts)}<small>${fmtDay(f.ts)}</small></div></td>
+        <td><div class="proc-cell"><div class="proc-avatar">${esc((f.proc_name || "?").slice(0,2))}</div><div style="min-width:0"><div class="proc-name">${esc(f.proc_name || "未归因进程")}</div><div class="proc-id">${f.pid ? "PID " + esc(f.pid) : "PID 未归因"}</div></div></div></td>
+        <td><div class="endpoint"><div class="endpoint-host">${esc(f.host)}${f.port && f.port !== 443 && f.port !== 80 ? ":" + esc(f.port) : ""}</div><div class="endpoint-path">${esc(f.method)} ${esc(short(f.path, 56))}</div><div class="tagline">${f.category && f.category !== "other" ? `<span class="tag ai">${esc(CAT_LABEL[f.category] || f.category)}</span>` : ""}${f.model ? `<span class="tag">${esc(f.model)}</span>` : ""}${f.blocked ? `<span class="tag block">已阻断</span>` : ""}</div></div></td>
+        <td><span class="sev ${sevClass(f.severity)}">${SEV_LABEL[sevClass(f.severity)] || f.severity}</span></td>
+        <td><span class="action">${esc(ACTION_LABEL[f.action] || f.action)}</span></td>
+      </tr>`).join("");
+  } catch (err) { $("#recent-body").innerHTML = `<tr><td colspan="5" class="empty">读取失败：${esc(err.message)}</td></tr>`; }
+}
+
+function flowRow(f) {
+  const cat = CAT_LABEL[f.category] || f.category || "普通流量";
+  return `<tr data-flow-id="${f.id}" tabindex="0">
+    <td><div class="t-time">${fmtClock(f.ts)}<small>${relTime(f.ts)}</small></div></td>
+    <td><div class="proc-cell"><div class="proc-avatar">${esc((f.proc_name || "?").slice(0,2))}</div><div style="min-width:0"><div class="proc-name">${esc(f.proc_name || "未归因进程")}</div><div class="proc-id">${f.pid ? "PID " + esc(f.pid) : "未归因"}</div></div></div></td>
+    <td><div class="endpoint"><div class="endpoint-host">${esc(f.host)}${f.port && f.port !== 443 && f.port !== 80 ? ":" + esc(f.port) : ""}</div><div class="endpoint-path">${esc(f.method)} ${esc(short(f.path, 62))}</div><div class="tagline">${f.blocked ? `<span class="tag block">已阻断</span>` : ""}${f.coverage && f.coverage !== "proxied" ? `<span class="tag">${esc(f.coverage)}</span>` : ""}</div></div></td>
+    <td><div style="color:#aebfd0;font-size:10px">${esc(f.model || "—")}</div><div class="tagline"><span class="tag ${f.category === "ai_service" || f.category === "ai_local" ? "ai" : ""}">${esc(cat)}</span>${f.endpoint_kind ? `<span class="tag">${esc(f.endpoint_kind)}</span>` : ""}</div></td>
+    <td><div class="risk-value"><span class="risk-num">${esc(f.risk)}</span><span class="risk-line"><i style="width:${Math.min(100, f.risk || 0)}%;background:${riskColor(f.risk)}"></i></span><span class="sev ${sevClass(f.severity)}">${SEV_LABEL[sevClass(f.severity)]}</span></div></td>
+    <td><span class="${actionClass(f.action, f.blocked)}">${esc(ACTION_LABEL[f.action] || f.action)}</span></td>
+  </tr>`;
+}
+
+async function loadFlows(silent=false) {
+  if (state.traffic.loading) return;
+  state.traffic.loading = true;
+  const body = $("#flow-body");
+  if (!silent) body.innerHTML = `<tr><td colspan="6" class="empty">正在检索证据…</td></tr>`;
+  const p = new URLSearchParams();
+  p.set("limit", state.traffic.limit);
+  p.set("offset", state.traffic.offset);
+  const f = state.filters;
+  if (f.q) p.set("q", f.q);
+  if (f.category) p.set("category", f.category);
+  if (f.severity) p.set("severity", f.severity);
+  if (f.risk) p.set("min_risk", f.risk);
+  if (f.ai) p.set("ai", "1");
+  if (f.blocked) p.set("blocked", "1");
+  if (state.traffic.since) p.set("since_hours", state.traffic.since);
+  try {
+    const data = await api("/api/flows?" + p.toString());
+    state.traffic.rows = data.flows || [];
+    state.traffic.total = data.total || 0;
+    renderTraffic();
+  } catch (err) {
+    body.innerHTML = `<tr><td colspan="6" class="empty">读取失败：${esc(err.message)}</td></tr>`;
+    toast("流量读取失败：" + err.message, "err");
+  } finally { state.traffic.loading = false; }
+}
+
+function renderTraffic() {
+  const total = state.traffic.total;
+  const rows = state.traffic.rows;
+  $("#flow-count").textContent = total ? `共 ${fmtNum(total)} 条记录 · 显示第 ${state.traffic.offset + 1}–${Math.min(state.traffic.offset + rows.length, total)} 条` : "没有匹配的流量";
+  const pages = Math.max(1, Math.ceil(total / state.traffic.limit));
+  const page = Math.floor(state.traffic.offset / state.traffic.limit) + 1;
+  $("#page-now").textContent = page + " / " + pages;
+  $("#prev-page").disabled = page <= 1;
+  $("#next-page").disabled = page >= pages;
+  const body = $("#flow-body");
+  if (!rows.length) {
+    body.innerHTML = `<tr><td colspan="6"><div class="empty">${icon("search")}<p>没有匹配当前条件的流量。<br>尝试放宽风险条件，或确认代理与 CA 已完成接入。</p><div style="margin-top:12px"><button class="btn sm" data-open-guide>查看接入指南</button></div></div></td></tr>`;
+    return;
+  }
+  body.innerHTML = rows.map(flowRow).join("");
+}
+
+async function loadFindings() {
+  try {
+    const data = await api("/api/findings");
+    state.findings = data.findings || [];
+    renderFindings();
+  } catch (err) { $("#finding-list").innerHTML = `<div class="empty">读取失败：${esc(err.message)}</div>`; }
+}
+
+function renderFindings() {
+  const all = state.findings || [];
+  const counts = {critical:0, high:0, medium:0, low:0, info:0};
+  all.forEach(f => { if (counts[f.severity] !== undefined) counts[f.severity]++; });
+  $("#findings-summary").innerHTML = `
+    <div class="summary-cell crit"><span>严重 / 高风险</span><b>${fmtNum(counts.critical + counts.high)}</b></div>
+    <div class="summary-cell warn"><span>中风险信号</span><b>${fmtNum(counts.medium)}</b></div>
+    <div class="summary-cell"><span>低风险 / 信息</span><b>${fmtNum(counts.low + counts.info)}</b></div>
+    <div class="summary-cell good"><span>显示条目</span><b>${fmtNum(all.length)}</b></div>`;
+  const filter = state.findingFilter;
+  let rows = all;
+  if (filter === "critical,high") rows = all.filter(f => f.severity === "critical" || f.severity === "high");
+  else if (filter === "medium") rows = all.filter(f => f.severity === "medium");
+  else if (filter === "low,info") rows = all.filter(f => f.severity === "low" || f.severity === "info");
+  const list = $("#finding-list");
+  if (!rows.length) {
+    list.innerHTML = `<div class="empty">${icon("shield")}<p>当前筛选下没有发现。风险引擎会持续观察新的可解密请求。</p></div>`;
+    return;
+  }
+  list.innerHTML = rows.map(f => `
+    <div class="finding-card" data-sev="${sevClass(f.severity)}" data-flow-id="${f.flow_id}" tabindex="0">
+      <div class="finding-icon">${icon(f.severity === "critical" || f.severity === "high" ? "alert" : "shield")}</div>
+      <div><div class="finding-title">${esc(f.title)}</div><div class="finding-meta"><span class="mono">${esc(f.rule_id)}</span><span>${esc(f.proc_name || "未归因进程")}</span><span class="mono">${esc(short(f.host, 38))}</span><span>${relTime(f.ts)}</span></div></div>
+      <div class="finding-score"><b>${esc(f.score)}</b><span>RISK SCORE</span></div>
+      <div class="finding-arrow">${icon("chevron-right")}</div>
+    </div>`).join("");
+}
+
+async function loadFiles() {
+  try {
+    const [events, canaries] = await Promise.all([api("/api/file-events"), api("/api/canaries")]);
+    state.fileEvents = events.events || [];
+    state.fileEventTotal = events.total || state.fileEvents.length;
+    state.canaries = canaries.canaries || [];
+    renderFiles();
+  } catch (err) { $("#file-timeline").innerHTML = `<div class="empty">读取失败：${esc(err.message)}</div>`; }
+}
+
+function renderFiles() {
+  const events = state.fileEvents || [];
+  const tl = $("#file-timeline");
+  $("#file-updated").textContent = "更新于 " + fmtClock(Date.now()/1000);
+  if (!events.length) {
+    tl.innerHTML = `<div class="empty">${icon("file")}<p>还没有关联文件事件。<br>文件触达为 Beta，仅在开启后会采样近期外发进程的打开句柄。</p></div>`;
+  } else {
+    tl.innerHTML = events.map(e => `
+      <div class="tl-item sens-${esc(e.sensitivity || "low")} ${e.canary ? "canary" : ""}">
+        <span class="tl-dot"></span>
+        <div class="tl-main">
+          <div class="tl-title">${esc(e.proc_name || "未知进程")}<span class="sens ${esc(e.sensitivity || "low")}">${e.sensitivity === "high" ? "高敏感" : e.sensitivity === "medium" ? "中敏感" : "低敏感"}</span>${e.canary ? `<span class="tag warn">Canary 触发</span>` : ""}</div>
+          <div class="tl-path">${esc(e.path)}</div>
+          <div class="tl-meta">${e.pid ? "PID " + esc(e.pid) + " · " : ""}${esc(e.action || "open")}${e.proc_path ? " · " + esc(short(e.proc_path, 54)) : ""}</div>
+        </div>
+        <span class="tl-time">${fmtClock(e.ts)}<br>${fmtDay(e.ts)}</span>
+      </div>`).join("");
+  }
+  const canaries = state.canaries || [];
+  $("#canary-list").innerHTML = canaries.length ? canaries.map(c => `
+    <div class="canary-row"><span class="canary-status ${c.triggered_at ? "hit" : ""}"></span><div class="canary-main"><div class="canary-name">${esc(c.name)}</div><div class="canary-sub">${esc(c.path)}</div></div>${c.triggered_at ? `<span class="canary-hit">${fmtClock(c.triggered_at)} 触发</span>` : `<span class="canary-hit" style="color:#52677c">待触发</span>`}</div>`).join("") : `<div class="empty" style="padding:25px 12px">${icon("key")}<p>Canary 未启用。诱饵含虚构凭据，不会触碰真实密钥。</p><button class="btn sm" data-goto="settings" style="margin-top:10px">前往设置</button></div>`;
+  const fg = (state.status && state.status.fileguard) || {};
+  $("#file-stats").innerHTML = `
+    <div><span>本次会话扫描</span><b>${fmtNum(fg.scans || 0)}</b></div>
+    <div><span>库内文件事件</span><b>${fmtNum(state.fileEventTotal)}</b></div>
+    <div><span>抽样间隔</span><b>${esc(fg.interval || "—")}s</b></div>`;
+}
+
+async function openFlow(id) {
+  const drawer = $("#drawer");
+  drawer.classList.add("open"); drawer.setAttribute("aria-hidden","false");
+  $("#drawer-scrim").classList.add("show");
+  $("#drawer-title").textContent = "正在读取…";
+  $("#drawer-body").innerHTML = `<div class="drawer-loading">正在读取加密证据…</div>`;
+  try {
+    const data = await api("/api/flows/" + encodeURIComponent(id));
+    state.detail = data.flow;
+    state.detailRevealed = false;
+    renderDrawer();
+  } catch (err) {
+    $("#drawer-body").innerHTML = `<div class="empty">${icon("alert")}<p>无法读取详情：${esc(err.message)}</p></div>`;
+  }
+}
+
+function closeDrawer() {
+  $("#drawer").classList.remove("open"); $("#drawer").setAttribute("aria-hidden","true");
+  $("#drawer-scrim").classList.remove("show");
+  state.detail = null; state.detailRevealed = false;
+}
+
+function renderDrawer() {
+  const f = state.detail; if (!f) return;
+  $("#drawer-title").innerHTML = `<span class="method">${esc(f.method)}</span>${esc(f.host)}${f.port && f.port !== 443 && f.port !== 80 ? ":" + esc(f.port) : ""}`;
+  const findings = f.findings || [];
+  const risk = Number(f.risk) || 0;
+  const sev = sevClass(f.severity);
+  const appChain = Array.isArray(f.app_chain) ? f.app_chain : [];
+  const tags = Array.isArray(f.tags) ? f.tags : [];
+  const related = f.related_files || [];
+  const headers = f.headers || {};
+  const canSeeRequest = !!f.body_available?.request;
+  const canSeeResponse = !!f.body_available?.response;
+  const reqPreview = f.req_preview || "（没有保留可读预览）";
+  const respPreview = f.resp_preview || "（没有保留可读预览）";
+  const bodyRequest = state.detailRevealed && f.request_body != null ? f.request_body : null;
+  const bodyResponse = state.detailRevealed && f.response_body != null ? f.response_body : null;
+  const requestText = bodyRequest != null ? bodyRequest : reqPreview;
+  const responseText = bodyResponse != null ? bodyResponse : respPreview;
+  const reqError = f.request_body_error || ""; const respError = f.response_body_error || "";
+  const safeHeaders = Object.keys(headers || {}).length ? JSON.stringify(headers, null, 2) : "没有任何保存的请求头。";
+  $("#drawer-body").innerHTML = `
+    <div class="detail-risk">
+      <div class="risk-orb ${sev}"><b>${esc(risk)}</b><small>RISK</small></div>
+      <div style="min-width:0"><h3>${esc(findings.length ? findings[0].title : "未命中风险规则")}</h3><p>${esc(findings.length ? findings.length + " 条信号 · " + (ACTION_LABEL[f.action] || f.action) : "策略引擎没有发现明显的敏感数据特征")}</p></div>
+      <span class="sev ${sev}">${SEV_LABEL[sev]}</span>
+    </div>
+    <div class="detail-grid">
+      <div class="detail-cell"><span>发起进程</span><b title="${esc(f.proc_path || "")}">${esc(f.proc_name || "未归因")}${f.pid ? " · PID " + esc(f.pid) : ""}</b></div>
+      <div class="detail-cell"><span>请求时间</span><b>${esc(fmtStamp(f.ts))}</b></div>
+      <div class="detail-cell"><span>端点类别</span><b>${esc(CAT_LABEL[f.category] || f.category)}${f.endpoint_kind ? " / " + esc(f.endpoint_kind) : ""}</b></div>
+      <div class="detail-cell"><span>模型 / 服务商</span><b>${esc(f.model || f.provider || "—")}</b></div>
+      <div class="detail-cell"><span>HTTP 状态</span><b>${esc(f.status || "—")} · ${fmtNum(f.duration_ms)} ms</b></div>
+      <div class="detail-cell"><span>流量体积</span><b>↑ ${fmtBytes(f.req_bytes)} · ↓ ${fmtBytes(f.resp_bytes)}</b></div>
+      <div class="detail-cell"><span>TLS</span><b>${esc(f.tls || "—")}</b></div>
+      <div class="detail-cell"><span>覆盖方式</span><b>${esc(f.coverage || "proxied")}</b></div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-head"><h4>${icon("activity")}请求目标</h4><span>${esc(f.scheme || "https")}://${esc(f.host)}${f.port && f.port !== 443 && f.port !== 80 ? ":" + esc(f.port) : ""}</span></div>
+      <pre class="body">${esc(f.method + " " + f.path)}</pre>
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-head"><h4>${icon("shield")}风险信号</h4><span>${findings.length} 条</span></div>
+      ${findings.length ? findings.map(x => `<div class="finding-mini"><span class="sev ${sevClass(x.severity)}">${SEV_LABEL[sevClass(x.severity)]}</span><div class="finding-mini-main"><div class="finding-mini-title">${esc(x.title)} <span class="dim mono" style="font-size:8px">${esc(x.rule_id)}</span></div><div class="finding-mini-detail">${esc(x.detail || "命中本地规则")}</div>${x.evidence ? `<span class="evidence">${esc(x.evidence)}</span>` : ""}</div><span class="finding-mini-score">+${esc(x.score)}</span></div>`).join("") : `<div class="privacy-note" style="margin:0">${icon("check")}<span>没有命中。策略只会评价能够看到的请求内容；没有经过代理的流量不在本次评价范围内。</span></div>`}
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-head"><h4>${icon("terminal")}请求正文</h4><span>${bodyRequest != null ? "已解密 · 仅本会话可见" : (canSeeRequest ? "加密存储 · 未解密" : "仅预览 / 未保存原文")}</span></div>
+      <div class="body-toolbar"><span class="body-meta">SHA-256 ${esc((f.req_sha || "—").slice(0, 16))}…</span><span class="spacer"></span><button class="btn sm" data-copy-target="request-body-pre">${icon("copy")}复制</button></div>
+      <pre class="body ${bodyRequest == null && !f.req_preview ? "empty-body" : ""}" id="request-body-pre">${esc(requestText)}${reqError ? "\n[解密失败: " + esc(reqError) + "]" : ""}</pre>
+      ${canSeeRequest && !state.detailRevealed ? `<div class="reveal-strip"><p>原始请求正文以 AES-GCM 加密存放。点击后在本次浏览器会话中解密显示，不会更改服务端状态。</p><button class="btn sm" id="reveal-btn">${icon("key")}解密原文</button></div>` : ""}
+      ${!canSeeRequest ? `<div class="privacy-note">${icon("info")}<span>请求正文未保存：可能因为关闭了正文存储、正文为空，或目标不是 AI 流量且风险分低于 25。当前预览始终经过脱敏。</span></div>` : ""}
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-head"><h4>${icon("arrow-right")}响应正文</h4><span>${bodyResponse != null ? "已解密 · 仅本会话可见" : (canSeeResponse ? "加密存储 · 未解密" : "仅预览 / 流式未保存")}</span></div>
+      <div class="body-toolbar"><span class="body-meta">SHA-256 ${esc((f.resp_sha || "—").slice(0, 16))}…</span><span class="spacer"></span><button class="btn sm" data-copy-target="response-body-pre">${icon("copy")}复制</button></div>
+      <pre class="body ${bodyResponse == null && !f.resp_preview ? "empty-body" : ""}" id="response-body-pre">${esc(responseText)}${respError ? "\n[解密失败: " + esc(respError) + "]" : ""}</pre>
+      ${!canSeeResponse ? `<div class="privacy-note">${icon("info")}<span>响应正文可能因为流式传输、体积超限或关闭正文存储而未保留。流式响应的元数据仍会记录。</span></div>` : ""}
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-head"><h4>${icon("cpu")}进程归因</h4><span>${f.pid ? "PID " + esc(f.pid) : "未归因"}</span></div>
+      <div class="metadata">${esc(f.proc_path || "可执行路径不可用")}${f.cmdline ? "\n\n" + esc(f.cmdline) : ""}${appChain.length ? "\n\n父进程链： " + esc(appChain.map(c => (c.name || "?") + (c.pid ? "(" + c.pid + ")" : "")).join(" → ")) : ""}</div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-head"><h4>${icon("link")}关联文件事件</h4><span>± 5 分钟 · ${related.length} 条</span></div>
+      ${related.length ? related.map(e => `<div class="related-file">${icon("file")}<div><b>${esc(e.path)}</b><span>${esc(e.proc_name || "")} · ${esc(fmtStamp(e.ts))}</span></div><span class="sens ${esc(e.sensitivity || "low")}">${esc(e.sensitivity || "low")}</span></div>`).join("") : `<div class="dim" style="font-size:9.5px;padding:5px 0">没有同一进程在邻近时间窗口内的文件触达记录。这不代表没有读取。</div>`}
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-head"><h4>${icon("file")}保存的请求头</h4><span>敏感值已脱敏</span></div>
+      <pre class="body">${esc(safeHeaders)}</pre>
+    </div>
+    ${tags.length ? `<div class="tagline" style="margin-top:2px">${tags.map(t => `<span class="tag">${esc(t)}</span>`).join("")}</div>` : ""}
+    ${f.note ? `<div class="privacy-note" style="margin-top:12px">${icon("info")}<span>${esc(f.note)}</span></div>` : ""}
+  `;
+  $("#reveal-btn")?.addEventListener("click", revealBody);
+}
+
+async function revealBody() {
+  if (!state.detail) return;
+  const btn = $("#reveal-btn");
+  if (btn) { btn.disabled = true; btn.textContent = "解密中…"; }
+  try {
+    const data = await api("/api/flows/" + encodeURIComponent(state.detail.id) + "?reveal=1");
+    state.detail = data.flow;
+    state.detailRevealed = true;
+    renderDrawer();
+    toast("正文已在当前会话中解密");
+  } catch (err) {
+    toast("解密失败：" + err.message, "err");
+    if (btn) { btn.disabled = false; btn.innerHTML = icon("key") + "解密原文"; }
+  }
+}
+
+function renderOnboarding() {
+  const host = $("#onboard-banner"); if (!host) return;
+  if (state.settings.onboarded) { host.innerHTML = ""; return; }
+  const ca = (state.status && state.status.ca) || {};
+  const sys = (state.status && state.status.system_proxy) || {};
+  const proxy = (state.status && state.status.proxy) || {};
+  const checks = [!!proxy.running, !!ca.installed, !!sys.ours];
+  const labels = ["本地代理运行", "本地 CA 已信任", "系统代理已启用（或使用环境变量）"];
+  host.innerHTML = `<div class="onboard">
+    <div>
+      <div class="onboard-top">${icon("book")}<span class="onboard-title">完成接入，让第一笔请求可被审计</span></div>
+      <div class="onboard-desc">EgressScope 不会自动修改系统设置。下面的三步操作均需你在桌面控制台中显式确认。</div>
+      <div class="onboard-steps">${labels.map((label,i) => `<div class="ob-step ${checks[i] ? "done" : ""}"><span class="num">${checks[i] ? "✓" : i+1}</span>${esc(label)}</div>`).join("")}</div>
+    </div>
+    <div class="onboard-actions"><button class="btn" data-download-ca>${icon("download")}CA 证书</button><button class="btn primary" data-open-guide>查看接入指南 ${icon("arrow-right")}</button></div>
+  </div>`;
+}
+
+function renderSettingsMeta() {
+  const s = state.status; if (!s) return;
+  const ca = s.ca || {}; const sys = s.system_proxy || {}; const proxy = s.proxy || {}; const chain = s.chain || {};
+  const setText = (id, value, cls="") => { const el = $(id); if (el) { el.textContent = value; el.className = cls; } };
+  setText("#cfg-proxy", proxy.running ? "127.0.0.1:" + proxy.port : "未运行", proxy.running ? "ok" : "bad");
+  setText("#cfg-upstream", proxy.upstream_proxy ? proxy.upstream_proxy + (proxy.upstream_source === "system" ? " · 自动继承" : " · 手动指定") : "直连上游", proxy.upstream_proxy ? "ok" : "");
+  setText("#cfg-sysproxy", sys.ours ? "已启用 · 指向本地代理" : sys.pac_active ? "PAC 模式 · 未接管" : sys.enabled ? "已启用其他代理" : "未启用", sys.ours ? "ok" : "warn");
+  setText("#cfg-ca", ca.installed ? "已安装到当前用户信任根" : ca.exists ? "已生成 · 尚未信任" : "未生成", ca.installed ? "ok" : "warn");
+  setText("#cfg-ca-fp", ca.sha1 || "—");
+  let exp = "—";
+  if (ca.expires_at) { try { const d = new Date(ca.expires_at); exp = d.toLocaleDateString("zh-CN"); if (d < new Date()) exp += " · 已过期"; } catch(_) { exp = ca.expires_at; } }
+  setText("#cfg-ca-exp", exp);
+  setText("#cfg-data", s.data_dir || "—");
+  setText("#cfg-chain", chain.entries ? (chain.valid ? "校验通过 · " + chain.entries + " 条" : "校验失败 · 第 " + (chain.broken_at || "?") + " 条断裂") : "暂无证据", chain.valid === false && chain.entries ? "bad" : "ok");
+  setText("#cfg-version", "v" + (s.version || (BOOT && BOOT.version) || "—"));
+}
+
+function syncSettings() {
+  const s = state.settings || {};
+  $$("[data-setting]").forEach(input => {
+    const key = input.dataset.setting;
+    if (key in s) input.checked = !!s[key];
+  });
+  const risk = $("#set-block-risk");
+  if (risk && s.block_risk != null) { risk.value = s.block_risk; $("#set-block-risk-val").textContent = s.block_risk; }
+  const retention = $("#set-retention");
+  if (retention && s.retention_days != null) {
+    const val = String(s.retention_days);
+    if (!Array.from(retention.options).some(o => o.value === val)) {
+      const option = document.createElement("option"); option.value = val; option.textContent = val + " 天"; retention.appendChild(option);
+    }
+    retention.value = val;
+  }
+  const interval = $("#set-file-interval");
+  if (interval && s.file_guard_interval != null) { const v = Math.round(Number(s.file_guard_interval)); interval.value = v; $("#set-file-interval-val").textContent = v + "s"; }
+  const upstream = $("#set-upstream");
+  if (upstream) upstream.value = s.upstream_proxy || "";
+}
+
+async function saveSettings(patch, {silent=false}={}) {
+  try {
+    const data = await api("/api/settings", {method:"POST", body:JSON.stringify(patch)});
+    state.settings = Object.assign({}, state.settings, patch, data.settings || {});
+    syncSettings();
+    if (!silent) toast("设置已保存");
+    renderOnboarding();
+    if (data.canary && data.canary.error) toast("Canary 操作失败：" + data.canary.error, "err");
+    return data;
+  } catch (err) {
+    toast("保存设置失败：" + err.message, "err");
+    syncSettings();
+    throw err;
+  }
+}
+
+function confirmDialog({title, kicker="PLEASE CONFIRM", body, confirm="确认", tone="normal"}) {
+  return new Promise(resolve => {
+    const root = $("#modal-root");
+    root.innerHTML = `<div class="modal" role="dialog" aria-modal="true">
+      <div class="modal-head"><div><div class="modal-kicker">${esc(kicker)}</div><h2 class="modal-title">${esc(title)}</h2></div><button class="modal-close" data-cancel aria-label="关闭">${icon("x")}</button></div>
+      <div class="modal-body"><div class="modal-copy">${body}</div></div>
+      <div class="modal-foot"><button class="btn ghost" data-cancel>取消</button><button class="btn ${tone === "danger" ? "danger" : "primary"}" data-ok>${esc(confirm)}</button></div>
+    </div>`;
+    root.classList.add("show");
+    const close = (value) => {
+      root.classList.remove("show"); root.innerHTML = ""; resolve(value);
+    };
+    root.querySelectorAll("[data-cancel]").forEach(b => b.onclick = () => close(false));
+    root.querySelector("[data-ok]").onclick = () => close(true);
+    root.onclick = (e) => { if (e.target === root) close(false); };
+  });
+}
+
+async function handleToggle(input) {
+  const key = input.dataset.setting;
+  const desired = input.checked;
+  input.disabled = true;
+  try {
+    if (key === "blocking_enabled" && desired) {
+      const ok = await confirmDialog({title:"启用主动阻断？", body:`<p>风险分达到 <b>${esc(state.settings.block_risk || 85)}</b> 的请求将被本地代理直接拒绝，并返回 403。</p><p>这可能中断正在进行的工作流。建议先以“观察”模式确认误报率，再启用阻断。</p>`, confirm:"启用阻断"});
+      if (!ok) { input.checked = false; return; }
+    }
+    if (key === "canary_enabled" && desired) {
+      const ok = await confirmDialog({title:"创建 Canary 诱饵文件？", body:`<p>将在你的 Documents 目录下创建 3 个含虚构凭据的诱饵文件，用于观察异常进程的触达行为。</p><p>这些文件内容全部是假数据，但会以普通文件形式存在，任意本地进程都可以打开它们。建议只在授权设备上、且有明确验证目的时启用。</p>`, confirm:"创建诱饵", tone:"danger"});
+      if (!ok) { input.checked = false; return; }
+    }
+    await saveSettings({[key]: desired});
+    if (key === "file_guard_enabled" || key === "canary_enabled") loadFiles();
+    if (key === "capture_enabled") refreshStatus(true);
+  } catch (_) { input.checked = !desired; }
+  finally { input.disabled = false; }
+}
+
+async function openGuide() {
+  const s = state.status || {};
+  const ca = s.ca || {}; const sys = s.system_proxy || {};
+  let env = "";
+  try { const data = await api("/api/env"); state.env = data.text || ""; env = state.env; }
+  catch (_) { env = "# 本地服务暂不可用，无法生成环境变量"; }
+  const root = $("#modal-root");
+  root.innerHTML = `<div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-head"><div><div class="modal-kicker">GETTING STARTED · AUTHORIZED DEVICES ONLY</div><h2 class="modal-title">接入指南</h2></div><button class="modal-close" data-close aria-label="关闭">${icon("x")}</button></div>
+    <div class="modal-body">
+      <div class="modal-copy" style="margin-bottom:15px">EgressScope 不会自动安装根证书，也不会自动修改系统代理。请只在你拥有或明确获授权的设备上完成以下步骤。</div>
+      <div class="guide-step">
+        <div class="step-num">1</div>
+        <div><div class="step-title">确认本地代理已运行 ${s.proxy?.running ? '<span class="guide-status ok">运行中 · 127.0.0.1:' + esc(s.proxy.port) + '</span>' : '<span class="guide-status warn">未运行</span>'}</div><div class="step-desc">启动 EgressScope 后，审计台和本地代理会同时就绪。代理只监听 127.0.0.1，不会暴露到局域网。</div></div>
+      </div>
+      <div class="guide-step">
+        <div class="step-num">2</div>
+        <div><div class="step-title">安装本地 CA ${ca.installed ? '<span class="guide-status ok">已安装</span>' : '<span class="guide-status warn">未安装</span>'}</div><div class="step-desc">在桌面控制台点击“安装根证书”，或下载公开证书后手动导入到“当前用户 → 受信任的根证书颁发机构”。这个 CA 仅用于本机审计代理签发站点证书，请勿分发私钥。</div><div class="step-actions"><button class="btn sm" data-download-ca>${icon("download")}下载 CA 公开证书</button><button class="btn sm" data-download-ca>${icon("key")}查看证书信息</button></div></div>
+      </div>
+      <div class="guide-step">
+        <div class="step-num">3</div>
+        <div><div class="step-title">选择流量入口 ${sys.ours ? '<span class="guide-status ok">系统代理已指向 EgressScope</span>' : '<span class="guide-status">尚未接管</span>'}</div><div class="step-desc">推荐先用桌面控制台的“启用系统代理”接管遵循 Windows 代理设置的应用。它会备份原设置，并在退出时尝试恢复；如果检测到 PAC 脚本会拒绝启用。对单个 Agent，也可以仅向它的进程注入下面的环境变量，影响范围更小。</div></div>
+      </div>
+      <div class="guide-step">
+        <div class="step-num">4</div>
+        <div><div class="step-title">为 Agent 注入代理与 CA</div><div class="step-desc">复制到目标应用的环境变量中，或用它启动子进程。NO_PROXY 保留本地流量绕过，避免审计台自身回环。</div><div class="code-block" id="env-snippet" style="margin-top:8px">${esc(env)}</div><div class="step-actions"><button class="btn sm" data-copy-target="#env-snippet">${icon("copy")}复制环境变量</button></div></div>
+      </div>
+      <div class="guide-step">
+        <div class="step-num">5</div>
+        <div><div class="step-title">发起一条测试请求</div><div class="step-desc">让 Agent 访问其常见的 API，或在终端执行一条 HTTPS 请求。回到“流量审计”检查进程归因、AI 分类与风险信号。若只看到 CONNECT 或没有记录，先确认应用确实遵循了代理设置，并且信任了本地 CA。</div></div>
+      </div>
+      <div class="privacy-note" style="margin-top:15px">${icon("alert")}<span>证书固定、mTLS、QUIC/HTTP3 和端到端加密不会被这套架构破解。EgressScope 不绕过应用自身的安全机制；它只审计配合代理且信任本地 CA 的路径。分析疑似恶意样本时，请在隔离虚拟机中进行。</span></div>
+    </div>
+    <div class="modal-foot"><button class="btn ghost" data-close>稍后继续</button><button class="btn primary" id="onboard-done">已完成，开始观察</button></div>
+  </div>`;
+  root.classList.add("show");
+  const close = () => { root.classList.remove("show"); root.innerHTML = ""; };
+  root.querySelectorAll("[data-close]").forEach(b => b.onclick = close);
+  root.onclick = e => { if (e.target === root) close(); };
+  $("#onboard-done").onclick = async () => {
+    await saveSettings({onboarded:true}, {silent:true});
+    close(); toast("已标记接入完成。你可以随时在“流量审计”中检查覆盖情况。");
+  };
+}
+
+function openClearDialog() {
+  const root = $("#modal-root");
+  root.innerHTML = `<div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-head"><div><div class="modal-kicker">IRREVERSIBLE LOCAL ACTION</div><h2 class="modal-title">清空本地审计数据</h2></div><button class="modal-close" data-close aria-label="关闭">${icon("x")}</button></div>
+    <div class="modal-body">
+      <div class="modal-danger">此操作会删除本机证据库中的全部流量、发现、文件事件、证据链记录和 Canary 注册信息，且无法恢复。加密正文也一并删除。已导出的 JSONL 文件不受影响。</div>
+      <div class="modal-copy">如果你只是想控制体积，可以先把“证据保留”改为更短周期，而不是立即清空。输入 <b class="mono">DELETE</b> 以继续。</div>
+      <input class="text-input" id="clear-phrase" placeholder="输入 DELETE" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="modal-foot"><button class="btn ghost" data-close>取消</button><button class="btn danger" id="clear-confirm" disabled>永久清空</button></div>
+  </div>`;
+  root.classList.add("show");
+  const close = () => { root.classList.remove("show"); root.innerHTML = ""; };
+  root.querySelectorAll("[data-close]").forEach(b => b.onclick = close);
+  root.onclick = e => { if (e.target === root) close(); };
+  const input = $("#clear-phrase"), confirm = $("#clear-confirm");
+  input.focus();
+  input.oninput = () => { confirm.disabled = input.value !== "DELETE"; };
+  confirm.onclick = async () => {
+    confirm.disabled = true;
+    try {
+      await api("/api/clear", {method:"POST", body:JSON.stringify({confirm:"DELETE"})});
+      close(); toast("本地审计数据已清空");
+      await Promise.allSettled([refreshStatus(true), loadStats(), loadRecent(), loadFindings(), loadFiles()]);
+      if (state.page === "traffic") loadFlows();
+    } catch (err) { toast("清空失败：" + err.message, "err"); confirm.disabled = false; }
+  };
+}
+
+async function downloadEvidence() {
+  const btn = $("#export-btn");
+  if (btn) { btn.disabled = true; const html = btn.innerHTML; btn.textContent = "正在生成导出…"; try {
+    const res = await fetch("/api/export", {headers:{"X-Egress-Token":TOKEN}, cache:"no-store"});
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "egressscope-evidence.jsonl"; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+    toast("脱敏证据已导出（不含原始正文）");
+  } catch (err) { toast("导出失败：" + err.message, "err"); }
+  finally { btn.disabled = false; btn.innerHTML = html; } }
+}
+
+async function copyText(text) {
+  try {
+    if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(text); return true; }
+    const area = document.createElement("textarea"); area.value = text; area.style.position = "fixed"; area.style.opacity = "0";
+    document.body.appendChild(area); area.select(); document.execCommand("copy"); area.remove(); return true;
+  } catch (_) { return false; }
+}
+
+async function copyEnv() {
+  try {
+    const data = await api("/api/env");
+    const ok = await copyText(data.text || "");
+    toast(ok ? "Agent 环境变量已复制" : "复制失败，请手动从接入指南中复制", ok ? "ok" : "err");
+  } catch (err) { toast("读取环境变量失败：" + err.message, "err"); }
+}
+
+function renderCoverage() {
+  const s = state.status; if (!s) return;
+  const ca = s.ca || {}; const sys = s.system_proxy || {}; const proxy = s.proxy || {}; const fg = s.fileguard || {};
+  const stateCell = (label, value, ok) => `<div class="state-cell"><span>${label}</span><b><i class="dot ${ok === true ? "ok" : ok === false ? "bad" : ""}"></i>${esc(value)}</b></div>`;
+  $("#coverage-state").innerHTML = [
+    stateCell("本地代理", proxy.running ? "运行中 · 127.0.0.1:" + proxy.port : "未运行", !!proxy.running),
+    stateCell("系统代理", sys.ours ? "已接管" : sys.pac_active ? "PAC 模式" : "未启用", !!sys.ours),
+    stateCell("本地 CA", ca.installed ? "当前用户已信任" : "未安装", !!ca.installed),
+    stateCell("文件触达", fg.enabled ? "Beta 抽样中" : "已关闭", !!fg.enabled),
+  ].join("");
+}
+
+async function refreshAll() {
+  await refreshStatus(true).catch(() => {});
+  await Promise.allSettled([loadStats(), loadRecent(), loadFindings(), loadFiles()]);
+  if (state.page === "traffic") loadFlows(true);
+}
+
+function bindEvents() {
+  document.addEventListener("click", async (e) => {
+    const pageBtn = e.target.closest("[data-page]");
+    if (pageBtn) { setPage(pageBtn.dataset.page); return; }
+    const goto = e.target.closest("[data-goto]");
+    if (goto) { setPage(goto.dataset.goto); return; }
+    if (e.target.closest("[data-open-guide]")) { e.preventDefault(); openGuide(); return; }
+    if (e.target.closest("[data-download-ca]")) { e.preventDefault(); window.location.href = BOOT.caUrl || "/api/ca.pem"; return; }
+    const row = e.target.closest("[data-flow-id]");
+    if (row) { e.preventDefault(); openFlow(row.dataset.flowId); return; }
+    const copyBtn = e.target.closest("[data-copy-target]");
+    if (copyBtn) {
+      e.preventDefault();
+      const target = $(copyBtn.dataset.copyTarget.startsWith("#") ? copyBtn.dataset.copyTarget : "#" + copyBtn.dataset.copyTarget);
+      const ok = target ? await copyText(target.textContent || "") : false;
+      toast(ok ? "已复制到剪贴板" : "复制失败", ok ? "ok" : "err");
+      return;
+    }
+    if (e.target.closest("#drawer-close") || e.target.id === "drawer-scrim") { closeDrawer(); return; }
+    if (e.target.closest("#traffic-refresh")) { loadFlows(); toast("正在刷新流量"); return; }
+    if (e.target.closest("#findings-refresh")) { loadFindings(); toast("正在刷新风险发现"); return; }
+    if (e.target.closest("#files-refresh")) { loadFiles(); refreshStatus(true); toast("正在刷新关联事件"); return; }
+    if (e.target.closest("#copy-env-btn")) { copyEnv(); return; }
+    if (e.target.closest("#export-btn")) { downloadEvidence(); return; }
+    if (e.target.closest("#clear-btn")) { openClearDialog(); return; }
+    const findChip = e.target.closest("[data-find]");
+    if (findChip) {
+      state.findingFilter = findChip.dataset.find;
+      $$("#finding-filters .chip").forEach(c => c.classList.toggle("active", c === findChip));
+      renderFindings(); return;
+    }
+    const since = e.target.closest("#f-since button");
+    if (since) {
+      $$("#f-since button").forEach(b => b.classList.toggle("active", b === since));
+      state.traffic.since = Number(since.dataset.hours) || 0;
+      state.traffic.offset = 0; loadFlows(); return;
+    }
+    if (e.target.closest("#prev-page")) { state.traffic.offset = Math.max(0, state.traffic.offset - state.traffic.limit); loadFlows(); return; }
+    if (e.target.closest("#next-page")) { if (state.traffic.offset + state.traffic.limit < state.traffic.total) { state.traffic.offset += state.traffic.limit; loadFlows(); } return; }
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      if ($("#modal-root").classList.contains("show")) { $("#modal-root").classList.remove("show"); $("#modal-root").innerHTML = ""; return; }
+      closeDrawer();
+    }
+    if (e.key === "Enter") {
+      const row = e.target.closest("tr[data-flow-id], .finding-card[data-flow-id]");
+      if (row) { e.preventDefault(); openFlow(row.dataset.flowId); }
+    }
+  });
+
+  const search = $("#f-q"); let timer = null;
+  search.addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(() => { state.filters.q = search.value.trim(); state.traffic.offset = 0; loadFlows(true); }, 320); });
+  $("#f-category").onchange = e => { state.filters.category = e.target.value; state.traffic.offset = 0; loadFlows(); };
+  $("#f-severity").onchange = e => { state.filters.severity = e.target.value; state.traffic.offset = 0; loadFlows(); };
+  $("#f-risk").onchange = e => { state.filters.risk = e.target.value; state.traffic.offset = 0; loadFlows(); };
+  $("#f-ai").onchange = e => { state.filters.ai = e.target.checked; state.traffic.offset = 0; loadFlows(); };
+  $("#f-blocked").onchange = e => { state.filters.blocked = e.target.checked; state.traffic.offset = 0; loadFlows(); };
+
+  document.addEventListener("change", (e) => {
+    const toggle = e.target.closest("[data-setting]");
+    if (toggle) { handleToggle(toggle); return; }
+    if (e.target.id === "set-retention") { saveSettings({retention_days:Number(e.target.value)}); return; }
+    if (e.target.id === "set-upstream") { saveSettings({upstream_proxy:e.target.value.trim()}); return; }
+  });
+  const riskInput = $("#set-block-risk");
+  riskInput.addEventListener("input", () => { $("#set-block-risk-val").textContent = riskInput.value; });
+  riskInput.addEventListener("change", () => saveSettings({block_risk:Number(riskInput.value)}));
+  const fileInterval = $("#set-file-interval");
+  fileInterval.addEventListener("input", () => { $("#set-file-interval-val").textContent = fileInterval.value + "s"; });
+  fileInterval.addEventListener("change", () => saveSettings({file_guard_interval:Number(fileInterval.value)}));
+
+  window.addEventListener("hashchange", () => setPage((location.hash || "#overview").slice(1), false));
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) refreshStatus(true); });
+}
+
+async function init() {
+  bindEvents();
+  const initial = (location.hash || "").replace("#","");
+  setPage(PAGE_TITLES[initial] ? initial : "overview", false);
+  try {
+    await refreshStatus(true);
+    await Promise.allSettled([loadStats(), loadRecent(), loadFindings(), loadFiles()]);
+    syncSettings();
+    renderSettingsMeta();
+  } catch (err) {
+    toast("审计服务连接失败：" + err.message, "err");
+  }
+  setInterval(() => {
+    if (document.hidden) return;
+    refreshStatus(true);
+    if (state.page === "overview") { loadStats(); loadRecent(); }
+  }, 12000);
+}
+
+init();
+</script>
+</body>
+</html>

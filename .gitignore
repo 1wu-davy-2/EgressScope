@@ -1,0 +1,26 @@
+.venv/
+build/
+dist/
+dist-new/
+release/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+
+# local audit data and test artifacts
+.tmp-*/
+.dev-home/
+.demo-*/
+.edge-profile/
+*.log
+data/
+canaries/
+dev-home/
+
+# editor / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
