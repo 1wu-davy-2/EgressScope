@@ -54,6 +54,26 @@ jobs:
           "EGRESS_SCOPE_OPENSSL_DLL=$($dll.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           Write-Output "Using $($dll.FullName)"
 
+      - name: Enter ARM64 developer environment
+        shell: pwsh
+        run: |
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $vsPath = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.ARM64 -property installationPath
+          if (-not $vsPath) { throw "Visual Studio with ARM64 tools not found" }
+          $vcvars = Join-Path $vsPath "VC\Auxiliary\Build\vcvarsall.bat"
+          if (-not (Test-Path $vcvars)) { throw "vcvarsall.bat not found at $vcvars" }
+          $lines = cmd /c "`"$vcvars`" arm64 >nul && set"
+          if ($LASTEXITCODE) { throw "vcvarsall arm64 failed" }
+          $keep = @("INCLUDE", "LIB", "LIBPATH", "PATH", "VCINSTALLDIR", "VCToolsInstallDir", "WindowsSdkDir", "WindowsSDKVersion", "UCRTVersion", "VSCMD_ARG_TGT_ARCH")
+          foreach ($line in $lines) {
+            if ($line -match '^([^=]+)=(.*)$' -and $matches[1] -in $keep) {
+              "$($matches[1])=$($matches[2])" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+            }
+          }
+          "CC=cl.exe" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "CXX=cl.exe" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          Write-Output "VS: $vsPath"
+
       - name: Install aioquic from source
         shell: pwsh
         run: |
