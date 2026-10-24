@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#fbfbf9">
+<meta name="theme-color" content="#ffffff">
 <meta name="description" content="EgressScope（本机数据外发审计）是本地优先的 AI Agent 审计工具：看清 AI 与桌面应用的 HTTPS 外发流量，定位发起进程，识别密钥与敏感数据，保留可验证的本地证据链。支持 Windows / macOS / Linux。">
 <meta name="keywords" content="EgressScope,外发审计,本机数据外发审计,AI审计,AI 审计,Agent审计,Agent 审计,AI Agent 审计,智能体审计,数据外发审计,数据防泄漏,DLP,AI DLP,大模型安全,LLM 安全,AI Agent 安全,出站流量审计,HTTPS 审计,进程归因,本地审计,本地优先,影子 AI,AI 使用审计,数据外泄检测,AI audit,agent audit,AI agent audit,egress audit,AI egress audit,data exfiltration,data exfiltration detection,DLP for AI agents,LLM security,AI agent security,shadow AI,AI usage audit,process attribution,local-first">
 <meta name="robots" content="index,follow,max-image-preview:large">
@@ -13,7 +13,7 @@
 <link rel="alternate" hreflang="zh-CN" href="https://1wu-davy-2.github.io/EgressScope/">
 <link rel="alternate" hreflang="en" href="https://1wu-davy-2.github.io/EgressScope/?lang=en">
 <link rel="alternate" hreflang="x-default" href="https://1wu-davy-2.github.io/EgressScope/">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='128' fill='%23d45d35'/%3E%3Ccircle cx='256' cy='256' r='150' fill='none' stroke='%23fff' stroke-opacity='.48' stroke-width='18'/%3E%3Ccircle cx='256' cy='256' r='88' fill='none' stroke='%23fff' stroke-opacity='.82' stroke-width='16' stroke-dasharray='30 38'/%3E%3Ccircle cx='256' cy='256' r='30' fill='%23fff'/%3E%3Cpath d='M279 233 392 120M330 120h62v62' fill='none' stroke='%23fff' stroke-width='22' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="icon" type="image/svg+xml" href="./assets/icon.svg">
 <link rel="icon" href="./assets/favicon.ico" sizes="48x48">
 <link rel="icon" type="image/png" href="./assets/favicon.png" sizes="32x32">
 <link rel="apple-touch-icon" href="./assets/apple-touch-icon.png">
@@ -35,32 +35,62 @@
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
-  "name": "EgressScope",
-  "alternateName": ["外发审计", "本机数据外发审计", "EgressScope 外发审计"],
-  "applicationCategory": "SecurityApplication",
-  "applicationSubCategory": "Data Loss Prevention",
-  "operatingSystem": "Windows 10, Windows 11, macOS, Linux",
-  "softwareVersion": "0.2.0",
-  "description": "EgressScope 是本地优先的 AI Agent 与桌面应用数据外发审计工具。通过本地 HTTP/HTTPS 代理、本地 CA、进程归因与内容策略，查看外发去了哪里、由哪个进程发起、带走了什么，并保留可验证的本地证据链。",
-  "url": "https://1wu-davy-2.github.io/EgressScope/",
-  "downloadUrl": "https://github.com/1wu-davy-2/EgressScope/releases/latest",
-  "codeRepository": "https://github.com/1wu-davy-2/EgressScope",
-  "isAccessibleForFree": true,
-  "inLanguage": ["zh-CN", "en"],
-  "keywords": "外发审计,AI审计,Agent审计,AI Agent 审计,智能体审计,数据外发审计,数据防泄漏,DLP,AI DLP,LLM 安全,大模型安全,AI Agent 安全,出站流量审计,HTTPS 审计,进程归因,本地优先,影子 AI,AI 使用审计,数据外泄检测,AI audit,agent audit,AI agent audit,AI egress audit,data exfiltration,data exfiltration detection,DLP for AI agents,LLM security,AI agent security,shadow AI,AI usage audit,process attribution",
-  "offers": {
-    "@type": "Offer",
-    "price": "0",
-    "priceCurrency": "USD"
-  },
-  "featureList": [
-    "HTTPS egress visibility through a local proxy and local CA",
-    "Process and parent-chain attribution",
-    "AI endpoint classification and DLP risk signals",
-    "Encrypted evidence with a verifiable SHA-256 hash chain",
-    "Local-first operation with no cloud sync",
-    "Honest coverage boundaries for pinning, mTLS, QUIC and E2EE"
+  "@graph": [
+    {
+      "@type": "SoftwareApplication",
+      "@id": "https://1wu-davy-2.github.io/EgressScope/#software",
+      "name": "EgressScope",
+      "alternateName": ["外发审计", "本机数据外发审计", "EgressScope 外发审计"],
+      "applicationCategory": "SecurityApplication",
+      "applicationSubCategory": "Data Loss Prevention",
+      "operatingSystem": "Windows 10, Windows 11, macOS, Linux",
+      "softwareVersion": "0.2.0",
+      "softwareRequirements": "Python 3.12+（源码运行）或平台对应的原生构建",
+      "description": "EgressScope 是本地优先的 AI Agent 与桌面应用数据外发审计工具。通过本地 HTTP/HTTPS 代理、本地 CA、进程归因与内容策略，查看外发去了哪里、由哪个进程发起、带走了什么，并保留可验证的本地证据链。",
+      "url": "https://1wu-davy-2.github.io/EgressScope/",
+      "downloadUrl": "https://github.com/1wu-davy-2/EgressScope/releases/latest",
+      "codeRepository": "https://github.com/1wu-davy-2/EgressScope",
+      "isAccessibleForFree": true,
+      "inLanguage": ["zh-CN", "en"],
+      "keywords": "外发审计,AI审计,Agent审计,AI Agent 审计,智能体审计,数据外发审计,数据防泄漏,DLP,AI DLP,LLM 安全,大模型安全,AI Agent 安全,出站流量审计,HTTPS 审计,进程归因,本地优先,影子 AI,AI 使用审计,数据外泄检测,AI audit,agent audit,AI agent audit,AI egress audit,data exfiltration,data exfiltration detection,DLP for AI agents,LLM security,AI agent security,shadow AI,AI usage audit,process attribution",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+      "featureList": [
+        "HTTPS egress visibility through a local proxy and local CA",
+        "Process and parent-chain attribution",
+        "AI endpoint classification and DLP risk signals",
+        "Encrypted evidence with a verifiable SHA-256 hash chain",
+        "Crash-safe system proxy recovery with an optional per-user watchdog",
+        "Local-first operation with no cloud sync",
+        "Honest coverage boundaries for pinning, mTLS, QUIC and E2EE"
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://1wu-davy-2.github.io/EgressScope/#faq",
+      "inLanguage": "zh-CN",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "电脑突然关机或程序崩溃后，系统代理会不会让本机断网？",
+          "acceptedAnswer": { "@type": "Answer", "text": "这是真实存在的失败模式：系统代理仍指向 127.0.0.1 上已停止的监听端口时，浏览器与多数应用会连接失败。v0.2.0 提供三层处理：启动时校正过期设置、可选的每用户计划任务看门狗在登录后自动恢复原代理，以及 EgressScope.exe --restore-proxy 手动恢复。断电瞬间无法执行任何代码，恢复发生在下一次登录后。" }
+        },
+        {
+          "@type": "Question",
+          "name": "EgressScope 能看见所有加密流量吗？",
+          "acceptedAnswer": { "@type": "Answer", "text": "不能。只有遵循代理设置并信任本地 CA 的 TLS 1.2 / 1.3 连接才能还原内容。证书固定、mTLS、QUIC / HTTP3、应用层端到端加密，以及完全绕过代理的直连流量都在覆盖边界之外，本产品不承诺攻破它们。" }
+        },
+        {
+          "@type": "Question",
+          "name": "审计数据会上传到云端吗？",
+          "acceptedAnswer": { "@type": "Answer", "text": "不会。证据保存在本机 SQLite，请求与响应正文用 AES-256-GCM 加密，主密钥由当前 Windows 用户的 DPAPI 保护。Web 审计台只绑定回环地址，使用每次启动随机生成的会话令牌，页面不含外部字体或脚本。" }
+        },
+        {
+          "@type": "Question",
+          "name": "可以用它审计别人的设备吗？",
+          "acceptedAnswer": { "@type": "Answer", "text": "只应用于你拥有或已获得明确书面授权的设备。未经授权拦截他人流量可能违法。也不要在存有真实凭据的日常主机上分析疑似恶意软件，请在隔离虚拟机或快照中进行。" }
+        }
+      ]
+    }
   ]
 }
 </script>
@@ -82,589 +112,489 @@
 </script>
 <style>
 :root{
-  --bg:#fbfbf9;
-  --tint:#f4f3ef;
+  --bg:#ffffff;
+  --tint:#f6f7f9;
   --surface:#ffffff;
-  --surface-2:#f8f7f4;
-  --ink:#211e1a;
-  --muted:#68625b;
-  --dim:#988f84;
-  --line:#e7e3db;
-  --line-strong:#d6d0c6;
-  --accent:#d45d35;
-  --accent-btn:#c3522b;
-  --accent-btn-hover:#ad4522;
-  --accent-ink:#963c1c;
-  --accent-soft:#f8e6dc;
-  --accent-wash:rgba(212,93,53,.05);
-  --accent-line:rgba(212,93,53,.24);
-  --green:#4d7a5c;
-  --green-soft:#eaf1e8;
-  --green-line:rgba(77,122,92,.24);
-  --amber:#9c681d;
-  --amber-soft:#f7ecd9;
-  --amber-line:rgba(156,104,29,.24);
-  --red:#ad4638;
-  --red-soft:#f9e8e4;
-  --red-line:rgba(173,70,56,.22);
-  --cta-bg:#c4522c;
-  --nav-bg:rgba(251,251,249,.86);
-  --shadow-sm:0 1px 2px rgba(46,36,27,.05);
-  --shadow-md:0 18px 40px -22px rgba(46,36,27,.26);
-  --shadow-lg:0 42px 90px -38px rgba(46,36,27,.36);
-  --font:"Inter","SF Pro Display",-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei UI","Microsoft YaHei",sans-serif;
-  --mono:"SFMono-Regular","Cascadia Code","JetBrains Mono",Consolas,"Liberation Mono",monospace;
-  --max:1200px;
-  --radius:24px;
+  --surface-2:#fafbfc;
+  --ink:#0d1420;
+  --muted:#4b5666;
+  --dim:#8a94a4;
+  --line:#e4e8ee;
+  --line-strong:#d3dae3;
+  --accent:#1d4ed8;
+  --accent-hover:#1a44bd;
+  --accent-ink:#1e40af;
+  --accent-soft:#eef3ff;
+  --accent-line:rgba(29,78,216,.24);
+  --ok:#1c7a4d;
+  --ok-soft:#e9f6ef;
+  --ok-line:rgba(28,122,77,.24);
+  --warn:#95650f;
+  --warn-soft:#fdf4e3;
+  --warn-line:rgba(149,101,15,.24);
+  --bad:#b23a2c;
+  --bad-soft:#fdecea;
+  --bad-line:rgba(178,58,44,.22);
+  --code-bg:#0c1220;
+  --code-ink:#dbe4f3;
+  --code-dim:#7d8ba3;
+  --code-line:#1e2a3d;
+  --nav-bg:rgba(255,255,255,.88);
+  --shadow-sm:0 1px 2px rgba(13,20,32,.05);
+  --shadow-md:0 10px 26px -14px rgba(13,20,32,.20);
+  --shadow-lg:0 28px 64px -30px rgba(13,20,32,.30);
+  --font:"Inter","SF Pro Text",-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei UI","Microsoft YaHei",sans-serif;
+  --mono:"SFMono-Regular","Cascadia Mono","JetBrains Mono",Consolas,"Liberation Mono",monospace;
+  --max:1180px;
+  --r-sm:6px;
+  --r:10px;
+  --r-lg:14px;
   color-scheme:light;
 }
 [data-theme="dark"]{
-  --bg:#1d1915;
-  --tint:#231e18;
-  --surface:#29231c;
-  --surface-2:#2f2820;
-  --ink:#f3ece1;
-  --muted:#b7a896;
-  --dim:#8d7f71;
-  --line:#3b332a;
-  --line-strong:#4d4236;
-  --accent:#e47a50;
-  --accent-btn:#d2603a;
-  --accent-btn-hover:#e07048;
-  --accent-ink:#f0a184;
-  --accent-soft:#3a251c;
-  --accent-wash:rgba(228,122,80,.09);
-  --accent-line:rgba(228,122,80,.3);
-  --green:#93c09f;
-  --green-soft:#243128;
-  --green-line:rgba(147,192,159,.24);
-  --amber:#ddb276;
-  --amber-soft:#34291a;
-  --amber-line:rgba(221,178,118,.24);
-  --red:#e59a8b;
-  --red-soft:#3b2521;
-  --red-line:rgba(229,154,139,.24);
-  --cta-bg:#c4522c;
-  --nav-bg:rgba(29,25,21,.84);
-  --shadow-sm:0 1px 2px rgba(0,0,0,.28);
-  --shadow-md:0 18px 40px -22px rgba(0,0,0,.62);
-  --shadow-lg:0 42px 90px -38px rgba(0,0,0,.72);
+  --bg:#0a0e15;
+  --tint:#0d121b;
+  --surface:#111722;
+  --surface-2:#151c28;
+  --ink:#e9eef7;
+  --muted:#a4b0c2;
+  --dim:#727e93;
+  --line:#1e2733;
+  --line-strong:#2b3644;
+  --accent:#7aa2ff;
+  --accent-hover:#93b4ff;
+  --accent-ink:#a9c4ff;
+  --accent-soft:#141d31;
+  --accent-line:rgba(122,162,255,.28);
+  --ok:#5ed39b;
+  --ok-soft:#10241b;
+  --ok-line:rgba(94,211,155,.26);
+  --warn:#e0b264;
+  --warn-soft:#241d10;
+  --warn-line:rgba(224,178,100,.26);
+  --bad:#f08a7c;
+  --bad-soft:#261512;
+  --bad-line:rgba(240,138,124,.24);
+  --code-bg:#080c14;
+  --code-ink:#d7e1f1;
+  --code-dim:#6f7d94;
+  --code-line:#182130;
+  --nav-bg:rgba(10,14,21,.86);
+  --shadow-sm:0 1px 2px rgba(0,0,0,.4);
+  --shadow-md:0 12px 28px -16px rgba(0,0,0,.7);
+  --shadow-lg:0 30px 70px -34px rgba(0,0,0,.8);
   color-scheme:dark;
 }
 *,*::before,*::after{box-sizing:border-box}
-html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;scroll-padding-top:112px}
 body{
-  margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);
-  font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  margin:0;background:var(--bg);color:var(--ink);
+  font-family:var(--font);font-size:15.5px;line-height:1.7;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
 }
-h1,h2,h3,h4,p,ul{margin-top:0}
+h1,h2,h3,h4{margin:0;font-weight:640;letter-spacing:-.018em;line-height:1.25}
+p{margin:0}
+ul,ol{margin:0;padding:0;list-style:none}
+dl{margin:0}
 a{color:inherit;text-decoration:none}
-button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
-svg{display:block}
-[hidden]{display:none!important}
-::selection{background:var(--accent-soft);color:var(--accent-ink)}
-:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
-svg.ic{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
-svg.ic.fill{fill:currentColor;stroke:none}
-.mono{font-family:var(--mono)}
-.logo-mark{width:38px;height:38px;flex:none}
-.lg-bg{fill:var(--accent)}
-.wrap{width:min(var(--max),calc(100vw - 48px));margin:0 auto}
-.skip{position:fixed;left:16px;top:-60px;z-index:100;background:var(--surface);border:1px solid var(--line);padding:10px 16px;border-radius:10px;font-size:13px;box-shadow:var(--shadow-md);transition:top .2s}
-.skip:focus{top:12px}
+code,.mono{font-family:var(--mono);font-size:.92em}
+table{border-collapse:collapse;width:100%}
+.wrap{max-width:var(--max);margin:0 auto;padding:0 24px;width:100%}
+.ic{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ic.fill{fill:currentColor;stroke:none}
+.skip{position:absolute;left:-9999px;top:0;z-index:200;background:var(--accent);color:#fff;padding:10px 16px;border-radius:0 0 var(--r-sm) 0}
+.skip:focus{left:0}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
-.nav{
-  position:sticky;top:0;z-index:60;background:var(--nav-bg);
-  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
-  border-bottom:1px solid transparent;transition:border-color .25s,box-shadow .25s;
-}
-.nav.scrolled{border-bottom-color:var(--line);box-shadow:0 12px 30px -26px rgba(60,44,30,.55)}
-.nav-inner{height:76px;display:flex;align-items:center;gap:30px}
-.brand{display:flex;align-items:center;gap:10px;flex:none;font-weight:700;font-size:17px;letter-spacing:-.25px}
-.brand-tag{font-size:10.5px;font-weight:600;color:var(--accent-ink);border:1px solid var(--accent-line);border-radius:999px;padding:3px 9px;letter-spacing:.02em;background:var(--accent-wash)}
-.nav-links{display:flex;gap:26px;margin-left:auto}
-.nav-links a{position:relative;font-size:14px;color:var(--muted);transition:color .18s;padding:4px 0}
-.nav-links a::after{content:"";position:absolute;left:0;right:0;bottom:-2px;height:1.5px;background:var(--accent);transform:scaleX(0);transform-origin:left;transition:transform .2s}
-.nav-links a:hover{color:var(--ink)}
-.nav-links a:hover::after{transform:scaleX(1)}
-.nav-actions{display:flex;align-items:center;gap:6px;margin-left:4px}
-.icon-btn{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;color:var(--muted);border:1px solid transparent;transition:background .18s,color .18s,border-color .18s}
-.icon-btn:hover{background:var(--surface);border-color:var(--line);color:var(--ink)}
-.icon-btn .ic{width:17px;height:17px}
-.lang-toggle{width:auto;min-width:38px;padding:0 9px;font-family:var(--mono);font-size:11.5px;font-weight:600;letter-spacing:.04em}
-.icon-sun{display:none}
-[data-theme="dark"] .icon-sun{display:block}
-[data-theme="dark"] .icon-moon{display:none}
+/* ---------- header ---------- */
+.announce{background:var(--accent-soft);border-bottom:1px solid var(--accent-line);color:var(--accent-ink);font-size:13px}
+.announce-inner{display:flex;align-items:center;gap:10px;min-height:40px;padding-top:7px;padding-bottom:7px}
+.announce-inner .dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}
+.announce-inner b{font-weight:650}
+.announce-inner a{margin-left:auto;display:inline-flex;align-items:center;gap:5px;font-weight:600;white-space:nowrap;border-bottom:1px solid transparent}
+.announce-inner a:hover{border-bottom-color:currentColor}
+.announce-inner a .ic{width:14px;height:14px}
 
-.btn{
-  display:inline-flex;align-items:center;justify-content:center;gap:9px;
-  height:48px;padding:0 22px;border-radius:12px;border:1px solid transparent;
-  font-size:15px;font-weight:600;line-height:1;white-space:nowrap;
-  transition:transform .18s,background .18s,border-color .18s,color .18s,box-shadow .18s;
-}
+.nav{position:sticky;top:0;z-index:60;background:var(--nav-bg);backdrop-filter:saturate(180%) blur(14px);border-bottom:1px solid var(--line);transition:box-shadow .2s}
+.nav.scrolled{box-shadow:var(--shadow-sm)}
+.nav-inner{display:flex;align-items:center;gap:22px;min-height:62px}
+.brand{display:flex;align-items:center;gap:10px;flex:none}
+.logo-mark{width:30px;height:30px;flex:none}
+.logo-mark .lg-bg{fill:var(--accent)}
+[data-theme="dark"] .logo-mark .lg-bg{fill:#2f5fd0}
+.brand-text{display:flex;flex-direction:column;line-height:1.2}
+.brand-name{font-size:16px;font-weight:680;letter-spacing:-.02em}
+.brand-tag{font-size:11px;color:var(--dim);letter-spacing:.02em}
+.nav-links{display:flex;align-items:center;gap:1px;margin-left:4px;min-width:0}
+.nav-links a{padding:7px 11px;border-radius:var(--r-sm);font-size:14px;font-weight:520;color:var(--muted);white-space:nowrap;transition:color .15s,background .15s}
+.nav-links a:hover{color:var(--ink);background:var(--tint)}
+.nav-actions{display:flex;align-items:center;gap:8px;margin-left:auto;flex:none}
+.icon-btn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:var(--r-sm);border:1px solid var(--line);background:var(--surface);color:var(--muted);cursor:pointer;transition:.15s;font-family:var(--font);font-size:12px;font-weight:650}
+.icon-btn:hover{color:var(--ink);border-color:var(--line-strong);background:var(--surface-2)}
+.lang-toggle{width:auto;padding:0 9px;letter-spacing:.02em}
+.theme-toggle .icon-sun{display:none}
+[data-theme="dark"] .theme-toggle .icon-sun{display:block}
+[data-theme="dark"] .theme-toggle .icon-moon{display:none}
+
+/* ---------- buttons ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;height:40px;padding:0 16px;border-radius:8px;border:1px solid transparent;font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;transition:.16s}
 .btn .ic{width:16px;height:16px}
-.btn:hover{transform:translateY(-1px)}
-.btn:active{transform:translateY(0)}
-.btn-primary{background:var(--accent-btn);border-color:var(--accent-btn);color:#fff;box-shadow:0 12px 26px -14px rgba(173,69,34,.6)}
-.btn-primary:hover{background:var(--accent-btn-hover);border-color:var(--accent-btn-hover)}
-.btn-ghost{background:transparent;border-color:var(--line-strong);color:var(--ink)}
-.btn-ghost:hover{background:var(--surface);border-color:var(--ink)}
-.btn-sm{height:40px;padding:0 16px;border-radius:10px;font-size:13.5px;gap:7px}
-.btn-lg{height:52px;padding:0 25px;font-size:15.5px;border-radius:13px}
-.btn-invert{background:#fffdf9;border-color:#fffdf9;color:#9b3a1a}
-.btn-invert:hover{background:#fff;border-color:#fff}
-.btn-ghost-light{background:transparent;border-color:rgba(255,255,255,.55);color:#fff}
-.btn-ghost-light:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.8)}
+.btn-lg{height:46px;padding:0 22px;font-size:15px}
+.btn-lg .ic{width:18px;height:18px}
+.btn-sm{height:34px;padding:0 13px;font-size:13.5px}
+.btn-primary{background:var(--accent);color:#fff;box-shadow:var(--shadow-sm)}
+.btn-primary:hover{background:var(--accent-hover);transform:translateY(-1px);box-shadow:var(--shadow-md)}
+.btn-ghost{background:var(--surface);border-color:var(--line-strong);color:var(--ink)}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.btn-invert{background:#fff;color:#0d1420}
+.btn-invert:hover{background:#e8edf6;transform:translateY(-1px)}
+.btn-quiet{background:transparent;border-color:rgba(255,255,255,.32);color:#fff}
+.btn-quiet:hover{border-color:#fff;background:rgba(255,255,255,.1)}
 
-.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--accent-ink)}
-.eyebrow::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent);flex:none}
-.section-head{max-width:780px;margin:0 auto 52px;text-align:center}
-.section-head h2{font-size:clamp(32px,4.6vw,48px);line-height:1.14;letter-spacing:-1.6px;margin:15px 0 17px;font-weight:700}
-.section-head p{font-size:16px;line-height:1.8;color:var(--muted);margin:0 auto;max-width:660px}
-.section-head.left{text-align:left;margin-left:0;margin-right:0}
-.section-head.left p{margin-left:0}
-.section{padding:clamp(72px,8.4vw,122px) 0}
+/* ---------- sections ---------- */
+.section{padding:84px 0}
 .section--tint{background:var(--tint);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-section[id],main[id]{scroll-margin-top:96px}
+.section-head{max-width:780px;margin-bottom:38px}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:650;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);margin-bottom:14px}
+.eyebrow::before{content:"";width:16px;height:1px;background:var(--accent);opacity:.5}
+.section-head h2{font-size:clamp(26px,3.1vw,34px);letter-spacing:-.026em}
+.section-head p{margin-top:14px;color:var(--muted);font-size:16px}
 
-.hero{position:relative;overflow:hidden;padding:clamp(58px,6.6vw,88px) 0 clamp(76px,7.6vw,112px)}
-.hero::before{
-  content:"";position:absolute;right:-180px;top:-220px;width:760px;height:760px;border-radius:50%;
-  background:radial-gradient(circle,rgba(212,93,53,.12),rgba(212,93,53,.035) 46%,transparent 68%);
-  pointer-events:none;
-}
-.hero::after{
-  content:"";position:absolute;left:-260px;bottom:-340px;width:620px;height:620px;border-radius:50%;
-  border:1px solid var(--line);opacity:.55;pointer-events:none;
-}
-.hero-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.06fr);gap:clamp(40px,5.2vw,72px);align-items:center;position:relative;z-index:1}
-.hero-badge{
-  display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border:1px solid var(--line);
-  border-radius:999px;background:var(--surface);font-size:12px;color:var(--muted);box-shadow:var(--shadow-sm);
-}
-.hero-badge i{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
-.hero h1{font-size:clamp(42px,7vw,68px);line-height:1.07;letter-spacing:-2.8px;margin:22px 0 22px;font-weight:700}
-.hero h1 em{font-style:normal;color:var(--accent);white-space:nowrap}
-.hero-sub{font-size:clamp(17px,1.5vw,19.5px);line-height:1.78;color:var(--muted);max-width:530px;margin:0}
-.hero-actions{display:flex;align-items:center;gap:12px;margin-top:32px;flex-wrap:wrap}
-.hero-meta{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:28px;color:var(--dim);font-size:12.5px}
-.hero-meta .sep{width:3px;height:3px;border-radius:50%;background:var(--line-strong)}
-
-.hero-visual{position:relative;min-width:0}
-.app-window{
-  position:relative;z-index:2;overflow:hidden;background:var(--surface);
-  border:1px solid var(--line);border-radius:26px;
-  box-shadow:0 34px 80px -34px rgba(60,44,30,.42),0 2px 5px rgba(60,44,30,.05);
-}
-.window-bar{height:48px;display:flex;align-items:center;gap:7px;padding:0 17px;border-bottom:1px solid var(--line);background:var(--surface-2)}
-.win-dot{width:9px;height:9px;border-radius:50%;background:#e07a5f;flex:none}
-.win-dot:nth-child(2){background:#e3b04b}
-.win-dot:nth-child(3){background:#7fa47c}
-.window-title{margin-left:9px;font-family:var(--mono);font-size:10px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.live{margin-left:auto;display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:999px;background:var(--green-soft);color:var(--green);font-family:var(--mono);font-size:9px;flex:none}
-.live i{width:5px;height:5px;border-radius:50%;background:var(--green)}
-.window-body{display:grid;grid-template-columns:166px minmax(0,1fr);min-height:402px}
-.app-side{display:flex;flex-direction:column;gap:3px;padding:18px 11px 13px;background:var(--surface-2);border-right:1px solid var(--line)}
-.side-label{padding:0 10px 8px;font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
-.side-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:9px;font-size:11.5px;color:var(--muted)}
-.side-item .ic{width:14px;height:14px;color:var(--dim)}
-.side-item.active{background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
-.side-item.active .ic{color:var(--accent-ink)}
-.side-foot{margin-top:auto;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);font-size:8.5px;line-height:1.55;color:var(--dim)}
-.side-foot b{display:flex;align-items:center;gap:6px;color:var(--green);font-family:var(--mono);font-size:8px;font-weight:500;margin-bottom:3px}
-.side-foot b i{width:4px;height:4px;border-radius:50%;background:var(--green)}
-.app-main{padding:19px 19px 17px;min-width:0}
-.app-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:13px}
-.app-head h4{margin:0;font-size:14px;font-weight:650;letter-spacing:-.2px}
-.app-head span{font-family:var(--mono);font-size:8.5px;color:var(--dim);background:var(--surface-2);border:1px solid var(--line);padding:3px 7px;border-radius:999px;white-space:nowrap}
-.app-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
-.app-stat{padding:9px 11px;background:var(--surface-2);border:1px solid var(--line);border-radius:11px;min-width:0}
-.app-stat span{display:block;font-size:9px;color:var(--muted);white-space:nowrap}
-.app-stat b{display:block;margin-top:2px;font-size:21px;line-height:1.2;font-weight:650;letter-spacing:-.6px}
-.app-stat.ai b{color:var(--accent)}
-.app-stat.hot b{color:var(--red)}
-.app-chart{position:relative;height:74px;margin-bottom:10px;border:1px solid var(--line);border-radius:11px;overflow:hidden;background:var(--surface)}
-.app-chart svg{position:absolute;inset:0;width:100%;height:100%}
-.chart-grid{stroke:var(--line);stroke-width:.7}
-.chart-line{fill:none;stroke:var(--accent);stroke-width:1.7;stroke-linecap:round}
-.chart-line-2{fill:none;stroke:var(--green);stroke-width:1.1;opacity:.75;stroke-linecap:round}
-.chart-stop-1{stop-color:var(--accent);stop-opacity:.22}
-.chart-stop-2{stop-color:var(--accent);stop-opacity:0}
-.app-flows{border:1px solid var(--line);border-radius:11px;overflow:hidden;background:var(--surface)}
-.flow-row{display:grid;grid-template-columns:46px minmax(0,1fr) 34px 54px;gap:7px;align-items:center;padding:8px 10px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:9px;color:var(--dim)}
-.flow-row:last-child{border-bottom:0}
-.flow-row.head{background:var(--surface-2);font-size:8px;letter-spacing:.04em;color:var(--dim)}
-.flow-row .proc{font-family:var(--font);font-size:10px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.risk-pill{padding:2px 4px;border-radius:4px;text-align:center;background:var(--red-soft);color:var(--red);font-size:8.5px;font-weight:600}
-.risk-pill.mid{background:var(--amber-soft);color:var(--amber)}
-.flow-row .action{text-align:right;font-size:8.5px}
-.flow-row .action.alert{color:var(--red);font-weight:600}
-.float{
-  position:absolute;z-index:3;display:flex;align-items:center;gap:10px;padding:11px 13px;
-  background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-md);
-}
-.float .fi{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent-ink);flex:none}
-.float .fi .ic{width:14px;height:14px}
-.float b{display:block;font-size:11px;font-weight:600;line-height:1.4}
-.float span{display:block;margin-top:1px;font-family:var(--mono);font-size:8.5px;color:var(--dim);line-height:1.45}
-.float.one{left:20px;bottom:-46px}
-.float.two{right:20px;top:-46px}
-.sample-tag{margin:14px 2px 0;text-align:right;font-family:var(--mono);font-size:9.5px;color:var(--dim)}
-
-.trust{background:var(--tint);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-.trust-grid{display:grid;grid-template-columns:repeat(4,1fr)}
-.trust-item{display:flex;align-items:center;gap:12px;padding:24px 26px;border-right:1px solid var(--line)}
-.trust-item:last-child{border-right:0}
-.trust-icon{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:var(--surface);border:1px solid var(--line);color:var(--accent-ink);flex:none}
-.trust-icon .ic{width:17px;height:17px}
-.trust-item b{display:block;font-size:13px;font-weight:600;line-height:1.4}
-.trust-item span{display:block;margin-top:2px;font-size:11.5px;color:var(--muted);line-height:1.5}
-
-.card-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
-.card{
-  background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:28px;
-  box-shadow:var(--shadow-sm);transition:transform .25s,border-color .25s,box-shadow .25s;
-}
-.card:hover{transform:translateY(-3px);border-color:var(--line-strong);box-shadow:var(--shadow-md)}
-.card .num{font-family:var(--mono);font-size:10.5px;font-weight:500;letter-spacing:.1em;color:var(--accent-ink)}
-.card .card-icon{width:46px;height:46px;border-radius:13px;display:grid;place-items:center;margin:18px 0 17px;background:var(--accent-soft);color:var(--accent-ink)}
-.card .card-icon .ic{width:20px;height:20px}
-.card h3{font-size:19px;line-height:1.35;letter-spacing:-.35px;margin:0 0 9px;font-weight:650}
-.card p{margin:0;font-size:13.5px;line-height:1.8;color:var(--muted)}
-.card p + p{margin-top:9px}
-.card code,.step code{
-  font-family:var(--mono);font-size:.88em;color:var(--accent-ink);background:var(--surface-2);
-  border:1px solid var(--line);border-radius:5px;padding:1px 5px;white-space:nowrap;
-}
-.insight{
-  display:grid;grid-template-columns:auto 1fr auto;gap:18px;align-items:center;
-  margin-top:18px;padding:24px 28px;background:var(--surface);border:1px solid var(--line);
-  border-left:3px solid var(--accent);border-radius:18px;box-shadow:var(--shadow-sm);
-}
-.insight-mark{font-family:Georgia,"Times New Roman",serif;font-size:42px;line-height:.7;color:var(--accent);align-self:start;margin-top:4px}
-.insight p{margin:0;font-size:14.5px;line-height:1.82;color:var(--muted)}
-.insight p strong{color:var(--ink);font-weight:600}
-.insight-note{font-family:var(--mono);font-size:9px;letter-spacing:.09em;color:var(--dim);white-space:nowrap;align-self:end}
-
-.arch-card{background:var(--surface);border:1px solid var(--line);border-radius:26px;padding:28px;box-shadow:var(--shadow-sm)}
-.pipeline{display:grid;grid-template-columns:repeat(5,1fr);gap:30px}
-.pipe-node{position:relative;min-height:154px;padding:17px 15px;background:var(--surface-2);border:1px solid var(--line);border-radius:16px}
-.pipe-node.highlight{border-color:var(--accent-line);background:var(--accent-wash);box-shadow:0 0 0 1px var(--accent-wash) inset}
-.pipe-node .pipe-icon{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:var(--surface);border:1px solid var(--line);color:var(--muted);margin-bottom:14px}
-.pipe-node.highlight .pipe-icon{color:var(--accent-ink);border-color:var(--accent-line);background:var(--surface)}
-.pipe-node .pipe-icon .ic{width:16px;height:16px}
-.pipe-node h4{margin:0 0 5px;font-size:13px;font-weight:650;letter-spacing:-.15px}
-.pipe-node p{margin:0;font-size:11.5px;line-height:1.68;color:var(--muted)}
-.pipe-node:not(:last-child)::after{
-  content:"";position:absolute;right:-21px;top:50%;width:10px;height:10px;
-  border-top:1.5px solid var(--line-strong);border-right:1.5px solid var(--line-strong);
-  transform:translateY(-50%) rotate(45deg);
-}
-.pipeline-caption{
-  display:flex;align-items:center;justify-content:center;gap:10px 18px;flex-wrap:wrap;
-  margin-top:18px;padding-top:17px;border-top:1px dashed var(--line);
-  font-family:var(--mono);font-size:10px;color:var(--dim);
-}
-.pipeline-caption b{font-weight:500;color:var(--muted)}
-.pipeline-caption .arr{color:var(--accent)}
-.why-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:18px}
-.why{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px 24px;box-shadow:var(--shadow-sm)}
-.why .label{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;color:var(--accent-ink);margin-bottom:8px}
-.why p{margin:0;font-size:13px;line-height:1.78;color:var(--muted)}
-.why b{color:var(--ink);font-weight:600}
-.table-card{margin-top:18px;background:var(--surface);border:1px solid var(--line);border-radius:22px;overflow:hidden;box-shadow:var(--shadow-sm)}
-.table-scroll{overflow-x:auto}
-table.compare{border-collapse:collapse;width:100%;min-width:820px}
-.compare th{padding:14px 18px;text-align:left;font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--dim);background:var(--surface-2);border-bottom:1px solid var(--line)}
-.compare td{padding:15px 18px;font-size:12.5px;line-height:1.65;color:var(--muted);border-bottom:1px solid var(--line);vertical-align:top}
-.compare tr:last-child td{border-bottom:0}
-.compare td:first-child{width:21%;color:var(--ink);font-weight:600}
-.compare .chosen td{background:var(--accent-wash)}
-.compare .chosen td:first-child{color:var(--accent-ink)}
-.tag-now{display:inline-block;margin-left:6px;padding:1px 5px;border-radius:4px;border:1px solid var(--accent-line);background:var(--accent-soft);color:var(--accent-ink);font-family:var(--mono);font-size:8px;vertical-align:1px}
-.compare .yes{color:var(--green)}
-.compare .mid{color:var(--amber)}
-.compare .no{color:var(--red)}
-.table-foot{display:flex;justify-content:space-between;gap:20px;padding:13px 18px;border-top:1px solid var(--line);background:var(--surface-2);font-size:10.5px;color:var(--dim)}
-
-.outcome-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
-.outcome{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:26px 26px 24px;box-shadow:var(--shadow-sm);transition:transform .25s,border-color .25s,box-shadow .25s}
-.outcome:hover{transform:translateY(-3px);border-color:var(--line-strong);box-shadow:var(--shadow-md)}
-.o-label{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;color:var(--accent-ink);margin-bottom:12px}
-.outcome h3{font-size:18px;line-height:1.35;letter-spacing:-.3px;margin:0 0 8px;font-weight:650}
-.outcome p{margin:0;font-size:13px;line-height:1.78;color:var(--muted)}
-.example{
-  margin-top:17px;padding:13px 14px;background:var(--surface-2);border:1px solid var(--line);
-  border-radius:12px;font-family:var(--mono);font-size:10px;line-height:1.95;color:var(--muted);
-}
-.example b{color:var(--accent-ink);font-weight:600}
-
-.coverage-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-.coverage{background:var(--surface);border:1px solid var(--line);border-radius:22px;overflow:hidden;box-shadow:var(--shadow-sm)}
-.cov-head{display:flex;align-items:center;gap:10px;padding:19px 24px;border-bottom:1px solid var(--line);font-size:15px;font-weight:650;letter-spacing:-.2px}
-.cov-head .ic{width:17px;height:17px}
-.coverage.good .cov-head{background:var(--green-soft);color:var(--green)}
-.coverage.bad .cov-head{background:var(--red-soft);color:var(--red)}
-.coverage ul{list-style:none;margin:0;padding:8px 24px 18px}
-.coverage li{display:flex;gap:11px;padding:11px 0;border-bottom:1px solid var(--line);font-size:12.5px;line-height:1.72;color:var(--muted)}
-.coverage li:last-child{border-bottom:0}
-.coverage li .ic{width:14px;height:14px;margin-top:2px;flex:none}
-.coverage.good li .ic{color:var(--green)}
-.coverage.bad li .ic{color:var(--red)}
-.coverage li b{color:var(--ink);font-weight:600}
-.notice{
-  display:flex;gap:12px;align-items:flex-start;margin-top:18px;padding:17px 20px;
-  background:var(--amber-soft);border:1px solid var(--amber-line);border-radius:16px;
-  font-size:12.5px;line-height:1.75;color:var(--muted);
-}
-.notice .ic{width:17px;height:17px;color:var(--amber);margin-top:2px;flex:none}
-.notice b{color:var(--ink);font-weight:600}
-
-.download-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
-.download-card{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:25px;box-shadow:var(--shadow-sm);transition:transform .25s,border-color .25s,box-shadow .25s}
-.download-card:hover{transform:translateY(-3px);border-color:var(--line-strong);box-shadow:var(--shadow-md)}
-.download-card.main{border-color:var(--accent-line);background:linear-gradient(165deg,var(--accent-wash),var(--surface) 46%)}
-.dl-badge{position:absolute;right:16px;top:16px;padding:3px 7px;border-radius:999px;background:var(--accent-soft);border:1px solid var(--accent-line);color:var(--accent-ink);font-family:var(--mono);font-size:8px;letter-spacing:.04em}
-.dl-os{font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);padding-right:76px}
-.download-card.main .dl-os{color:var(--accent-ink)}
-.download-card h3{margin:9px 0 7px;font-size:18px;line-height:1.35;letter-spacing:-.35px;font-weight:650}
-.download-card p{margin:0;font-size:12.5px;line-height:1.72;color:var(--muted);min-height:62px}
-.dl-file{margin-top:15px;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);font-family:var(--mono);font-size:9.5px;line-height:1.55;color:var(--muted);word-break:break-all}
-.dl-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}
-.chip{display:inline-flex;align-items:center;padding:3px 8px;border:1px solid var(--line);border-radius:999px;background:var(--surface-2);font-size:9.5px;color:var(--dim)}
-.chip.ok{background:var(--green-soft);border-color:transparent;color:var(--green)}
-.chip.warm{background:var(--amber-soft);border-color:transparent;color:var(--amber)}
-.release-bar{display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-top:24px;padding:20px 24px;background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow-sm)}
-.release-bar p{margin:0;font-size:13px;line-height:1.7;color:var(--muted)}
-.release-bar b{color:var(--ink);font-weight:600}
-.release-actions{display:flex;gap:10px;flex-wrap:wrap}
-.dl-note{display:flex;gap:9px;margin-top:14px;font-size:11.5px;line-height:1.75;color:var(--dim)}
-.dl-note .ic{width:14px;height:14px;margin-top:2px;flex:none;color:var(--dim)}
-.dl-note b{color:var(--muted);font-weight:600}
-
-.start-grid{display:grid;grid-template-columns:.92fr 1.08fr;gap:clamp(36px,5vw,64px);align-items:center}
-.steps{margin-top:32px}
-.step{position:relative;display:grid;grid-template-columns:36px 1fr;gap:16px;padding-bottom:26px}
-.step:last-child{padding-bottom:0}
-.step:not(:last-child)::before{content:"";position:absolute;left:17px;top:40px;bottom:2px;width:1px;background:var(--line)}
-.step-num{position:relative;z-index:1;width:35px;height:35px;border-radius:50%;display:grid;place-items:center;background:var(--surface);border:1px solid var(--accent-line);color:var(--accent-ink);font-family:var(--mono);font-size:11px}
-.step h4{margin:4px 0 5px;font-size:16px;font-weight:650;letter-spacing:-.2px}
-.step p{margin:0;font-size:13px;line-height:1.78;color:var(--muted)}
-.control{overflow:hidden;background:var(--surface);border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow-lg)}
-.control-body{padding:23px}
-.control-head{display:flex;align-items:center;gap:11px;margin-bottom:18px}
-.control-logo{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent-ink);flex:none}
-.control-logo .ic{width:19px;height:19px}
-.control-head h4{margin:0;font-size:14px;font-weight:650;letter-spacing:-.2px}
-.control-head span{display:block;margin-top:2px;font-size:9.5px;color:var(--dim)}
-.control-state{margin-left:auto;display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:999px;background:var(--green-soft);color:var(--green);font-family:var(--mono);font-size:8.5px;white-space:nowrap}
-.control-state i{width:5px;height:5px;border-radius:50%;background:var(--green)}
-.control-cards{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:11px}
-.control-card{padding:10px 11px;background:var(--surface-2);border:1px solid var(--line);border-radius:10px}
-.control-card .label{display:flex;align-items:center;justify-content:space-between;font-size:9px;color:var(--muted)}
-.control-card .label .ic{width:11px;height:11px;color:var(--dim)}
-.control-card .value{display:flex;align-items:center;gap:6px;margin-top:6px;font-family:var(--mono);font-size:9.5px;color:var(--ink)}
-.control-card .value i{width:5px;height:5px;border-radius:50%;background:var(--green);flex:none}
-.control-card .value.warn i{background:var(--amber)}
-.control-banner{display:flex;align-items:flex-start;gap:8px;margin-bottom:12px;padding:10px 11px;border-radius:9px;background:var(--green-soft);color:var(--muted);font-size:9.5px;line-height:1.6}
-.control-banner .ic{width:12px;height:12px;color:var(--green);margin-top:1px;flex:none}
-.control-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px}
-.mock-btn{display:flex;align-items:center;justify-content:center;gap:5px;height:32px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--muted);font-size:9.5px;white-space:nowrap}
-.mock-btn .ic{width:11px;height:11px}
-.mock-btn.primary{background:var(--accent-btn);border-color:var(--accent-btn);color:#fff;font-weight:600}
-.control-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:13px;padding-top:11px;border-top:1px solid var(--line);font-family:var(--mono);font-size:8px;color:var(--dim)}
-
-.privacy-grid{display:grid;grid-template-columns:1.02fr .98fr;gap:clamp(40px,6vw,72px);align-items:start}
-.privacy-list{list-style:none;margin:26px 0 0;padding:0;display:grid;gap:17px}
-.privacy-list li{display:flex;gap:12px}
-.privacy-list .ic{width:17px;height:17px;color:var(--accent-ink);margin-top:3px;flex:none}
-.privacy-list b{display:block;margin-bottom:2px;font-size:14px;font-weight:650;color:var(--ink)}
-.privacy-list p{margin:0;font-size:12.5px;line-height:1.72;color:var(--muted)}
-.boundary{
-  position:relative;overflow:hidden;padding:30px;border-radius:24px;
-  background:#2e2722;border:1px solid #3e342c;color:#f5eee4;
-  box-shadow:0 36px 80px -36px rgba(40,28,18,.72);
-}
-.boundary::after{content:"";position:absolute;right:-90px;bottom:-130px;width:260px;height:260px;border-radius:50%;border:1px solid rgba(255,255,255,.08);box-shadow:0 0 0 34px rgba(255,255,255,.025),0 0 0 68px rgba(255,255,255,.015);pointer-events:none}
-.boundary .label{position:relative;z-index:1;font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;color:#e8a184}
-.boundary h3{position:relative;z-index:1;margin:11px 0 20px;font-size:clamp(22px,2.4vw,27px);line-height:1.4;letter-spacing:-.5px;color:#fbf6ee;font-weight:650}
-.boundary-row{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:9px 0;border-top:1px solid rgba(255,255,255,.11);font-size:12px}
-.boundary-row span{color:rgba(245,238,228,.55)}
-.boundary-row b{font-family:var(--mono);font-size:10.5px;font-weight:500;color:#f5eee4;text-align:right}
-.boundary-row b.good{color:#a6cfa9}
-.boundary-note{position:relative;z-index:1;display:flex;gap:8px;margin-top:16px;font-size:10px;line-height:1.7;color:rgba(245,238,228,.48)}
-.boundary-note .ic{width:12px;height:12px;margin-top:1px;flex:none}
-[data-theme="dark"] .boundary{background:var(--surface);border-color:var(--line);color:var(--ink);box-shadow:var(--shadow-lg)}
-[data-theme="dark"] .boundary .label{color:var(--accent-ink)}
-[data-theme="dark"] .boundary h3{color:var(--ink)}
-[data-theme="dark"] .boundary-row{border-top-color:var(--line)}
-[data-theme="dark"] .boundary-row span{color:var(--muted)}
-[data-theme="dark"] .boundary-row b{color:var(--ink)}
-[data-theme="dark"] .boundary-row b.good{color:var(--green)}
-[data-theme="dark"] .boundary-note{color:var(--dim)}
-
-.roadmap-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
-.road{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:26px;box-shadow:var(--shadow-sm)}
-.road.done{border-color:var(--green-line)}
-.road-tag{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:999px;border:1px solid var(--line);background:var(--surface-2);color:var(--dim);font-family:var(--mono);font-size:8.5px;letter-spacing:.08em;margin-bottom:14px}
-.road-tag .ic{width:10px;height:10px}
-.road.done .road-tag{background:var(--green-soft);border-color:transparent;color:var(--green)}
-.road h3{margin:0 0 8px;font-size:17.5px;line-height:1.4;letter-spacing:-.3px;font-weight:650}
-.road p{margin:0;font-size:12.5px;line-height:1.75;color:var(--muted)}
-.road ul{margin:12px 0 0;padding-left:16px;font-size:11.5px;line-height:1.95;color:var(--dim)}
-.road li::marker{color:var(--accent)}
-.road.done li::marker{color:var(--green)}
-
-.final{position:relative;overflow:hidden;background:var(--cta-bg);color:#fff;padding:clamp(72px,8vw,104px) 0}
-.final::before{content:"";position:absolute;right:-140px;top:-220px;width:560px;height:560px;border-radius:50%;border:1px solid rgba(255,255,255,.16);box-shadow:0 0 0 50px rgba(255,255,255,.045),0 0 0 100px rgba(255,255,255,.025);pointer-events:none}
-.final::after{content:"";position:absolute;left:18%;bottom:-260px;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.1),transparent 68%);pointer-events:none}
-.final-inner{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:42px}
-.final .eyebrow{color:rgba(255,255,255,.72)}
-.final .eyebrow::before{background:#fff}
-.final h2{max-width:740px;margin:14px 0 13px;font-size:clamp(33px,4.3vw,52px);line-height:1.14;letter-spacing:-1.8px;font-weight:700;color:#fff}
-.final p{max-width:590px;margin:0;font-size:14px;line-height:1.8;color:rgba(255,255,255,.8)}
-.final-actions{display:flex;gap:11px;flex-wrap:wrap;flex:none}
-.final-actions .btn{height:50px}
-.final-note{position:relative;z-index:1;margin-top:30px;font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;color:rgba(255,255,255,.55)}
-
-.footer{background:var(--bg);padding:54px 0 26px}
-.footer-grid{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:38px}
-.footer .brand{margin-bottom:14px}
-.footer-desc{max-width:350px;margin:0;font-size:12px;line-height:1.75;color:var(--muted)}
-.footer-badge{display:inline-flex;align-items:center;gap:6px;margin-top:14px;padding:4px 8px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-family:var(--mono);font-size:8.5px;color:var(--dim)}
-.footer-badge i{width:4px;height:4px;border-radius:50%;background:var(--green)}
-.footer h4{margin:2px 0 12px;font-size:10px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--dim)}
-.footer-col{display:flex;flex-direction:column;gap:9px}
-.footer-col a,.footer-col span{font-size:12px;color:var(--muted);line-height:1.5}
-.footer-col a:hover{color:var(--accent-ink)}
-.footer-bottom{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:38px;padding-top:18px;border-top:1px solid var(--line);font-family:var(--mono);font-size:9.5px;color:var(--dim)}
-.search-terms{display:flex;align-items:flex-start;gap:18px;flex-wrap:wrap;margin-top:32px;padding-top:22px;border-top:1px solid var(--line)}
-.st-title{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;color:var(--dim);white-space:nowrap;padding-top:5px}
-.st-list{display:flex;flex-wrap:wrap;gap:6px}
-.st-list span{font-size:11px;line-height:1.5;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px 9px}
-.footer-lang{display:flex;align-items:center;gap:7px;font-family:var(--font);font-size:11px;color:var(--dim)}
-.footer-lang button{font-size:11px;color:var(--dim);padding:2px 0}
-.footer-lang button:hover{color:var(--ink)}
-.footer-lang button.active{color:var(--accent-ink);font-weight:600}
-html[data-lang="en"] .section-head h2{letter-spacing:-1.2px}
-html[data-lang="en"] .hero h1{letter-spacing:-2.2px}
-
-.js .reveal{opacity:0;transform:translateY(16px);transition:opacity .6s ease,transform .6s ease}
+.reveal{opacity:1;transform:none}
+.js .reveal{opacity:0;transform:translateY(14px);transition:opacity .5s ease,transform .5s cubic-bezier(.22,.68,.36,1)}
 .js .reveal.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .js .reveal{opacity:1;transform:none;transition:none}
+  *{animation:none!important}
+}
 
-@media(max-width:1180px){
-  .hero-grid{grid-template-columns:1fr;gap:52px}
-  .hero-visual{max-width:720px;margin:0 auto;width:100%}
-  .float{display:none}
-  .nav-links{gap:20px}
-  .pipeline{grid-template-columns:repeat(3,1fr)}
-  .pipe-node:not(:last-child)::after{display:none}
-  .pipe-node{min-height:auto}
+/* ---------- hero ---------- */
+.hero{position:relative;padding:64px 0 70px;overflow:hidden;border-bottom:1px solid var(--line)}
+.hero::before{content:"";position:absolute;inset:0;background:
+  radial-gradient(720px 320px at 84% -10%,var(--accent-soft),transparent 70%),
+  linear-gradient(180deg,var(--surface-2),var(--bg) 64%);pointer-events:none}
+.hero-grid{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:50px;align-items:center}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:5px 12px 5px 10px;border:1px solid var(--accent-line);background:var(--surface);border-radius:999px;font-size:12.5px;font-weight:560;color:var(--accent-ink);margin-bottom:20px}
+.hero-badge i{width:6px;height:6px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px var(--ok-soft)}
+.hero h1{font-size:clamp(31px,4.2vw,47px);line-height:1.14;letter-spacing:-.034em;font-weight:660}
+.hero-sub{margin-top:18px;color:var(--muted);font-size:16.5px;max-width:36em}
+.hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}
+.hero-points{margin-top:26px;display:grid;gap:9px}
+.hero-points li{display:flex;align-items:flex-start;gap:9px;font-size:14px;color:var(--muted)}
+.hero-points .ic{width:16px;height:16px;color:var(--ok);margin-top:4px}
+.hero-visual{position:relative;min-width:0}
+.sample-tag{margin-top:10px;text-align:right;font-size:11.5px;color:var(--dim)}
+
+/* ---------- app window mock ---------- */
+.app-window{border:1px solid var(--line-strong);border-radius:var(--r-lg);background:var(--surface);box-shadow:var(--shadow-lg);overflow:hidden}
+.window-bar{display:flex;align-items:center;gap:7px;height:38px;padding:0 12px;background:var(--surface-2);border-bottom:1px solid var(--line)}
+.win-dot{width:9px;height:9px;border-radius:50%;background:var(--line-strong)}
+.window-title{margin-left:7px;font-size:12px;font-weight:600;color:var(--muted)}
+.window-bar .live{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:620;color:var(--ok)}
+.window-bar .live i{width:6px;height:6px;border-radius:50%;background:var(--ok);animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.window-body{display:grid;grid-template-columns:184px minmax(0,1fr);min-height:396px}
+.app-side{border-right:1px solid var(--line);background:var(--surface-2);padding:12px 10px;display:flex;flex-direction:column;gap:2px}
+.side-brand{display:flex;align-items:center;gap:8px;padding:2px 6px 12px}
+.side-brand svg{width:22px;height:22px;flex:none}
+.side-brand b{display:block;font-size:12.5px;font-weight:680;letter-spacing:-.01em}
+.side-brand span{display:block;font-size:10px;color:var(--dim);letter-spacing:.03em}
+.side-label{padding:9px 8px 4px;font-size:10px;font-weight:650;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+.side-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:var(--r-sm);font-size:12.5px;color:var(--muted);font-weight:520}
+.side-item .ic{width:15px;height:15px}
+.side-item.active{background:var(--accent-soft);color:var(--accent-ink);font-weight:620}
+.side-badge{margin-left:auto;font-size:10px;font-weight:650;padding:1px 5px;border-radius:999px;background:var(--line);color:var(--muted)}
+.side-item.active .side-badge{background:var(--accent);color:#fff}
+.side-foot{margin-top:auto;padding:9px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--surface)}
+.side-foot b{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:650;color:var(--ok)}
+.side-foot b i{width:6px;height:6px;border-radius:50%;background:var(--ok)}
+.side-foot span{display:block;margin-top:3px;font-size:10px;color:var(--dim);line-height:1.5}
+.app-main{padding:14px 16px 16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.app-crumb{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--dim)}
+.app-crumb b{color:var(--ink);font-weight:620}
+.app-pill{margin-left:auto;display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border-radius:999px;background:var(--ok-soft);border:1px solid var(--ok-line);color:var(--ok);font-size:10.5px;font-weight:620}
+.app-pill i{width:5px;height:5px;border-radius:50%;background:var(--ok)}
+.app-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.app-stat{border:1px solid var(--line);border-radius:var(--r);padding:9px 10px;background:var(--surface)}
+.app-stat span{display:block;font-size:10.5px;color:var(--dim)}
+.app-stat b{display:block;margin-top:2px;font-size:19px;font-weight:660;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.app-stat b.hot{color:var(--bad)}
+.app-stat i{display:block;font-size:10px;color:var(--dim);font-style:normal}
+.app-chart{border:1px solid var(--line);border-radius:var(--r);background:var(--surface);padding:10px 12px 8px}
+.app-chart svg{display:block;width:100%;height:86px}
+.chart-grid{stroke:var(--line);stroke-width:1}
+.chart-line{fill:none;stroke:var(--accent);stroke-width:1.8;stroke-linejoin:round}
+.chart-line-2{fill:none;stroke:var(--ok);stroke-width:1.5;stroke-dasharray:3 3;opacity:.85}
+.chart-line-3{fill:none;stroke:var(--bad);stroke-width:1.5;opacity:.8}
+.chart-stop-1{stop-color:var(--accent);stop-opacity:.20}
+.chart-stop-2{stop-color:var(--accent);stop-opacity:0}
+.chart-legend{display:flex;gap:12px;padding:7px 2px 1px;font-size:10px;color:var(--dim)}
+.chart-legend span{display:inline-flex;align-items:center;gap:5px}
+.chart-legend i{width:8px;height:2px;border-radius:2px;background:var(--accent)}
+.chart-legend .ai i{background:var(--ok)}
+.chart-legend .high i{background:var(--bad)}
+.app-flows{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--surface)}
+.flow-row{display:grid;grid-template-columns:64px minmax(0,1fr) 44px 50px;gap:8px;align-items:center;padding:7px 11px;font-size:11.5px;border-top:1px solid var(--line)}
+.flow-row.head{border-top:0;background:var(--surface-2);color:var(--dim);font-size:10.5px;font-weight:620}
+.flow-row .proc{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:520}
+.flow-row .proc em{font-style:normal;color:var(--dim)}
+.risk-pill{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:19px;padding:0 6px;border-radius:999px;font-size:10.5px;font-weight:680;font-variant-numeric:tabular-nums;background:var(--bad-soft);color:var(--bad);border:1px solid var(--bad-line)}
+.risk-pill.mid{background:var(--warn-soft);color:var(--warn);border-color:var(--warn-line)}
+.risk-pill.low{background:var(--ok-soft);color:var(--ok);border-color:var(--ok-line)}
+.action{font-size:10.5px;font-weight:620;color:var(--muted)}
+.action.alert{color:var(--bad)}
+
+/* ---------- spec strip ---------- */
+.specs{border-bottom:1px solid var(--line);background:var(--surface)}
+.spec-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr))}
+.spec{padding:20px 18px;border-left:1px solid var(--line)}
+.spec:first-child{border-left:0;padding-left:0}
+.spec dt{font-size:11px;font-weight:620;letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}
+.spec dd{margin:6px 0 0;font-size:14px;font-weight:600;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.spec dd .mono{font-size:13px;font-weight:560}
+
+/* ---------- generic cards ---------- */
+.card-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.card-grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.card{border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface);padding:22px;transition:border-color .18s,box-shadow .18s,transform .18s}
+.card:hover{border-color:var(--accent-line);box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.card-icon{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:9px;background:var(--accent-soft);color:var(--accent);border:1px solid var(--accent-line);margin-bottom:14px}
+.card h3{font-size:16.5px;letter-spacing:-.02em}
+.card p{margin-top:8px;color:var(--muted);font-size:14.5px}
+.card .spec-line{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line);font-family:var(--mono);font-size:11.5px;color:var(--dim);word-break:break-word}
+
+/* ---------- pipeline ---------- */
+.pipeline{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;position:relative}
+.pipe-node{position:relative;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);padding:18px 16px}
+.pipe-node::after{content:"";position:absolute;right:-11px;top:50%;width:12px;height:1px;background:var(--line-strong);z-index:1}
+.pipe-node:last-child::after{display:none}
+.pipe-node .pipe-idx{font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:.04em}
+.pipe-node h4{margin-top:8px;font-size:14.5px;letter-spacing:-.01em}
+.pipe-node p{margin-top:6px;font-size:13px;color:var(--muted);line-height:1.6}
+.pipe-node.highlight{border-color:var(--accent-line);background:var(--accent-soft)}
+.pipe-node.highlight .pipe-idx{color:var(--accent)}
+.pipeline-caption{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin-top:16px;padding:12px 16px;border:1px dashed var(--line-strong);border-radius:var(--r);background:var(--surface-2);font-size:13px;color:var(--muted)}
+.pipeline-caption b{color:var(--ink);font-weight:620}
+.pipeline-caption .arr{color:var(--accent);font-weight:600}
+
+/* ---------- tables ---------- */
+.table-card{border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface);overflow:hidden}
+.table-scroll{overflow-x:auto}
+.data-table{font-size:13.5px;min-width:660px}
+.data-table th{text-align:left;padding:11px 16px;background:var(--surface-2);border-bottom:1px solid var(--line);font-size:11.5px;font-weight:650;letter-spacing:.05em;text-transform:uppercase;color:var(--dim);white-space:nowrap}
+.data-table td{padding:13px 16px;border-bottom:1px solid var(--line);vertical-align:top;color:var(--muted)}
+.data-table tbody tr:last-child td{border-bottom:0}
+.data-table tbody tr:hover{background:var(--surface-2)}
+.data-table td b,.data-table td strong{color:var(--ink);font-weight:620}
+.data-table .mono{color:var(--ink);font-size:12.5px}
+.data-table tr.chosen td{background:var(--accent-soft)}
+.data-table tr.chosen:hover td{background:var(--accent-soft)}
+.yes{color:var(--ok);font-weight:560}
+.mid{color:var(--warn);font-weight:560}
+.no{color:var(--bad);font-weight:560}
+.table-foot{display:flex;flex-wrap:wrap;gap:8px 20px;justify-content:space-between;padding:12px 16px;background:var(--surface-2);border-top:1px solid var(--line);font-size:12.5px;color:var(--dim)}
+.pill{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:620;border:1px solid var(--line-strong);background:var(--surface);color:var(--muted);white-space:nowrap}
+.pill.ok{color:var(--ok);border-color:var(--ok-line);background:var(--ok-soft)}
+.pill.warn{color:var(--warn);border-color:var(--warn-line);background:var(--warn-soft)}
+.pill.accent{color:var(--accent-ink);border-color:var(--accent-line);background:var(--accent-soft)}
+
+/* ---------- coverage ---------- */
+.coverage-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.coverage{border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface);overflow:hidden}
+.cov-head{display:flex;align-items:center;gap:9px;padding:14px 18px;border-bottom:1px solid var(--line);font-size:14px;font-weight:640;background:var(--surface-2)}
+.cov-head .ic{width:17px;height:17px}
+.coverage.good .cov-head{color:var(--ok)}
+.coverage.bad .cov-head{color:var(--bad)}
+.coverage ul{padding:6px 18px 14px}
+.coverage li{display:flex;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:14px;color:var(--muted);line-height:1.65}
+.coverage li:last-child{border-bottom:0}
+.coverage li .ic{width:16px;height:16px;margin-top:4px;flex:none}
+.coverage.good li .ic{color:var(--ok)}
+.coverage.bad li .ic{color:var(--bad)}
+.coverage li b{color:var(--ink);font-weight:620}
+.notice{display:flex;gap:12px;margin-top:18px;padding:16px 18px;border:1px solid var(--warn-line);background:var(--warn-soft);border-radius:var(--r);font-size:14px;color:var(--muted);line-height:1.65}
+.notice .ic{width:19px;height:19px;color:var(--warn);margin-top:2px;flex:none}
+.notice b{color:var(--ink);font-weight:650}
+.notice--info{border-color:var(--line-strong);background:var(--surface-2);color:var(--muted)}
+.notice--info .ic{color:var(--dim)}
+
+/* ---------- safety / layers ---------- */
+.safety-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:40px;align-items:start}
+.layers{margin-top:26px;display:grid;gap:12px}
+.layer{display:grid;grid-template-columns:32px minmax(0,1fr);gap:14px;padding:16px 18px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+.layer-num{display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:var(--accent-soft);border:1px solid var(--accent-line);color:var(--accent);font-family:var(--mono);font-size:13px;font-weight:650}
+.layer h4{font-size:15px;letter-spacing:-.01em}
+.layer p{margin-top:6px;font-size:14px;color:var(--muted)}
+.layer .tag{display:inline-block;margin-top:9px;font-size:11px;font-weight:620;color:var(--dim);letter-spacing:.05em;text-transform:uppercase}
+
+/* ---------- code panel ---------- */
+.code{border:1px solid var(--code-line);border-radius:var(--r);background:var(--code-bg);overflow:hidden}
+.code-bar{display:flex;align-items:center;gap:8px;padding:9px 13px;border-bottom:1px solid var(--code-line);background:rgba(255,255,255,.03);font-size:11.5px;color:var(--code-dim);font-family:var(--mono)}
+.code-bar b{color:var(--code-ink);font-weight:600}
+.code-bar .tagline{margin-left:auto;letter-spacing:.05em;text-transform:uppercase;font-size:10px}
+.code pre{margin:0;padding:14px 16px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.75;color:var(--code-ink)}
+.code .c{color:var(--code-dim)}
+.code .k{color:#8fb6ff}
+.code .s{color:#8fd6a8}
+.code .w{color:#e6c07b}
+.code-note{margin-top:10px;font-size:12.5px;color:var(--dim);line-height:1.6}
+
+/* ---------- desktop control mock ---------- */
+.control{border:1px solid var(--line-strong);border-radius:var(--r-lg);background:var(--surface);box-shadow:var(--shadow-md);overflow:hidden}
+.control-body{padding:16px}
+.control-head{display:flex;align-items:center;gap:11px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.control-logo{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:9px;background:var(--accent-soft);border:1px solid var(--accent-line);color:var(--accent)}
+.control-head h4{font-size:14.5px}
+.control-head span{display:block;font-size:11px;color:var(--dim)}
+.control-state{margin-left:auto;display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;background:var(--ok-soft);border:1px solid var(--ok-line);color:var(--ok);font-size:11px;font-weight:620}
+.control-state i{width:6px;height:6px;border-radius:50%;background:var(--ok)}
+.control-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;padding:14px 0}
+.control-card{border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;background:var(--surface-2)}
+.control-card .label{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--dim)}
+.control-card .label .ic{width:14px;height:14px}
+.control-card .value{display:flex;align-items:center;gap:7px;margin-top:5px;font-size:13px;font-weight:620;font-family:var(--mono)}
+.control-card .value i{width:6px;height:6px;border-radius:50%;background:var(--ok);flex:none}
+.control-card .value.warn{color:var(--warn)}
+.control-card .value.warn i{background:var(--warn)}
+.control-banner{display:flex;gap:9px;padding:11px 13px;border:1px solid var(--ok-line);background:var(--ok-soft);border-radius:var(--r);font-size:12.5px;color:var(--muted);line-height:1.55}
+.control-banner .ic{width:16px;height:16px;color:var(--ok);margin-top:2px;flex:none}
+.control-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding-top:14px}
+.mock-btn{display:flex;align-items:center;justify-content:center;gap:7px;height:36px;border:1px solid var(--line-strong);border-radius:8px;background:var(--surface);font-size:12.5px;font-weight:600;color:var(--ink)}
+.mock-btn .ic{width:15px;height:15px}
+.mock-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.control-foot{display:flex;justify-content:space-between;gap:10px;padding-top:14px;margin-top:14px;border-top:1px solid var(--line);font-size:11px;color:var(--dim)}
+
+/* ---------- steps ---------- */
+.start-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.92fr);gap:44px;align-items:start}
+.steps{margin-top:24px;display:grid;gap:12px}
+.step{display:grid;grid-template-columns:30px minmax(0,1fr);gap:14px;padding-bottom:14px;border-bottom:1px dashed var(--line)}
+.step:last-child{border-bottom:0;padding-bottom:0}
+.step-num{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;border:1px solid var(--line-strong);background:var(--surface);font-family:var(--mono);font-size:12.5px;font-weight:650;color:var(--muted)}
+.step h4{font-size:15px}
+.step p{margin-top:6px;font-size:14px;color:var(--muted)}
+.step code{background:var(--tint);border:1px solid var(--line);border-radius:4px;padding:1px 5px;font-size:12.5px;color:var(--ink)}
+
+/* ---------- privacy ---------- */
+.privacy-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.86fr);gap:44px;align-items:start}
+.privacy-list{display:grid;gap:12px}
+.privacy-list li{display:grid;grid-template-columns:34px minmax(0,1fr);gap:13px;padding:15px 16px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+.privacy-list .ic{width:18px;height:18px;color:var(--accent);margin-top:3px}
+.privacy-list b{font-size:14.5px;font-weight:640}
+.privacy-list p{margin-top:5px;font-size:13.5px;color:var(--muted)}
+.boundary{border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface);overflow:hidden}
+.boundary-head{padding:18px;border-bottom:1px solid var(--line);background:var(--surface-2)}
+.boundary-head .label{font-size:11px;font-weight:650;letter-spacing:.09em;text-transform:uppercase;color:var(--accent)}
+.boundary-head h3{margin-top:8px;font-size:19px;letter-spacing:-.02em}
+.boundary-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:11px 18px;border-bottom:1px solid var(--line);font-size:13.5px}
+.boundary-row span{color:var(--muted)}
+.boundary-row b{font-weight:620;font-family:var(--mono);font-size:12.5px;text-align:right}
+.boundary-row b.good{color:var(--ok)}
+.boundary-note{display:flex;gap:10px;padding:14px 18px;background:var(--surface-2);font-size:12.5px;color:var(--dim);line-height:1.6}
+.boundary-note .ic{width:16px;height:16px;flex:none;margin-top:2px}
+
+/* ---------- faq ---------- */
+.faq{border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface);overflow:hidden}
+.faq details{border-bottom:1px solid var(--line)}
+.faq details:last-child{border-bottom:0}
+.faq summary{display:flex;align-items:center;gap:12px;padding:16px 18px;cursor:pointer;font-size:15px;font-weight:600;letter-spacing:-.01em;list-style:none}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary .q{font-family:var(--mono);font-size:11.5px;color:var(--dim);flex:none}
+.faq summary .chev{margin-left:auto;width:16px;height:16px;color:var(--dim);transition:transform .2s;flex:none}
+.faq details[open] summary .chev{transform:rotate(90deg);color:var(--accent)}
+.faq details[open] summary{color:var(--accent-ink)}
+.faq .a{padding:0 18px 18px 47px;color:var(--muted);font-size:14.5px;line-height:1.72}
+.faq .a code{background:var(--tint);border:1px solid var(--line);border-radius:4px;padding:1px 5px;font-size:12.5px;color:var(--ink)}
+.faq .a a{color:var(--accent);border-bottom:1px solid var(--accent-line);font-weight:560}
+.faq .a a:hover{border-bottom-color:var(--accent)}
+.faq-grid{display:grid;grid-template-columns:minmax(0,.62fr) minmax(0,1.38fr);gap:40px;align-items:start}
+
+/* ---------- roadmap ---------- */
+.roadmap-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.road{border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface);padding:20px}
+.road.done{border-color:var(--ok-line);background:var(--ok-soft)}
+.road-tag{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}
+.road.done .road-tag{color:var(--ok)}
+.road-tag .ic{width:14px;height:14px}
+.road h3{margin-top:11px;font-size:16px}
+.road p{margin-top:8px;font-size:13.5px;color:var(--muted)}
+.road ul{margin-top:13px;padding-top:13px;border-top:1px dashed var(--line-strong);display:grid;gap:7px}
+.road li{display:flex;gap:8px;font-size:13px;color:var(--muted)}
+.road li::before{content:"";width:4px;height:4px;border-radius:50%;background:var(--dim);margin-top:9px;flex:none}
+.road.done li::before{background:var(--ok)}
+
+/* ---------- final ---------- */
+.final{background:#0b1220;color:#e8eef8;padding:70px 0;border-top:1px solid var(--line)}
+[data-theme="dark"] .final{background:#070b12}
+.final-inner{display:flex;flex-wrap:wrap;align-items:center;gap:28px;justify-content:space-between}
+.final .eyebrow{color:#9dbcff}
+.final .eyebrow::before{background:#9dbcff}
+.final h2{font-size:clamp(24px,2.9vw,32px);letter-spacing:-.026em;color:#fff}
+.final p{margin-top:12px;color:#a9b6ca;font-size:15px;max-width:44em}
+.final-actions{display:flex;flex-wrap:wrap;gap:12px}
+.final-note{margin-top:34px;padding-top:18px;border-top:1px solid rgba(255,255,255,.12);font-size:12px;color:#8494ab;letter-spacing:.04em}
+
+/* ---------- footer ---------- */
+.footer{background:var(--surface);border-top:1px solid var(--line);padding:52px 0 26px;font-size:13.5px}
+.footer-grid{display:grid;grid-template-columns:minmax(0,1.5fr) repeat(4,minmax(0,1fr));gap:30px}
+.footer-brand .brand{margin-bottom:14px}
+.footer-desc{color:var(--muted);font-size:13.5px;max-width:34em}
+.footer-badge{display:inline-flex;align-items:center;gap:7px;margin-top:16px;padding:4px 10px;border:1px solid var(--line-strong);border-radius:999px;font-size:11px;font-weight:620;color:var(--dim);letter-spacing:.04em}
+.footer-badge i{width:6px;height:6px;border-radius:50%;background:var(--ok)}
+.footer h4{font-size:12px;font-weight:650;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin-bottom:12px}
+.footer-col{display:grid;gap:9px}
+.footer-col a,.footer-col span{color:var(--muted);font-size:13.5px;line-height:1.5}
+.footer-col a{display:inline-flex;align-items:center;gap:5px;width:fit-content;border-bottom:1px solid transparent;transition:.15s}
+.footer-col a:hover{color:var(--accent);border-bottom-color:var(--accent-line)}
+.footer-col a .ic{width:13px;height:13px}
+.search-terms{margin-top:38px;padding-top:22px;border-top:1px solid var(--line)}
+.st-title{display:block;font-size:10.5px;font-weight:650;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-bottom:9px}
+.st-list{display:flex;flex-wrap:wrap;gap:5px 7px}
+.st-list span{font-size:11.5px;color:var(--dim);border:1px solid var(--line);border-radius:5px;padding:2px 7px;background:var(--surface-2)}
+.footer-bottom{display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;margin-top:26px;padding-top:20px;border-top:1px solid var(--line);font-size:12.5px;color:var(--dim)}
+.footer-bottom .sep{width:1px;height:12px;background:var(--line-strong)}
+.footer-lang{margin-left:auto;display:flex;align-items:center;gap:8px}
+.footer-lang button{background:none;border:0;padding:2px 4px;font-family:var(--font);font-size:12.5px;color:var(--dim);cursor:pointer;border-radius:4px}
+.footer-lang button:hover{color:var(--ink)}
+.footer-lang button.active{color:var(--accent);font-weight:650}
+
+/* ---------- responsive ---------- */
+@media (max-width:1080px){
+  .hero-grid{grid-template-columns:minmax(0,1fr);gap:38px}
+  .hero{padding:48px 0 56px}
+  .card-grid,.roadmap-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .pipeline{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .pipe-node::after{display:none}
+  .spec-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .spec{border-left:0;border-top:1px solid var(--line);padding:14px 0}
+  .spec:first-child,.spec:nth-child(2),.spec:nth-child(3){border-top:0}
+  .safety-grid,.start-grid,.privacy-grid,.faq-grid{grid-template-columns:minmax(0,1fr);gap:30px}
+  .footer-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
-@media(max-width:1000px){
-  .nav-links{display:none}
-  .nav-actions{margin-left:auto}
-  .trust-grid{grid-template-columns:1fr 1fr}
-  .trust-item:nth-child(2){border-right:0}
-  .trust-item:nth-child(1),.trust-item:nth-child(2){border-bottom:1px solid var(--line)}
-  .card-grid{grid-template-columns:1fr 1fr}
-  .outcome-grid{grid-template-columns:1fr 1fr}
-  .download-grid{grid-template-columns:1fr 1fr}
-  .roadmap-grid{grid-template-columns:1fr 1fr}
-  .start-grid{grid-template-columns:1fr;gap:42px}
-  .privacy-grid{grid-template-columns:1fr;gap:38px}
-  .coverage-grid{grid-template-columns:1fr}
-  .why-grid{grid-template-columns:1fr 1fr}
-  .final-inner{flex-direction:column;align-items:flex-start}
-  .footer-grid{grid-template-columns:1.5fr 1fr 1fr}
-  .footer-grid .footer-brand{grid-column:1 / -1}
+@media (max-width:900px){
+  .nav-inner{flex-wrap:wrap;min-height:58px;gap:10px;padding-top:9px;padding-bottom:9px}
+  .nav-links{order:3;width:100%;margin-left:0;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+  .nav-links::-webkit-scrollbar{display:none}
+  .announce-inner{flex-wrap:wrap;gap:6px}
+  .announce-inner a{margin-left:0}
 }
-@media(max-width:760px){
-  .wrap{width:calc(100vw - 32px)}
-  .nav-inner{height:68px;gap:14px}
-  .brand{font-size:15.5px;gap:9px}
-  .logo-mark{width:34px;height:34px}
-  .brand-tag{display:none}
-  .nav .repo-btn{display:none}
-  .hero{padding-top:44px;padding-bottom:72px}
-  .hero h1{letter-spacing:-2.2px}
-  .hero-sub{font-size:16.5px}
-  .hero-actions .btn{flex:1;min-width:150px}
-  .hero-meta{font-size:11.5px;gap:9px}
-  .app-window{border-radius:20px}
-  .window-body{grid-template-columns:1fr;min-height:0}
+@media (max-width:760px){
+  .section{padding:60px 0}
+  .card-grid,.card-grid.two,.coverage-grid,.roadmap-grid{grid-template-columns:minmax(0,1fr)}
+  .pipeline{grid-template-columns:minmax(0,1fr)}
+  .spec-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .spec:first-child,.spec:nth-child(2){border-top:0}
+  .spec:nth-child(3){border-top:1px solid var(--line)}
+  .window-body{grid-template-columns:minmax(0,1fr)}
   .app-side{display:none}
-  .app-main{padding:15px}
-  .app-stats{gap:6px}
-  .app-stat{padding:8px 9px}
-  .app-stat b{font-size:18px}
-  .app-stat span{font-size:8px}
-  .window-title{font-size:9px}
-  .live{display:none}
-  .flow-row{grid-template-columns:40px minmax(0,1fr) 30px 48px;padding:7px 8px;font-size:8.5px;gap:5px}
-  .flow-row .proc{font-size:9px}
-  .sample-tag{text-align:center}
-  .section{padding:68px 0}
-  .section-head{margin-bottom:38px}
-  .section-head h2{letter-spacing:-1.1px}
-  .section-head p{font-size:14.5px}
-  .trust-grid{grid-template-columns:1fr}
-  .trust-item{border-right:0;border-bottom:1px solid var(--line);padding:18px 20px}
-  .trust-item:last-child{border-bottom:0}
-  .card-grid,.outcome-grid,.download-grid,.roadmap-grid,.why-grid{grid-template-columns:1fr}
-  .card,.outcome,.download-card,.road{padding:23px}
-  .download-card p{min-height:0}
-  .insight{grid-template-columns:1fr;gap:8px;padding:22px}
-  .insight-mark{display:none}
-  .insight-note{text-align:left}
-  .pipeline{grid-template-columns:1fr 1fr}
-  .pipe-node h4{font-size:12.5px}
-  .pipe-node p{font-size:11px}
-  .arch-card{padding:18px;border-radius:20px}
-  .pipeline-caption{font-size:9px;gap:6px 12px}
-  .compare-foot{flex-direction:column;gap:4px}
-  .compare td,.compare th{padding:12px 14px}
-  .coverage ul{padding:6px 20px 14px}
-  .coverage li{font-size:12px}
-  .release-bar{align-items:flex-start;padding:18px}
-  .release-actions{width:100%}
-  .release-actions .btn{flex:1}
-  .final-actions{width:100%}
-  .final-actions .btn{flex:1;min-width:150px}
-  .final::before,.final::after{display:none}
-  .final{background-image:radial-gradient(circle at 100% 0,rgba(255,255,255,.15),transparent 46%)}
-  .footer-grid{grid-template-columns:1fr 1fr;gap:28px}
-  .footer-grid .footer-brand{grid-column:1 / -1}
-  .footer-bottom{flex-direction:column;align-items:flex-start}
-  .search-terms{flex-direction:column;gap:10px}
-  .st-title{padding-top:0}
-  .boundary{padding:24px}
-  .boundary-row{font-size:11px}
-  .boundary-row b{font-size:9.5px}
-}
-@media(max-width:480px){
-  .nav .btn-sm{padding:0 12px;font-size:12.5px}
-  .nav .btn-sm .ic{display:none}
-  .hero h1{font-size:clamp(38px,10.4vw,48px)}
-  .hero-meta{gap:6px 14px}
-  .hero-meta .sep{display:none}
-  .hero-actions .btn{width:100%;flex:none}
-  .app-chart{height:62px}
-  .flow-row.head span:nth-child(1){display:none}
-  .flow-row{grid-template-columns:minmax(0,1fr) 28px 44px}
-  .flow-row > span:first-child{display:none}
-  .pipeline{grid-template-columns:1fr}
-  .final h2{letter-spacing:-1.2px}
-  .final-actions .btn{width:100%;flex:none}
-  .control-cards{grid-template-columns:1fr}
-  .control-actions{grid-template-columns:1fr}
-  .footer-grid{grid-template-columns:1fr}
-  .dl-badge{position:static;display:inline-flex;margin-bottom:10px}
-  .dl-os{padding-right:0}
-}
-@media(prefers-reduced-motion:reduce){
-  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
-  .js .reveal{opacity:1;transform:none}
+  .app-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .flow-row{grid-template-columns:58px minmax(0,1fr) 42px}
+  .flow-row .action{display:none}
+  .flow-row.head .action{display:none}
+  .footer-grid{grid-template-columns:minmax(0,1fr)}
+  .footer-lang{margin-left:0}
+  .final-inner{flex-direction:column;align-items:flex-start}
+  .hero-actions .btn{width:100%}
 }
 </style>
 </head>
@@ -673,7 +603,7 @@ html[data-lang="en"] .hero h1{letter-spacing:-2.2px}
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <symbol id="i-logo" viewBox="0 0 40 40">
-    <rect class="lg-bg" width="40" height="40" rx="12"/>
+    <rect class="lg-bg" width="40" height="40" rx="10"/>
     <circle cx="20" cy="20" r="11.2" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="1.3"/>
     <circle cx="20" cy="20" r="6.6" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="1.3" stroke-dasharray="2.4 3"/>
     <circle cx="20" cy="20" r="2.3" fill="#fff"/>
@@ -683,7 +613,6 @@ html[data-lang="en"] .hero h1{letter-spacing:-2.2px}
   <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></symbol>
   <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></symbol>
   <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9S14.5 18.4 12 21c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></symbol>
-  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 10-5.7-5.7l-1.7 1.7"/><path d="M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 105.7 5.7l1.7-1.7"/></symbol>
   <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6z"/><circle cx="12" cy="12" r="2.5"/></symbol>
   <symbol id="i-eye-off" viewBox="0 0 24 24"><path d="M3 3l18 18M10.6 6.2A9.6 9.6 0 0112 6c6 0 9.5 6 9.5 6a16 16 0 01-3.1 3.6M6.2 7.7A17 17 0 002.5 12s3.5 6 9.5 6c1.4 0 2.7-.3 3.8-.8"/><path d="M9.9 9.9a3 3 0 004.2 4.2"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></symbol>
@@ -691,8 +620,11 @@ html[data-lang="en"] .hero h1{letter-spacing:-2.2px}
   <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
   <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h15M14 7l5 5-5 5"/></symbol>
   <symbol id="i-arrow-up" viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+  <symbol id="i-external" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-8.5 8.5"/><path d="M18 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h5"/></symbol>
   <symbol id="i-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></symbol>
   <symbol id="i-activity" viewBox="0 0 24 24"><path d="M3 12h4l2.5-7 5 14 2.5-7h4"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.5"/></symbol>
   <symbol id="i-file" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></symbol>
   <symbol id="i-server" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="6" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/><path d="M7 7h.01M7 17h.01"/></symbol>
   <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l2 2M14 9l2 2"/></symbol>
@@ -700,29 +632,41 @@ html[data-lang="en"] .hero h1{letter-spacing:-2.2px}
   <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h2M10 12h10M4 18h9M17 18h3"/><circle cx="16" cy="6" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="15" cy="18" r="2"/></symbol>
   <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></symbol>
   <symbol id="i-terminal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3M13 15h4"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 10-2.3 6.3"/><path d="M20 4v7h-7"/></symbol>
+  <symbol id="i-power" viewBox="0 0 24 24"><path d="M12 3v9"/><path d="M6.7 6.7a7.5 7.5 0 1010.6 0"/></symbol>
   <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
   <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20.5 14.2A8.5 8.5 0 019.8 3.5 8.5 8.5 0 1020.5 14.2z"/></symbol>
   <symbol id="i-github" viewBox="0 0 24 24"><path d="M12 .5C5.73.5.5 5.73.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56 0-.28-.01-1.02-.02-2-3.2.7-3.88-1.54-3.88-1.54-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.23-1.28-5.23-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11.1 11.1 0 015.79 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.43-2.69 5.41-5.25 5.69.41.36.78 1.06.78 2.14 0 1.55-.01 2.8-.01 3.18 0 .31.21.68.8.56A11.51 11.51 0 0023.5 12C23.5 5.73 18.27.5 12 .5z"/></symbol>
   <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 20h16"/></symbol>
 </svg>
 
+<div class="announce">
+  <div class="wrap announce-inner">
+    <span class="dot" aria-hidden="true"></span>
+    <span><b>v0.2.0 已发布</b>：新增断网保护，异常关机或进程退出后自动恢复系统代理。</span>
+    <a href="#safety">查看断网保护<svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+  </div>
+</div>
+
 <nav class="nav" aria-label="主导航">
   <div class="nav-inner wrap">
     <a class="brand" href="#top" aria-label="EgressScope 外发审计首页">
       <svg class="logo-mark" aria-hidden="true"><use href="#i-logo"/></svg>
-      <span>EgressScope</span>
-      <span class="brand-tag">本机数据外发审计</span>
+      <span class="brand-text">
+        <span class="brand-name">EgressScope</span>
+        <span class="brand-tag">本机数据外发审计</span>
+      </span>
     </a>
     <div class="nav-links">
-      <a href="#problem">问题</a>
-      <a href="#architecture">架构</a>
+      <a href="#capabilities">能力</a>
+      <a href="#how">工作原理</a>
       <a href="#coverage">覆盖边界</a>
+      <a href="#safety">断网保护</a>
       <a href="#download">下载</a>
-      <a href="#start">快速开始</a>
-      <a href="#privacy">隐私设计</a>
+      <a href="#faq">常见问题</a>
     </div>
     <div class="nav-actions">
-      <a class="icon-btn repo-btn" data-repo href="__REPO_URL__" target="_blank" rel="noopener" aria-label="GitHub 仓库">
+      <a class="icon-btn" data-repo href="__REPO_URL__" target="_blank" rel="noopener" aria-label="GitHub 仓库">
         <svg class="ic fill" aria-hidden="true"><use href="#i-github"/></svg>
       </a>
       <button class="icon-btn lang-toggle" id="lang-toggle" type="button" aria-label="切换到英文" data-no-i18n>EN</button>
@@ -731,8 +675,7 @@ html[data-lang="en"] .hero h1{letter-spacing:-2.2px}
         <svg class="ic icon-sun" aria-hidden="true"><use href="#i-sun"/></svg>
       </button>
       <a class="btn btn-primary btn-sm" data-release href="__REPO_URL__/releases/latest">
-        <span class="cta-label">免费下载</span>
-        <svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg>
+        <span class="cta-label">下载 v0.2.0</span>
       </a>
     </div>
   </div>
@@ -742,26 +685,24 @@ html[data-lang="en"] .hero h1{letter-spacing:-2.2px}
   <section class="hero" id="top">
     <div class="wrap hero-grid">
       <div class="hero-copy">
-        <div class="hero-badge"><i></i>v0.2.0 正式发布 · 六平台原生构建</div>
-        <h1>让每一次 <em>AI 外发</em><br>都有迹可循。</h1>
-        <p class="hero-sub">EgressScope 把本机 Agent 与桌面应用的出站流量，收拢成一条可见、可归因、可追溯的审计路径。它不读取聊天记录，而是观察操作系统里真实发生的数据外发。</p>
+        <div class="hero-badge"><i aria-hidden="true"></i>v0.2.0 · 六平台原生构建 · 本地优先</div>
+        <h1>看清本机 AI Agent 的<br>每一次数据外发</h1>
+        <p class="hero-sub">EgressScope 在本机运行一个只绑定 127.0.0.1 的审计代理：还原 HTTPS 外发内容、定位发起进程、识别密钥与敏感数据，并把结果写入可验证的本地证据链。</p>
         <div class="hero-actions">
           <a class="btn btn-primary btn-lg" data-release href="__REPO_URL__/releases/latest">
-            <span class="cta-label">免费下载</span>
+            <span class="cta-label">下载 v0.2.0</span>
             <svg class="ic" aria-hidden="true"><use href="#i-download"/></svg>
           </a>
-          <a class="btn btn-ghost btn-lg" href="#architecture">
-            查看架构
-            <svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg>
+          <a class="btn btn-ghost btn-lg" data-repo-path="/blob/main/README.md" href="__REPO_URL__/blob/main/README.md" target="_blank" rel="noopener">
+            阅读技术文档
+            <svg class="ic" aria-hidden="true"><use href="#i-external"/></svg>
           </a>
         </div>
-        <div class="hero-meta">
-          <span>Windows 10+ · macOS · Linux</span>
-          <span class="sep" aria-hidden="true"></span>
-          <span>本地运行 · 无需内核驱动</span>
-          <span class="sep" aria-hidden="true"></span>
-          <span>数据不离开设备</span>
-        </div>
+        <ul class="hero-points">
+          <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>默认只观察、不阻断；阻断需要显式开启</li>
+          <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>证据留在本机，正文以 AES-256-GCM 加密保存</li>
+          <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>根证书与系统代理都可以一键撤销</li>
+        </ul>
       </div>
 
       <div class="hero-visual">
@@ -773,149 +714,156 @@ html[data-lang="en"] .hero h1{letter-spacing:-2.2px}
           </div>
           <div class="window-body">
             <aside class="app-side">
-              <div class="side-label">工作台</div>
-              <div class="side-item active"><svg class="ic" aria-hidden="true"><use href="#i-activity"/></svg>态势总览</div>
-              <div class="side-item"><svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg>流量记录</div>
-              <div class="side-item"><svg class="ic" aria-hidden="true"><use href="#i-sliders"/></svg>外发规则</div>
-              <div class="side-item"><svg class="ic" aria-hidden="true"><use href="#i-database"/></svg>证据链</div>
-              <div class="side-item"><svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg>隐私设置</div>
+              <div class="side-brand">
+                <svg aria-hidden="true"><use href="#i-logo"/></svg>
+                <div><b>EgressScope</b><span>Local Egress Audit</span></div>
+              </div>
+              <div class="side-label">审计</div>
+              <div class="side-item active"><svg class="ic" aria-hidden="true"><use href="#i-grid"/></svg>态势总览</div>
+              <div class="side-item"><svg class="ic" aria-hidden="true"><use href="#i-activity"/></svg>流量审计<span class="side-badge">327</span></div>
+              <div class="side-item"><svg class="ic" aria-hidden="true"><use href="#i-shield"/></svg>风险发现</div>
+              <div class="side-label">关联</div>
+              <div class="side-item"><svg class="ic" aria-hidden="true"><use href="#i-file"/></svg>文件触达</div>
+              <div class="side-item"><svg class="ic" aria-hidden="true"><use href="#i-eye"/></svg>覆盖范围</div>
+              <div class="side-label">系统</div>
+              <div class="side-item"><svg class="ic" aria-hidden="true"><use href="#i-sliders"/></svg>策略与设置</div>
               <div class="side-foot">
-                <b><i></i>LOCAL ONLY</b>
-                仅绑定 127.0.0.1<br>无云同步 · 无外部脚本
+                <b><i></i>证据链 有效</b>
+                <span>AES-GCM · DPAPI · 不上云</span>
               </div>
             </aside>
             <div class="app-main">
-              <div class="app-head">
-                <h4>态势总览</h4>
-                <span>过去 24 小时</span>
-              </div>
+              <div class="app-crumb"><span>本机审计台</span><span aria-hidden="true">/</span><b>态势总览</b><span class="app-pill"><i></i>代理运行中</span></div>
               <div class="app-stats">
-                <div class="app-stat"><span>今日请求</span><b>1,284</b></div>
-                <div class="app-stat ai"><span>AI 外发</span><b>327</b></div>
-                <div class="app-stat hot"><span>高风险</span><b>12</b></div>
+                <div class="app-stat"><span>今日请求</span><b>1,284</b><i>较昨日 +8%</i></div>
+                <div class="app-stat"><span>AI 外发</span><b>327</b><i>6 个端点</i></div>
+                <div class="app-stat"><span>高风险</span><b class="hot">12</b><i>2 条已阻断</i></div>
+                <div class="app-stat"><span>进程归因</span><b>98%</b><i>PID 命中率</i></div>
               </div>
               <div class="app-chart">
                 <svg viewBox="0 0 420 80" preserveAspectRatio="none" aria-hidden="true">
-                  <defs><linearGradient id="chartFill" x1="0" x2="0" y1="0" y2="1"><stop class="chart-stop-1" offset="0"/><stop class="chart-stop-2" offset="1"/></linearGradient></defs>
+                  <defs><linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1"><stop class="chart-stop-1" offset="0"/><stop class="chart-stop-2" offset="1"/></linearGradient></defs>
                   <line class="chart-grid" x1="0" y1="58" x2="420" y2="58"/>
                   <line class="chart-grid" x1="0" y1="32" x2="420" y2="32"/>
                   <path d="M0,66 C34,62 48,48 76,54 S118,39 148,44 S190,30 220,37 S262,18 294,27 S332,20 362,16 S394,28 420,10 L420,80 L0,80 Z" fill="url(#chartFill)"/>
                   <path class="chart-line" d="M0,66 C34,62 48,48 76,54 S118,39 148,44 S190,30 220,37 S262,18 294,27 S332,20 362,16 S394,28 420,10"/>
                   <path class="chart-line-2" d="M0,73 C44,70 60,63 92,66 S135,54 170,59 S225,44 260,48 S310,40 344,37 S390,42 420,30"/>
+                  <path class="chart-line-3" d="M0,78 C60,77 90,72 140,74 S210,66 260,69 S330,58 420,62"/>
                 </svg>
+                <div class="chart-legend" aria-hidden="true">
+                  <span><i></i>全部请求</span>
+                  <span class="ai"><i></i>AI 相关</span>
+                  <span class="high"><i></i>高风险 / 已阻断</span>
+                </div>
               </div>
               <div class="app-flows">
-                <div class="flow-row head"><span>时间</span><span>进程 / 端点</span><span>风险</span><span>动作</span></div>
-                <div class="flow-row"><span>11:42:08</span><span class="proc">Codex.exe → api.openai.com</span><span class="risk-pill">92</span><span class="action alert">告警</span></div>
-                <div class="flow-row"><span>11:41:54</span><span class="proc">python.exe → generativelanguage…</span><span class="risk-pill mid">58</span><span class="action">观察</span></div>
-                <div class="flow-row"><span>11:40:31</span><span class="proc">Cursor.exe → api.anthropic.com</span><span class="risk-pill mid">44</span><span class="action">观察</span></div>
+                <div class="flow-row head"><span>时间</span><span>发起进程 → 目标端点</span><span>风险</span><span class="action">处置</span></div>
+                <div class="flow-row"><span>11:42:08</span><span class="proc">Codex.exe <em>→</em> api.openai.com</span><span class="risk-pill">92</span><span class="action alert">告警</span></div>
+                <div class="flow-row"><span>11:41:54</span><span class="proc">python.exe <em>→</em> generativelanguage…</span><span class="risk-pill mid">58</span><span class="action">观察</span></div>
+                <div class="flow-row"><span>11:40:31</span><span class="proc">Cursor.exe <em>→</em> api.anthropic.com</span><span class="risk-pill low">24</span><span class="action">观察</span></div>
               </div>
             </div>
           </div>
         </div>
-        <div class="float one" aria-hidden="true">
-          <div class="fi"><svg class="ic"><use href="#i-cpu"/></svg></div>
-          <div><b>PID 归因完成</b><span>python.exe · PID 18240</span></div>
-        </div>
-        <div class="float two" aria-hidden="true">
-          <div class="fi"><svg class="ic"><use href="#i-lock"/></svg></div>
-          <div><b>证据已加密</b><span>AES-256-GCM · DPAPI</span></div>
-        </div>
-        <div class="sample-tag">* 产品界面示意，数据为样例</div>
+        <div class="sample-tag">界面预览 · 表中数据为样例</div>
       </div>
     </div>
   </section>
 
-  <section class="trust" aria-label="核心特性">
-    <div class="wrap trust-grid">
-      <div class="trust-item">
-        <div class="trust-icon"><svg class="ic" aria-hidden="true"><use href="#i-eye"/></svg></div>
-        <div><b>进程级可见性</b><span>端口到 PID 的本地关联</span></div>
-      </div>
-      <div class="trust-item">
-        <div class="trust-icon"><svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg></div>
-        <div><b>内容只在本地</b><span>SQLite 存储 · 无云同步</span></div>
-      </div>
-      <div class="trust-item">
-        <div class="trust-icon"><svg class="ic" aria-hidden="true"><use href="#i-database"/></svg></div>
-        <div><b>可验证证据链</b><span>SHA-256 逐条链接</span></div>
-      </div>
-      <div class="trust-item">
-        <div class="trust-icon"><svg class="ic" aria-hidden="true"><use href="#i-shield"/></svg></div>
-        <div><b>可撤销的系统变更</b><span>代理备份 · CA 可移除</span></div>
-      </div>
+  <section class="specs" aria-label="关键参数">
+    <div class="wrap">
+      <dl class="spec-grid">
+        <div class="spec"><dt>代理监听</dt><dd class="mono">127.0.0.1:8899</dd></div>
+        <div class="spec"><dt>审计台</dt><dd class="mono">127.0.0.1:8898</dd></div>
+        <div class="spec"><dt>正文加密</dt><dd>AES-256-GCM<span class="mono"> + DPAPI</span></dd></div>
+        <div class="spec"><dt>证据完整性</dt><dd>SHA-256 链</dd></div>
+        <div class="spec"><dt>原生构建</dt><dd>6 个平台目标</dd></div>
+        <div class="spec"><dt>云同步</dt><dd>无</dd></div>
+      </dl>
     </div>
   </section>
-
-  <section class="section" id="problem">
+  <section class="section" id="capabilities">
     <div class="wrap">
       <div class="section-head reveal">
-        <span class="eyebrow">01 / 盲区</span>
-        <h2>问题不在模型，<br>而在看不见的出站路径。</h2>
-        <p>当 Agent 获得文件系统、终端和代码库的访问权，它同时获得了把这些上下文送出本机的能力。传统安全工具关心连接是否存在，却很少回答：是谁、在什么时候、把什么内容、送到了哪里。</p>
+        <span class="eyebrow">能力总览</span>
+        <h2>把“有一条连接”变成一次可复核的外发记录</h2>
+        <p>每一项能力都对应本机证据链上的一个环节：从流量入口、内容还原、进程归因，到风险判定与加密留存。审计台可随时校验链条是否完整。</p>
       </div>
       <div class="card-grid">
         <article class="card reveal">
-          <div class="num">01 / CONTEXT</div>
-          <div class="card-icon"><svg class="ic" aria-hidden="true"><use href="#i-cpu"/></svg></div>
-          <h3>Agent 自动装载上下文</h3>
-          <p>工作区文件、终端输出、环境变量和密钥可能在一次会话里被装入提示词。会话日志能告诉你会话内容，却不能证明这些内容是否、何时、向何处发生了外发。</p>
-        </article>
-        <article class="card reveal">
-          <div class="num">02 / ENCRYPTION</div>
           <div class="card-icon"><svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg></div>
-          <h3>HTTPS 让异常失去内容</h3>
-          <p>流氓软件、被劫持的编辑器插件与合法 Agent 使用同一条加密通道。流量面板只显示字节数；没有应用配合与本地 TLS 终止，你无法判断上传的是遥测、代码，还是客户数据。</p>
+          <h3>HTTPS 外发可见性</h3>
+          <p>本地代理终止 TLS，还原请求方法、路径、请求头与正文，并记录响应状态与体积。不遵循代理设置的应用不会被假装看见。</p>
+          <div class="spec-line">TLS 1.2 / 1.3 · HTTP/1.1 · HTTP/2</div>
         </article>
         <article class="card reveal">
-          <div class="num">03 / ATTRIBUTION</div>
-          <div class="card-icon"><svg class="ic" aria-hidden="true"><use href="#i-link"/></svg></div>
-          <h3>连接不等于发起者</h3>
-          <p>日志里的一条 <code>POST /v1/chat</code> 没有意义，如果不知道它来自哪个进程、哪条父进程链。没有归因，风险告警只会变成噪声；有了归因，才能定位到具体工具与工作流。</p>
+          <div class="card-icon"><svg class="ic" aria-hidden="true"><use href="#i-cpu"/></svg></div>
+          <h3>进程级归因</h3>
+          <p>用客户端临时端口匹配本机 TCP 归属表，缓存 PID 与进程创建时间以减少 PID 复用误判，并保留父进程链与脱敏命令行。</p>
+          <div class="spec-line">port → pid → parent chain</div>
         </article>
-      </div>
-      <div class="insight reveal">
-        <div class="insight-mark" aria-hidden="true">“</div>
-        <p>真正的空白不是“有没有网络监控”，而是<strong>网络元数据与内容、进程、文件线索之间缺少一条连续的证据链</strong>。EgressScope 选择在这条链上做工程，而不是再做一个流量计数器。</p>
-        <div class="insight-note">DESIGN PRINCIPLE / 01</div>
+        <article class="card reveal">
+          <div class="card-icon"><svg class="ic" aria-hidden="true"><use href="#i-activity"/></svg></div>
+          <h3>AI 端点识别</h3>
+          <p>识别主流 AI 服务与本地自建端点，提取模型名与 token 用量，把 AI 外发与普通遥测、下载流量区分开。</p>
+          <div class="spec-line">category: ai_saas / ai_local / other</div>
+        </article>
+        <article class="card reveal">
+          <div class="card-icon"><svg class="ic" aria-hidden="true"><use href="#i-key"/></svg></div>
+          <h3>敏感数据规则</h3>
+          <p>匹配常见 API 密钥、私钥、证件号、银行卡、手机号、源码块与文件路径引用，形成可解释、可复核的风险分。</p>
+          <div class="spec-line">secret.openai_key +55 · pii.cn_id +40</div>
+        </article>
+        <article class="card reveal">
+          <div class="card-icon"><svg class="ic" aria-hidden="true"><use href="#i-database"/></svg></div>
+          <h3>加密证据链</h3>
+          <p>每条记录的关键摘要与上一条哈希链接，正文加密保存，列表与导出默认脱敏；可随时校验链条并导出 JSONL 证据。</p>
+          <div class="spec-line">sha256(prev + summary) → chain valid</div>
+        </article>
+        <article class="card reveal">
+          <div class="card-icon"><svg class="ic" aria-hidden="true"><use href="#i-file"/></svg></div>
+          <h3>文件触达关联（Beta）</h3>
+          <p>抽样近期外发进程打开的文件句柄，并用虚构诱饵文件观察异常触达。只记录路径与时间等元数据，不读取文件内容。</p>
+          <div class="spec-line">metadata only · content never read</div>
+        </article>
       </div>
     </div>
   </section>
 
-  <section class="section section--tint" id="architecture">
+  <section class="section section--tint" id="how">
     <div class="wrap">
       <div class="section-head reveal">
-        <span class="eyebrow">02 / 架构取舍</span>
-        <h2>本地代理 + 本地 CA +<br>进程归因，是最可落地的组合。</h2>
-        <p>我们比较了透明重定向、浏览器扩展、Agent 会话旁路和内核级采集。最终选择用户态本地代理作为第一版主干：它不要求驱动签名，不依赖某个 Agent 的私有格式，能在应用配合时还原内容，也允许用户清楚知道审计边界在哪里。</p>
+        <span class="eyebrow">工作原理</span>
+        <h2>用户态本地代理 + 本地 CA + 进程归因</h2>
+        <p>这条路径不需要内核驱动签名，不依赖任何 Agent 的私有数据格式，并且失败模式清晰：应用不配合就看不到，不会把“代理已启动”说成“全部可见”。</p>
       </div>
 
-      <div class="arch-card reveal">
+      <div class="table-card reveal" style="padding:20px;background:var(--surface)">
         <div class="pipeline">
           <div class="pipe-node">
-            <div class="pipe-icon"><svg class="ic" aria-hidden="true"><use href="#i-box"/></svg></div>
-            <h4>应用 / Agent</h4>
-            <p>Claude Code、Codex、编辑器、SDK 或普通桌面程序发起 HTTPS 请求。</p>
+            <div class="pipe-idx">STEP 01</div>
+            <h4>应用 / Agent 发起请求</h4>
+            <p>Claude Code、Codex、编辑器插件、SDK 或普通桌面程序发出 HTTPS 请求。</p>
           </div>
           <div class="pipe-node">
-            <div class="pipe-icon"><svg class="ic" aria-hidden="true"><use href="#i-server"/></svg></div>
-            <h4>本地转发代理</h4>
-            <p>仅监听 127.0.0.1。系统代理或进程环境变量把流量引到这里，不影响局域网。</p>
+            <div class="pipe-idx">STEP 02</div>
+            <h4>进入本地转发代理</h4>
+            <p>代理只监听 127.0.0.1，通过系统代理或进程环境变量接入，不影响局域网。</p>
           </div>
           <div class="pipe-node highlight">
-            <div class="pipe-icon"><svg class="ic" aria-hidden="true"><use href="#i-key"/></svg></div>
-            <h4>TLS 终止</h4>
-            <p>使用当前用户信任的本地 CA，对应用配合的 TLS 1.2 / 1.3 连接还原 HTTP 语义。</p>
+            <div class="pipe-idx">STEP 03</div>
+            <h4>本地 CA 终止 TLS</h4>
+            <p>使用当前用户信任的本地 CA 签发站点证书，还原 HTTP 语义后再重新加密转发。</p>
           </div>
           <div class="pipe-node">
-            <div class="pipe-icon"><svg class="ic" aria-hidden="true"><use href="#i-cpu"/></svg></div>
-            <h4>进程归因</h4>
-            <p>客户端临时端口匹配本机 TCP 表，缓存 PID + 创建时间，避免 PID 复用误判。</p>
+            <div class="pipe-idx">STEP 04</div>
+            <h4>归因到发起进程</h4>
+            <p>客户端端口匹配本机 TCP 表，得到 PID、进程名、父进程链与创建时间。</p>
           </div>
           <div class="pipe-node">
-            <div class="pipe-icon"><svg class="ic" aria-hidden="true"><use href="#i-sliders"/></svg></div>
-            <h4>策略与证据</h4>
-            <p>端点分类、DLP 信号、风险分；正文加密、审计链、脱敏预览与策略处置。</p>
+            <div class="pipe-idx">STEP 05</div>
+            <h4>策略判定与证据留存</h4>
+            <p>端点分类、DLP 规则、风险评分与处置动作，正文加密写入哈希链证据库。</p>
           </div>
         </div>
         <div class="pipeline-caption" aria-label="审计流程">
@@ -927,31 +875,31 @@ html[data-lang="en"] .hero h1{letter-spacing:-2.2px}
         </div>
       </div>
 
-      <div class="why-grid">
-        <div class="why reveal">
-          <span class="label">WHY LOCAL PROXY</span>
-          <p><b>失败模式清晰。</b>应用不配合，就看不到；不会假装全量可见。系统代理修改前备份，退出时尝试恢复。已有 Clash 等回环代理时自动串联，避免接管后断网。</p>
-        </div>
-        <div class="why reveal">
-          <span class="label">WHY MITMPROXY</span>
-          <p><b>不重复造 TLS。</b>成熟的开源代理负责 HTTP/2、证书签发与流式转发，项目把精力放在归因、策略与证据链。</p>
-        </div>
-        <div class="why reveal">
-          <span class="label">WHY LOCAL CA</span>
-          <p><b>内容需要应用同意。</b>CA 只安装到当前用户信任根，且不会自动安装；固定证书、mTLS、E2EE 不被攻破。</p>
-        </div>
+      <div class="card-grid" style="margin-top:16px">
+        <article class="card reveal">
+          <h3>为什么选择本地代理</h3>
+          <p>失败模式清晰、可解释、可撤销。修改系统代理前先备份，退出时恢复；检测到 PAC 脚本时拒绝接管；已有 Clash 等回环代理时自动串联，避免接管后断网。</p>
+        </article>
+        <article class="card reveal">
+          <h3>为什么使用 mitmproxy</h3>
+          <p>不重复造 TLS。成熟的开源代理负责 HTTP/2、证书签发与流式转发，项目把工程精力集中在归因、策略、证据链与产品边界上。</p>
+        </article>
+        <article class="card reveal">
+          <h3>为什么需要本地 CA</h3>
+          <p>还原内容必须经过应用同意。CA 只安装到当前用户信任根且不会自动安装；证书固定、mTLS 与端到端加密不被本项目攻破。</p>
+        </article>
       </div>
 
-      <div class="table-card reveal">
+      <div class="table-card reveal" style="margin-top:16px">
         <div class="table-scroll">
-          <table class="compare">
+          <table class="data-table compare">
             <thead><tr><th>技术路径</th><th>内容可见性</th><th>部署与维护</th><th>覆盖面</th><th>用户可解释性</th></tr></thead>
             <tbody>
-              <tr class="chosen"><td>本地代理 + 本地 CA <span class="tag-now">本版</span></td><td class="yes">高：协议语义、正文、进程</td><td class="yes">中低：用户态、无驱动签名</td><td class="mid">中：需应用遵循代理 / 信任 CA</td><td class="yes">高：授权与边界可见</td></tr>
-              <tr><td>WFP / WinDivert 透明重定向</td><td class="mid">中：仍受 TLS 固定与信任限制</td><td class="no">高：驱动、签名、兼容性</td><td class="yes">较高：不依赖应用代理设置</td><td class="mid">中：用户不易感知</td></tr>
-              <tr><td>Agent 会话 / MCP 旁路</td><td class="yes">高：可读会话内容</td><td class="yes">低：只需读本地数据</td><td class="no">窄：只覆盖特定 Agent，不看真实外发</td><td class="mid">中：依赖私有格式</td></tr>
-              <tr><td>浏览器扩展</td><td class="mid">中：仅浏览器内页面与请求</td><td class="yes">低：无需系统权限</td><td class="no">窄：桌面 Agent、CLI、后台服务不可见</td><td class="yes">高</td></tr>
-              <tr><td>ETW / 内核文件审计</td><td class="no">不提供内容</td><td class="no">高：需要管理员与规则工程</td><td class="yes">广：网络 / 文件系统事件</td><td class="mid">中：事件量大、噪声高</td></tr>
+              <tr class="chosen"><td><b>本地代理 + 本地 CA</b> <span class="pill accent">本版</span></td><td class="yes">高：协议语义、正文、进程</td><td class="yes">中低：用户态、无驱动签名</td><td class="mid">中：需应用遵循代理 / 信任 CA</td><td class="yes">高：授权与边界可见</td></tr>
+              <tr><td><b>WFP / WinDivert 透明重定向</b></td><td class="mid">中：仍受 TLS 固定与信任限制</td><td class="no">高：驱动、签名、兼容性</td><td class="yes">较高：不依赖应用代理设置</td><td class="mid">中：用户不易感知</td></tr>
+              <tr><td><b>Agent 会话 / MCP 旁路</b></td><td class="yes">高：可读会话内容</td><td class="yes">低：只需读本地数据</td><td class="no">窄：只覆盖特定 Agent，不看真实外发</td><td class="mid">中：依赖私有格式</td></tr>
+              <tr><td><b>浏览器扩展</b></td><td class="mid">中：仅浏览器内页面与请求</td><td class="yes">低：无需系统权限</td><td class="no">窄：桌面 Agent、CLI、后台服务不可见</td><td class="yes">高</td></tr>
+              <tr><td><b>ETW / 内核文件审计</b></td><td class="no">不提供内容</td><td class="no">高：需要管理员与规则工程</td><td class="yes">广：网络 / 文件系统事件</td><td class="mid">中：事件量大、噪声高</td></tr>
             </tbody>
           </table>
         </div>
@@ -960,60 +908,12 @@ html[data-lang="en"] .hero h1{letter-spacing:-2.2px}
     </div>
   </section>
 
-  <section class="section">
+  <section class="section" id="coverage">
     <div class="wrap">
       <div class="section-head reveal">
-        <span class="eyebrow">03 / 审计结果</span>
-        <h2>从“有一条连接”，到<br>“这一次外发是什么”。</h2>
-        <p>审计结果不是要制造恐慌，而是让安全判断建立在可复核的事实上：进程、端点、内容信号、处置动作和存储完整性。</p>
-      </div>
-      <div class="outcome-grid">
-        <article class="outcome reveal">
-          <div class="o-label">01 / ATTRIBUTION</div>
-          <h3>精确到进程</h3>
-          <p>缓存进程创建时间，减少 PID 复用带来的错误归属；同时保留父进程链与脱敏命令行，帮助识别 Agent、编辑器子进程和脚本运行时。</p>
-          <div class="example"><b>python.exe</b> · PID 18240<br>parent: code.exe → chrome.exe<br>endpoint: api.openai.com/v1/chat</div>
-        </article>
-        <article class="outcome reveal">
-          <div class="o-label">02 / DLP SIGNALS</div>
-          <h3>内容级风险信号</h3>
-          <p>识别 AI 服务端点与常见 API 密钥、私钥、证件号、银行卡、手机号和代码块。风险分可解释，证据保留脱敏，避免审计本身成为密钥泄露源。</p>
-          <div class="example">secret.openai_key <b>+55</b><br>pii.cn_id <b>+40</b><br>egress.unknown_destination <b>+15</b></div>
-        </article>
-        <article class="outcome reveal">
-          <div class="o-label">03 / ACTION</div>
-          <h3>可观察，也可阻断</h3>
-          <p>默认只观察。需要时对达到阈值的请求返回 403，让“是否放行”成为显式策略，而不是事后的猜测。阻断开关默认关闭，避免误伤。</p>
-          <div class="example">risk ≥ 85 <b>→ BLOCK</b><br>risk ≥ 45 <b>→ ALERT</b><br>default <b>→ OBSERVE</b></div>
-        </article>
-        <article class="outcome reveal">
-          <div class="o-label">04 / EVIDENCE</div>
-          <h3>脱敏在前，解密在后</h3>
-          <p>列表与导出只展示脱敏预览。原始正文仅有选择地加密保存，在详情中再次确认后才于当前会话解密。导出的 JSONL 不包含正文。</p>
-          <div class="example">list/export <b>redacted</b><br>raw body <b>AES-256-GCM</b><br>master key <b>Windows DPAPI</b></div>
-        </article>
-        <article class="outcome reveal">
-          <div class="o-label">05 / INTEGRITY</div>
-          <h3>证据链可验证</h3>
-          <p>每条流量写库时，将关键摘要与上一条哈希链接。审计台可随时校验链条是否断裂，为事后取证提供一个廉价的完整性基线。</p>
-          <div class="example">entry 0421 <b>prev: 9f2c…</b><br>sha256(prev + summary)<br>chain <b>valid</b></div>
-        </article>
-        <article class="outcome reveal">
-          <div class="o-label">06 / CORRELATION</div>
-          <h3>网络 × 文件线索</h3>
-          <p>Beta 版把近期外发进程与其打开的文件句柄做时间关联，并用虚构诱饵文件观察异常触达。只记录元数据，不读取用户文件内容。</p>
-          <div class="example">PID 18240 · .ssh/id_rsa <b>high</b><br>canary · aws_credentials <b>hit</b><br>content read <b>not claimed</b></div>
-        </article>
-      </div>
-    </div>
-  </section>
-
-  <section class="section section--tint" id="coverage">
-    <div class="wrap">
-      <div class="section-head reveal">
-        <span class="eyebrow">04 / 覆盖边界</span>
-        <h2>我们主动写清楚了<br>“看不到”的部分。</h2>
-        <p>没有一种用户态方案能看见所有加密流量。一个可信的审计产品，不应该把“代理已启动”宣传成“全部可见”。下面是第一版的真实边界。</p>
+        <span class="eyebrow">覆盖边界</span>
+        <h2>我们主动写清楚了“看不到”的部分</h2>
+        <p>没有一种用户态方案能看见所有加密流量。一个可信的审计产品，不应该把“代理已启动”宣传成“全部可见”。下面是当前版本的真实边界。</p>
       </div>
       <div class="coverage-grid">
         <div class="coverage good reveal">
@@ -1032,7 +932,7 @@ html[data-lang="en"] .hero h1{letter-spacing:-2.2px}
           <ul>
             <li><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg><span><b>未经过代理的直连流量。</b>忽略系统代理的应用必须用环境变量或后续的透明重定向接入。</span></li>
             <li><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg><span><b>证书固定、mTLS、双向证书校验。</b>这些是应用有意建立的安全边界，不被本项目攻破。</span></li>
-            <li><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg><span><b>QUIC / HTTP3 与非 HTTP 协议。</b>第一版不解析，无法给出内容级结论。</span></li>
+            <li><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg><span><b>QUIC / HTTP3 与非 HTTP 协议。</b>当前版本不解析，无法给出内容级结论。</span></li>
             <li><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg><span><b>应用层端到端加密。</b>没有密钥时，即使流量经过代理也只能看到密文和元数据。</span></li>
             <li><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg><span><b>Windows 服务 / SYSTEM 会话的完整归因。</b>当前面向登录用户进程，服务账户路径在路线图中。</span></li>
             <li><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg><span><b>完整文件读取历史。</b>打开句柄抽样无法证明文件已被读取，也不覆盖已经关闭的句柄。</span></li>
@@ -1042,71 +942,138 @@ html[data-lang="en"] .hero h1{letter-spacing:-2.2px}
       <div class="notice reveal"><svg class="ic" aria-hidden="true"><use href="#i-alert"/></svg><span><b>重要安全边界：</b>不要在日常使用、存有真实凭据的设备上分析疑似恶意软件。受信 CA 会扩大本机可被中间人解密的范围。请在隔离虚拟机 / 快照中处理未知样本，分析结束后移除 CA 并恢复系统代理。</span></div>
     </div>
   </section>
+  <section class="section section--tint" id="safety">
+    <div class="wrap">
+      <div class="safety-grid">
+        <div class="reveal">
+          <div class="section-head left">
+            <span class="eyebrow">断网保护</span>
+            <h2>接管系统代理之后，本机不能失联</h2>
+            <p>这是一个真实存在的失败模式：如果电脑突然断电、程序崩溃或被强制结束，Windows 的系统代理仍会指向 127.0.0.1 上已经停止的端口，浏览器与多数应用会连接失败——和某些 VPN 客户端退出后留下的问题一样。v0.2.0 用三层机制处理它。</p>
+          </div>
+          <div class="layers">
+            <div class="layer">
+              <div class="layer-num">1</div>
+              <div>
+                <h4>启动时校正</h4>
+                <p>程序启动会检查系统代理是否仍指向本工具：端口变了就重新指向新的监听端口；本地代理没能启动，就立刻恢复原始设置，不把机器留在断网状态。</p>
+                <span class="tag">AUTOMATIC · 无需配置</span>
+              </div>
+            </div>
+            <div class="layer">
+              <div class="layer-num">2</div>
+              <div>
+                <h4>独立看门狗任务</h4>
+                <p>启用系统代理时可以选择注册一个仅当前用户的计划任务：登录时以及每 2 分钟检查一次，如果系统代理仍指向已停止的回环端口，等待 30 秒宽限后恢复备份的原始值、刷新 WinINET 设置，然后自动停用任务，避免无意义的重复运行。</p>
+                <span class="tag">OPT-IN · 每用户 · 不需要管理员</span>
+              </div>
+            </div>
+            <div class="layer">
+              <div class="layer-num">3</div>
+              <div>
+                <h4>手动恢复</h4>
+                <p>桌面控制台提供“恢复系统代理”，也可以直接运行命令行恢复；极端情况下还能在 Windows 设置的网络代理页手动关闭。备份文件被保留，直到恢复成功。</p>
+                <span class="tag">MANUAL · 始终可用</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="reveal">
+          <div class="code">
+            <div class="code-bar"><b>PowerShell</b><span class="tagline">手动恢复</span></div>
+            <pre><span class="c"># 恢复启用系统代理前的原始设置</span>
+EgressScope.exe <span class="k">--restore-proxy</span>
+
+<span class="c"># 仅当系统代理指向本工具且端口已停止时恢复</span>
+EgressScope.exe <span class="k">--recover-proxy</span> <span class="k">--recover-grace</span> 30
+
+<span class="c"># 看门狗脚本与日志位置（当前用户）</span>
+%LOCALAPPDATA%\EgressScope\proxy-guard.ps1
+%LOCALAPPDATA%\EgressScope\logs\proxy-recovery.log
+
+<span class="c"># 任务计划程序中的每用户任务</span>
+EgressScope Proxy Recovery  <span class="c"># 登录时 + 每 2 分钟</span>
+EgressScope Audit           <span class="c"># 登录时启动审计</span></pre>
+          </div>
+          <div class="notice notice--info" style="margin-top:16px"><svg class="ic" aria-hidden="true"><use href="#i-info"/></svg><span><b>诚实的限制：</b>断电瞬间无法执行任何代码，恢复发生在下一次登录后；看门狗依赖 Windows 任务计划程序且只覆盖当前登录用户；只要备份文件存在，指向已停止回环端口的系统代理会被视为本工具的设置。Linux 与 macOS 版本不修改系统代理，不受此问题影响。如果不能接受任何全局代理风险，请只用 Agent 环境变量接入。</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <section class="section" id="download">
     <div class="wrap">
       <div class="section-head reveal">
-        <span class="eyebrow">05 / 下载</span>
-        <h2>六个原生构建，<br>选择你的系统。</h2>
-        <p>每次发布同时提供六个原生构建与 SHA-256 校验。Windows x64 与 ARM64 都是完整桌面版；Linux / macOS 共享审计引擎与本机 Web 审计台，系统代理与 CA 需要手动配置。</p>
+        <span class="eyebrow">下载</span>
+        <h2>六个原生构建，全部由 GitHub Actions 编译</h2>
+        <p>每次发布同时提供六个平台目标与 SHA-256 校验文件。Windows x64 与 ARM64 都是完整桌面版；Linux 与 macOS 提供审计引擎与本机 Web 审计台，系统代理与根证书需要手动配置。</p>
       </div>
-      <div class="download-grid">
-        <article class="download-card main reveal">
-          <span class="dl-badge">主要支持</span>
-          <div class="dl-os">WINDOWS · X64</div>
-          <h3>Windows 10 / 11</h3>
-          <p>完整桌面控制台、系统代理备份与恢复、当前用户 CA 一键安装、进程归因。</p>
-          <div class="dl-file">EgressScope-&lt;tag&gt;-windows-x64.exe</div>
-          <div class="dl-chips"><span class="chip">Windows x64</span><span class="chip ok">单文件 EXE</span></div>
-        </article>
-        <article class="download-card reveal">
-          <span class="dl-badge">原生 ARM64</span>
-          <div class="dl-os">WINDOWS · ARM64</div>
-          <h3>Windows on ARM</h3>
-          <p>原生 Windows 11 ARM64 桌面版；在 GitHub 的 ARM runner 上编译依赖，并完成源码冒烟与打包验收。</p>
-          <div class="dl-file">EgressScope-&lt;tag&gt;-windows-arm64.exe</div>
-          <div class="dl-chips"><span class="chip">ARM64</span><span class="chip ok">单文件 EXE</span></div>
-        </article>
-        <article class="download-card reveal">
-          <div class="dl-os">MACOS · APPLE SILICON</div>
-          <h3>macOS Apple Silicon</h3>
-          <p>审计引擎与本机 Web 审计台。需手动信任 CA，并通过环境变量接入目标 Agent。</p>
-          <div class="dl-file">EgressScope-&lt;tag&gt;-macos-arm64.tar.gz</div>
-          <div class="dl-chips"><span class="chip">arm64</span><span class="chip warm">未签名</span></div>
-        </article>
-        <article class="download-card reveal">
-          <div class="dl-os">MACOS · INTEL</div>
-          <h3>macOS Intel</h3>
-          <p>面向 Intel Mac 的审计引擎与 Web 审计台，使用兼容的 cryptography 版本构建。</p>
-          <div class="dl-file">EgressScope-&lt;tag&gt;-macos-x64.tar.gz</div>
-          <div class="dl-chips"><span class="chip">x86_64</span><span class="chip warm">未签名</span></div>
-        </article>
-        <article class="download-card reveal">
-          <div class="dl-os">LINUX · X64</div>
-          <h3>Linux x64</h3>
-          <p>审计引擎与 Web 审计台；PID 归因依赖 /proc/net/tcp，手动配置代理与 CA。</p>
-          <div class="dl-file">EgressScope-&lt;tag&gt;-linux-x64.tar.gz</div>
-          <div class="dl-chips"><span class="chip">x86_64</span><span class="chip ok">glibc</span></div>
-        </article>
-        <article class="download-card reveal">
-          <div class="dl-os">LINUX · ARM64</div>
-          <h3>Linux arm64</h3>
-          <p>面向 ARM64 Linux 服务器与开发机的审计引擎，能力与 Linux x64 一致。</p>
-          <div class="dl-file">EgressScope-&lt;tag&gt;-linux-arm64.tar.gz</div>
-          <div class="dl-chips"><span class="chip">aarch64</span><span class="chip ok">glibc</span></div>
-        </article>
-      </div>
-      <div class="release-bar reveal">
-        <p><b>每个产物附带独立校验。</b>发布页提供 <span class="mono">.sha256</span> 与 <span class="mono">SHA256SUMS.txt</span>，下载后可先校验再运行。</p>
-        <div class="release-actions">
-          <a class="btn btn-primary" data-release href="__REPO_URL__/releases/latest">
-            <span class="cta-label">前往 GitHub Releases</span>
-            <svg class="ic" aria-hidden="true"><use href="#i-arrow-up"/></svg>
-          </a>
-          <a class="btn btn-ghost" href="#coverage">查看平台边界</a>
+      <div class="table-card reveal">
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>平台</th><th>产物文件</th><th>桌面控制台</th><th>一键 CA / 系统代理</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr class="chosen">
+                <td><b>Windows 10 / 11</b> <span class="pill accent">主要支持</span></td>
+                <td class="mono">EgressScope-&lt;tag&gt;-windows-x64.exe</td>
+                <td class="yes">支持</td>
+                <td class="yes">支持</td>
+                <td>单文件 EXE，含系统代理备份恢复、当前用户 CA 安装、断网保护与进程归因。</td>
+              </tr>
+              <tr>
+                <td><b>Windows on ARM</b> <span class="pill ok">原生 ARM64</span></td>
+                <td class="mono">EgressScope-&lt;tag&gt;-windows-arm64.exe</td>
+                <td class="yes">支持</td>
+                <td class="yes">支持</td>
+                <td>在 ARM runner 上编译 OpenSSL 与 Rust 依赖，非 x64 模拟；Tk 界面尚未做实机 UI 验收。</td>
+              </tr>
+              <tr>
+                <td><b>macOS Apple Silicon</b></td>
+                <td class="mono">EgressScope-&lt;tag&gt;-macos-arm64.tar.gz</td>
+                <td class="mid">命令行 / Web</td>
+                <td class="no">手动</td>
+                <td>需手动信任 CA，并通过环境变量接入目标 Agent；二进制未签名。</td>
+              </tr>
+              <tr>
+                <td><b>macOS Intel</b></td>
+                <td class="mono">EgressScope-&lt;tag&gt;-macos-x64.tar.gz</td>
+                <td class="mid">命令行 / Web</td>
+                <td class="no">手动</td>
+                <td>使用兼容的 cryptography 版本构建；二进制未签名，Gatekeeper 可能要求放行。</td>
+              </tr>
+              <tr>
+                <td><b>Linux x64</b></td>
+                <td class="mono">EgressScope-&lt;tag&gt;-linux-x64.tar.gz</td>
+                <td class="mid">命令行 / Web</td>
+                <td class="no">手动</td>
+                <td>PID 归因依赖 /proc/net/tcp；代理与 CA 需手动配置。</td>
+              </tr>
+              <tr>
+                <td><b>Linux arm64</b></td>
+                <td class="mono">EgressScope-&lt;tag&gt;-linux-arm64.tar.gz</td>
+                <td class="mid">命令行 / Web</td>
+                <td class="no">手动</td>
+                <td>面向 ARM64 服务器与开发机，能力与 Linux x64 一致。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="table-foot">
+          <span>每个产物附带 <span class="mono">.sha256</span>，发布页同时提供 <span class="mono">SHA256SUMS.txt</span>；建议先校验再运行。</span>
+          <span>构建未做代码签名，SmartScreen 与 Gatekeeper 可能提示未知发布者。</span>
         </div>
       </div>
-      <div class="dl-note reveal"><svg class="ic" aria-hidden="true"><use href="#i-info"/></svg><span><b>构建说明：</b>Windows ARM64 是原生构建，不是 x64 模拟运行；桌面 Tk 控制台尚未做 ARM64 实机 UI 验收。macOS 与 Linux 二进制未签名，Gatekeeper 与 SmartScreen 可能要求手动放行。</span></div>
+      <div class="hero-actions reveal" style="margin-top:22px">
+        <a class="btn btn-primary btn-lg" data-release href="__REPO_URL__/releases/latest">
+          <span class="cta-label">前往 GitHub Releases</span>
+          <svg class="ic" aria-hidden="true"><use href="#i-arrow-up"/></svg>
+        </a>
+        <a class="btn btn-ghost btn-lg" data-repo-path="/actions" href="__REPO_URL__/actions" target="_blank" rel="noopener">
+          查看构建流水线
+          <svg class="ic" aria-hidden="true"><use href="#i-external"/></svg>
+        </a>
+      </div>
     </div>
   </section>
 
@@ -1115,86 +1082,101 @@ html[data-lang="en"] .hero h1{letter-spacing:-2.2px}
       <div class="start-grid">
         <div class="reveal">
           <div class="section-head left">
-            <span class="eyebrow">06 / 快速开始</span>
-            <h2>三步接入，<br>不自动接管系统。</h2>
-            <p>桌面控制台和本地审计台会同时启动。系统代理、根证书与阻断策略都需要显式确认；你可以随时暂停采集或恢复原代理设置。</p>
+            <span class="eyebrow">快速开始</span>
+            <h2>三步接入，不自动接管系统</h2>
+            <p>桌面控制台与本机审计台会同时启动。根证书、系统代理与阻断策略都需要显式确认，你可以随时暂停采集或恢复原始代理设置。</p>
           </div>
           <div class="steps">
             <div class="step">
               <div class="step-num">1</div>
               <div>
                 <h4>启动 EgressScope</h4>
-                <p>双击可执行文件，或使用 <code>EgressScope.exe --headless</code> 运行无窗口模式。代理默认监听 <code>127.0.0.1:8899</code>，审计台绑定回环地址。</p>
+                <p>双击可执行文件，或用 <code>EgressScope.exe --headless</code> 运行无窗口模式。代理默认监听 <code>127.0.0.1:8899</code>，审计台绑定回环地址并带随机访问令牌。</p>
               </div>
             </div>
             <div class="step">
               <div class="step-num">2</div>
               <div>
                 <h4>确认根证书</h4>
-                <p>在控制台点击“安装根证书”，将公开 CA 加入当前用户信任根。私钥始终留在本机数据目录，不会分发；安装后可随时移除。</p>
+                <p>在控制台点击“安装根证书”，把公开 CA 加入当前用户信任根。私钥始终留在本机数据目录，不会分发；安装后可随时移除。</p>
               </div>
             </div>
             <div class="step">
               <div class="step-num">3</div>
               <div>
                 <h4>选择流量入口</h4>
-                <p>开启系统代理，或只给目标 Agent 注入 <code>HTTPS_PROXY</code> 与 <code>NODE_EXTRA_CA_CERTS</code> 等变量。若本机原本通过 Clash 等回环代理（如 <code>127.0.0.1:7890</code>）上网，程序会在启动时自动串联，避免接管后断网。</p>
+                <p>开启系统代理（可勾选断网保护），或只给目标 Agent 注入环境变量。若本机原本通过 Clash 等回环代理上网，程序会在启动时自动串联，避免接管后断网。</p>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="control reveal" role="img" aria-label="EgressScope 桌面控制台示意：本地代理运行中，根证书等待信任，系统代理未启用">
-          <div class="window-bar">
-            <span class="win-dot"></span><span class="win-dot"></span><span class="win-dot"></span>
-            <span class="window-title">EgressScope · 控制窗口</span>
+        <div class="reveal">
+          <div class="code">
+            <div class="code-bar"><b>agent-env.cmd</b><span class="tagline">只影响当前终端</span></div>
+            <pre><span class="c">:: 只给一个终端注入代理与 CA，不改动系统设置</span>
+<span class="k">set</span> HTTPS_PROXY=http://127.0.0.1:8899
+<span class="k">set</span> HTTP_PROXY=http://127.0.0.1:8899
+<span class="k">set</span> NODE_EXTRA_CA_CERTS=%LOCALAPPDATA%\EgressScope\data\certs\mitmproxy-ca-cert.pem
+<span class="k">set</span> REQUESTS_CA_BUNDLE=%LOCALAPPDATA%\EgressScope\data\certs\mitmproxy-ca-cert.pem
+<span class="k">set</span> SSL_CERT_FILE=%LOCALAPPDATA%\EgressScope\data\certs\mitmproxy-ca-cert.pem
+
+<span class="c">:: 验证链路是否被审计</span>
+curl https://api.openai.com/v1/models</pre>
           </div>
-          <div class="control-body">
-            <div class="control-head">
-              <div class="control-logo"><svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg></div>
-              <div><h4>本机数据外发审计</h4><span>EgressScope v0.2.0 · Windows</span></div>
-              <span class="control-state"><i></i>运行中</span>
+          <div class="control" style="margin-top:16px" role="img" aria-label="EgressScope 桌面控制台示意：本地代理运行中，根证书等待信任，系统代理未启用">
+            <div class="window-bar">
+              <span class="win-dot"></span><span class="win-dot"></span><span class="win-dot"></span>
+              <span class="window-title">EgressScope · 控制窗口</span>
             </div>
-            <div class="control-cards">
-              <div class="control-card"><div class="label">本地代理 <svg class="ic" aria-hidden="true"><use href="#i-server"/></svg></div><div class="value"><i></i>127.0.0.1:8899</div></div>
-              <div class="control-card"><div class="label">本地 CA <svg class="ic" aria-hidden="true"><use href="#i-key"/></svg></div><div class="value warn"><i></i>等待信任</div></div>
-              <div class="control-card"><div class="label">系统代理 <svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg></div><div class="value warn"><i></i>未启用</div></div>
-              <div class="control-card"><div class="label">文件触达 <svg class="ic" aria-hidden="true"><use href="#i-file"/></svg></div><div class="value"><i></i>Beta 抽样中</div></div>
+            <div class="control-body">
+              <div class="control-head">
+                <div class="control-logo"><svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg></div>
+                <div><h4>本机数据外发审计</h4><span>EgressScope v0.2.0 · Windows</span></div>
+                <span class="control-state"><i></i>运行中</span>
+              </div>
+              <div class="control-cards">
+                <div class="control-card"><div class="label">本地代理 <svg class="ic" aria-hidden="true"><use href="#i-server"/></svg></div><div class="value"><i></i>127.0.0.1:8899</div></div>
+                <div class="control-card"><div class="label">本地 CA <svg class="ic" aria-hidden="true"><use href="#i-key"/></svg></div><div class="value warn"><i></i>等待信任</div></div>
+                <div class="control-card"><div class="label">系统代理 <svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg></div><div class="value warn"><i></i>未启用</div></div>
+                <div class="control-card"><div class="label">断网保护 <svg class="ic" aria-hidden="true"><use href="#i-shield"/></svg></div><div class="value warn"><i></i>未注册</div></div>
+              </div>
+              <div class="control-banner"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>本机审计已就绪。下一步：安装 CA，再启用系统代理或使用 Agent 环境变量。</div>
+              <div class="control-actions">
+                <div class="mock-btn primary"><svg class="ic" aria-hidden="true"><use href="#i-shield"/></svg>安装根证书</div>
+                <div class="mock-btn">启用系统代理</div>
+                <div class="mock-btn"><svg class="ic" aria-hidden="true"><use href="#i-terminal"/></svg>复制环境变量</div>
+                <div class="mock-btn">打开审计台</div>
+              </div>
+              <div class="control-foot"><span>仅限授权设备</span><span>LOCAL · NO CLOUD</span></div>
             </div>
-            <div class="control-banner"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>本机审计已就绪。下一步：安装 CA，再启用系统代理或使用 Agent 环境变量。</div>
-            <div class="control-actions">
-              <div class="mock-btn primary"><svg class="ic" aria-hidden="true"><use href="#i-shield"/></svg>安装根证书</div>
-              <div class="mock-btn">启用系统代理</div>
-              <div class="mock-btn"><svg class="ic" aria-hidden="true"><use href="#i-terminal"/></svg>复制环境变量</div>
-              <div class="mock-btn">打开审计台</div>
-            </div>
-            <div class="control-foot"><span>仅限授权设备</span><span>LOCAL · NO CLOUD</span></div>
           </div>
         </div>
       </div>
     </div>
   </section>
-
   <section class="section" id="privacy">
     <div class="wrap privacy-grid">
       <div class="reveal">
         <div class="section-head left">
-          <span class="eyebrow">07 / 隐私设计</span>
-          <h2>审计工具本身，<br>不应该成为新的泄露面。</h2>
-          <p>数据边界不是靠一句“我们很重视隐私”。它需要落实在密钥位置、导出格式、默认设置和系统变更的撤销路径上。</p>
+          <span class="eyebrow">隐私与安全设计</span>
+          <h2>审计工具本身不应该成为新的泄露面</h2>
+          <p>数据边界不能只靠一句“我们很重视隐私”。它需要落实在密钥位置、导出格式、默认设置与系统变更的撤销路径上。</p>
         </div>
         <ul class="privacy-list">
-          <li><svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg><div><b>正文加密存储</b><p>AES-256-GCM 加密请求 / 响应正文；主密钥由当前 Windows 用户的 DPAPI 保护。更换用户或离线拷走数据库都无法直接解密。</p></div></li>
-          <li><svg class="ic" aria-hidden="true"><use href="#i-eye-off"/></svg><div><b>脱敏是默认值</b><p>列表、搜索、预览和 JSONL 导出只包含脱敏后的内容与哈希。原始正文需要显式的二次确认才会解密显示，且不回写数据库。</p></div></li>
-          <li><svg class="ic" aria-hidden="true"><use href="#i-shield"/></svg><div><b>最小化系统变更</b><p>CA 只装当前用户，不自动安装；系统代理修改前备份，检测到 PAC 时拒绝接管；退出时仅在设置仍属于本工具时恢复。</p></div></li>
-          <li><svg class="ic" aria-hidden="true"><use href="#i-database"/></svg><div><b>本地回环服务</b><p>Web 审计台只绑定 127.0.0.1，使用每次启动随机生成的会话令牌，校验 Host 并应用严格 CSP。没有云同步，没有外部字体或脚本。</p></div></li>
+          <li><svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg><div><b>正文加密存储</b><p>AES-256-GCM 加密请求与响应正文，主密钥由当前 Windows 用户的 DPAPI 保护。更换用户或离线拷走数据库都无法直接解密。</p></div></li>
+          <li><svg class="ic" aria-hidden="true"><use href="#i-eye-off"/></svg><div><b>脱敏是默认值</b><p>列表、搜索、预览与 JSONL 导出只包含脱敏后的内容与哈希。原始正文需要显式二次确认才会在当前会话解密，且不回写数据库。</p></div></li>
+          <li><svg class="ic" aria-hidden="true"><use href="#i-shield"/></svg><div><b>最小化系统变更</b><p>CA 只装当前用户且不自动安装；系统代理修改前先备份，检测到 PAC 时拒绝接管；退出时仅在设置仍属于本工具时恢复。</p></div></li>
+          <li><svg class="ic" aria-hidden="true"><use href="#i-database"/></svg><div><b>本地回环服务</b><p>Web 审计台只绑定 127.0.0.1，使用每次启动随机生成的会话令牌，校验 Host 头并应用严格 CSP。没有云同步、外部字体或第三方脚本。</p></div></li>
         </ul>
       </div>
 
       <div class="boundary reveal">
-        <div class="label">DATA BOUNDARY / AT A GLANCE</div>
-        <h3>你掌握密钥、<br>保留期与删除权。</h3>
-        <div class="boundary-row"><span>数据库位置</span><b>%LOCALAPPDATA%\EgressScope</b></div>
+        <div class="boundary-head">
+          <div class="label">DATA BOUNDARY</div>
+          <h3>你掌握密钥、保留期与删除权</h3>
+        </div>
+        <div class="boundary-row"><span>数据目录</span><b>%LOCALAPPDATA%\EgressScope</b></div>
         <div class="boundary-row"><span>原始正文</span><b>AES-256-GCM</b></div>
         <div class="boundary-row"><span>主密钥保护</span><b>Windows DPAPI</b></div>
         <div class="boundary-row"><span>内容上云</span><b class="good">不启用</b></div>
@@ -1207,25 +1189,88 @@ html[data-lang="en"] .hero h1{letter-spacing:-2.2px}
     </div>
   </section>
 
-  <section class="section section--tint">
+  <section class="section section--tint" id="faq">
+    <div class="wrap faq-grid">
+      <div class="section-head left reveal" style="margin-bottom:0">
+        <span class="eyebrow">常见问题</span>
+        <h2>关于能力边界与使用前提</h2>
+        <p>下面这些问题决定了它是否适合你的场景。答案与本产品的实际实现一致，不做超出能力的承诺。</p>
+        <div class="hero-actions" style="margin-top:22px">
+          <a class="btn btn-ghost" data-repo-path="/issues" href="__REPO_URL__/issues" target="_blank" rel="noopener">
+            提交问题或反馈
+            <svg class="ic" aria-hidden="true"><use href="#i-external"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <div class="faq reveal">
+        <details open>
+          <summary><span class="q">01</span>电脑突然关机或程序崩溃后，本机还能上网吗？<svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
+          <div class="a">系统代理仍指向已停止的回环端口时，浏览器与多数应用会连接失败——这是真实存在的失败模式。v0.2.0 提供三层处理：启动时校正过期设置、可选的每用户计划任务看门狗在登录后自动恢复原始代理，以及 <code>EgressScope.exe --restore-proxy</code> 手动恢复。断电瞬间无法执行任何代码，恢复发生在下一次登录后。</div>
+        </details>
+        <details>
+          <summary><span class="q">02</span>它是杀毒软件或 EDR 吗？<svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
+          <div class="a">不是。EgressScope 只做外发流量的可见性、归因、策略判定与证据留存，不做恶意代码检测，也不提供阻断未知威胁的能力。风险分是启发式信号，用于辅助人工判断，不能直接当作处置结论。</div>
+        </details>
+        <details>
+          <summary><span class="q">03</span>它会读取我的聊天记录吗？<svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
+          <div class="a">只有在你启用系统代理或注入环境变量、并信任本地 CA 之后，经过代理的 HTTPS 正文才会被解析。列表与导出默认脱敏，原始正文需要在详情里再次确认才解密显示，且不回写数据库。它不读取任何 Agent 的本地会话文件。</div>
+        </details>
+        <details>
+          <summary><span class="q">04</span>能看见所有加密流量吗？<svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
+          <div class="a">不能。证书固定、mTLS、QUIC / HTTP3、应用层端到端加密，以及完全绕过代理的直连流量都在覆盖边界之外。本产品不承诺、也不会尝试攻破这些机制。详见<a href="#coverage">覆盖边界</a>一节。</div>
+        </details>
+        <details>
+          <summary><span class="q">05</span>审计数据会上传到云端吗？<svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
+          <div class="a">不会。证据保存在本机 SQLite，正文用 AES-256-GCM 加密，主密钥由当前用户的 DPAPI 保护。Web 审计台只绑定回环地址，使用每次启动随机生成的令牌，页面不含外部字体、脚本或统计代码。</div>
+        </details>
+        <details>
+          <summary><span class="q">06</span>需要管理员权限吗？<svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
+          <div class="a">不需要。CA 只安装到当前用户信任根，系统代理是每用户设置，断网保护用的是每用户计划任务。这也是它的边界：Windows 服务与 SYSTEM 会话的完整归因不在当前版本范围内。</div>
+        </details>
+        <details>
+          <summary><span class="q">07</span>已经在用 Clash 或其他本地代理怎么办？<svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
+          <div class="a">启动时会自动继承本机回环 HTTP 代理（例如 <code>127.0.0.1:7890</code>）并串联转发，避免接管后断网。上游只看到重新加密后的 TLS 字节。带用户名密码的上游、PAC 脚本与 SOCKS 目前不支持，这些场景请改用单 Agent 环境变量接入。</div>
+        </details>
+        <details>
+          <summary><span class="q">08</span>对性能与磁盘有多大影响？<svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
+          <div class="a">代理运行在用户态、只走本机回环。正文保存有单条体积上限，只有 AI 请求或风险分达到阈值的流量才加密保留原文；证据默认保留 7 天，可在设置中调整，也可以一键清空。</div>
+        </details>
+        <details>
+          <summary><span class="q">09</span>支持哪些操作系统？<svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
+          <div class="a">Windows 10 / 11 的 x64 与 ARM64 是功能完整的桌面版本，含系统代理接入、CA 一键安装与断网保护。macOS 与 Linux 提供同一套审计引擎与本机 Web 审计台，代理与 CA 需要手动配置；macOS 在非 root 下无法读取 TCP 归属表，会降级为不含 PID 的记录。</div>
+        </details>
+        <details>
+          <summary><span class="q">10</span>可以用它审计别人的设备吗？<svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
+          <div class="a">只应用于你拥有或已获得明确书面授权的设备，未经授权拦截他人流量可能违法。也不要在存有真实凭据的日常主机上分析疑似恶意软件：受信 CA 会扩大本机可被中间人解密的范围，请在隔离虚拟机或快照中进行，结束后移除 CA。</div>
+        </details>
+        <details>
+          <summary><span class="q">11</span>项目是开源的吗？许可是什么？<svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
+          <div class="a">源码与构建流水线公开在 GitHub，可自行审计与复现构建。仓库当前未附带标准开源许可证，使用即表示你理解并接受 README 中的授权、安全与覆盖边界声明。</div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="roadmap">
     <div class="wrap">
       <div class="section-head reveal">
-        <span class="eyebrow">08 / 路线图</span>
-        <h2>第一版把闭环跑通，<br>再把覆盖面做深。</h2>
-        <p>路线图按“可验证的收益 / 增加的信任成本”排序。不会承诺破解加密，也不以驱动或隐蔽手段扩张采集范围。</p>
+        <span class="eyebrow">路线图</span>
+        <h2>先把闭环跑通，再把覆盖面做深</h2>
+        <p>路线图按“可验证的收益 / 增加的信任成本”排序。不承诺破解加密，也不以驱动或隐蔽手段扩张采集范围。</p>
       </div>
       <div class="roadmap-grid">
         <article class="road done reveal">
           <div class="road-tag"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>DELIVERED · P0</div>
           <h3>可交付的本机闭环</h3>
-          <p>嵌入式代理、本地 CA、TLS 解密、PID 归因、AI/敏感数据规则、风险评分与阻断、加密证据、哈希链、桌面控制台与本地 Web 审计台。</p>
-          <ul><li>Windows 当前用户路径</li><li>系统代理备份 / 恢复</li><li>Agent 环境变量接入</li><li>回环上游代理自动串联</li><li>文件句柄抽样 Beta</li></ul>
+          <p>嵌入式代理、本地 CA、TLS 解密、PID 归因、AI 与敏感数据规则、风险评分与阻断、加密证据、哈希链、桌面控制台与本机 Web 审计台。</p>
+          <ul><li>Windows 当前用户路径</li><li>系统代理备份 / 恢复 / 断网保护</li><li>Agent 环境变量接入</li><li>回环上游代理自动串联</li><li>文件句柄抽样 Beta</li></ul>
         </article>
         <article class="road reveal">
           <div class="road-tag">NEXT · P1</div>
           <h3>扩大流量入口</h3>
           <p>以 WFP / WinDivert 做显式的透明重定向，支持不遵循系统代理的应用；补充 QUIC 元数据策略与代理链路健康诊断。</p>
-          <ul><li>驱动签名与兼容性测试</li><li>按进程 / 端口重定向</li><li>QUIC 无法解密时明确降级</li><li>接入安装器与服务账户入口</li></ul>
+          <ul><li>驱动签名与兼容性测试</li><li>按进程 / 端口重定向</li><li>QUIC 无法解密时明确降级</li><li>安装器与服务账户入口</li></ul>
         </article>
         <article class="road reveal">
           <div class="road-tag">LATER · P2</div>
@@ -1242,15 +1287,15 @@ html[data-lang="en"] .hero h1{letter-spacing:-2.2px}
       <div class="final-inner reveal">
         <div>
           <span class="eyebrow">LOCAL AUDIT, ON YOUR TERMS</span>
-          <h2>从第一条可解释的<br>外发记录开始。</h2>
-          <p>打开本机审计台，查看代理、CA 与证据链状态。仅在你拥有或明确获授权的设备上使用。</p>
+          <h2>从第一条可解释的外发记录开始</h2>
+          <p>下载后打开本机审计台，查看代理、CA、断网保护与证据链状态。仅在你拥有或明确获授权的设备上使用。</p>
         </div>
         <div class="final-actions">
-          <a class="btn btn-invert" data-release href="__REPO_URL__/releases/latest">
-            <span class="cta-label">免费下载</span>
+          <a class="btn btn-invert btn-lg" data-release href="__REPO_URL__/releases/latest">
+            <span class="cta-label">下载 v0.2.0</span>
             <svg class="ic" aria-hidden="true"><use href="#i-download"/></svg>
           </a>
-          <a class="btn btn-ghost-light" href="#coverage">再次查看边界</a>
+          <a class="btn btn-quiet btn-lg" href="#coverage">再次查看边界</a>
         </div>
       </div>
       <div class="final-note">v0.2.0 · WINDOWS / MACOS / LINUX · 仅用于拥有或明确获授权的设备</div>
@@ -1264,28 +1309,41 @@ html[data-lang="en"] .hero h1{letter-spacing:-2.2px}
       <div class="footer-brand">
         <a class="brand" href="#top" aria-label="EgressScope 外发审计首页">
           <svg class="logo-mark" aria-hidden="true"><use href="#i-logo"/></svg>
-          <span>EgressScope</span>
-          <span class="brand-tag">本机数据外发审计</span>
+          <span class="brand-text">
+            <span class="brand-name">EgressScope</span>
+            <span class="brand-tag">本机数据外发审计</span>
+          </span>
         </a>
-        <p class="footer-desc">本机数据外发审计。为授权的 Windows 设备提供完整的桌面控制与系统代理接入；Linux / macOS 版本提供审计引擎与本机 Web 审计台。界面与数据均在此设备上运行。</p>
+        <p class="footer-desc">本机数据外发审计工具。Windows 版本提供完整桌面控制与系统代理接入；Linux 与 macOS 版本提供审计引擎与本机 Web 审计台。界面与数据都在这台设备上运行。</p>
         <span class="footer-badge"><i></i>LOCAL-FIRST · 无云同步</span>
       </div>
       <div>
         <h4>产品</h4>
         <div class="footer-col">
-          <a href="#problem">为什么需要审计</a>
-          <a href="#architecture">架构与取舍</a>
+          <a href="#capabilities">能力总览</a>
+          <a href="#how">工作原理</a>
           <a href="#coverage">覆盖边界</a>
-          <a href="#privacy">隐私设计</a>
+          <a href="#safety">断网保护</a>
+          <a href="#privacy">隐私与安全</a>
         </div>
       </div>
       <div>
-        <h4>获取</h4>
+        <h4>文档</h4>
         <div class="footer-col">
-          <a data-release href="__REPO_URL__/releases/latest"><span class="cta-label">GitHub Releases</span></a>
-          <a href="#download">六平台构建</a>
+          <a data-repo-path="/blob/main/README.md" href="__REPO_URL__/blob/main/README.md" target="_blank" rel="noopener">技术文档<svg class="ic" aria-hidden="true"><use href="#i-external"/></svg></a>
           <a href="#start">快速开始</a>
-          <a data-repo href="__REPO_URL__" target="_blank" rel="noopener">GitHub 仓库</a>
+          <a href="#download">平台与产物矩阵</a>
+          <a href="#faq">常见问题</a>
+          <a href="#roadmap">路线图</a>
+        </div>
+      </div>
+      <div>
+        <h4>资源</h4>
+        <div class="footer-col">
+          <a data-release href="__REPO_URL__/releases/latest"><span class="cta-label">发布与校验文件</span></a>
+          <a data-repo href="__REPO_URL__" target="_blank" rel="noopener">源代码仓库<svg class="ic" aria-hidden="true"><use href="#i-external"/></svg></a>
+          <a data-repo-path="/actions" href="__REPO_URL__/actions" target="_blank" rel="noopener">构建流水线<svg class="ic" aria-hidden="true"><use href="#i-external"/></svg></a>
+          <a data-repo-path="/issues" href="__REPO_URL__/issues" target="_blank" rel="noopener">问题与反馈<svg class="ic" aria-hidden="true"><use href="#i-external"/></svg></a>
         </div>
       </div>
       <div>
@@ -1298,8 +1356,9 @@ html[data-lang="en"] .hero h1{letter-spacing:-2.2px}
         </div>
       </div>
     </div>
+
     <div class="search-terms" data-no-i18n aria-label="Search keywords">
-      <span class="st-title">SEARCH TERMS / 常见搜索词</span>
+      <span class="st-title">相关检索词 / SEARCH TERMS</span>
       <div class="st-list">
         <span>外发审计</span><span>AI 审计</span><span>Agent 审计</span><span>AI Agent 审计</span>
         <span>智能体审计</span><span>数据外发审计</span><span>数据防泄漏</span><span>DLP</span><span>AI DLP</span>
@@ -1310,8 +1369,10 @@ html[data-lang="en"] .hero h1{letter-spacing:-2.2px}
         <span>shadow AI</span><span>AI usage audit</span><span>process attribution</span>
       </div>
     </div>
+
     <div class="footer-bottom">
       <span>© 2026 EgressScope · v0.2.0</span>
+      <span class="sep" aria-hidden="true"></span>
       <span>WINDOWS-FIRST · LOCAL-FIRST · NO CLOUD</span>
       <div class="footer-lang" data-no-i18n aria-label="Language">
         <button type="button" data-lang-set="zh" class="active">简体中文</button>
@@ -1324,305 +1385,349 @@ html[data-lang="en"] .hero h1{letter-spacing:-2.2px}
 
 <script type="application/json" id="i18n-en">
 {
-  "跳到主要内容": "Skip to main content",
-  "问题": "Problem",
-  "架构": "Architecture",
-  "覆盖边界": "Boundaries",
-  "下载": "Download",
-  "快速开始": "Quick start",
-  "隐私设计": "Privacy",
-  "免费下载": "Download",
-  "外发审计": "Egress Audit",
-  "v0.2.0 正式发布 · 六平台原生构建": "v0.2.0 released · six native builds",
-  "让每一次": "Every",
-  "AI 外发": "AI egress",
-  "都有迹可循。": "leaves a trace.",
-  "EgressScope 把本机 Agent 与桌面应用的出站流量，收拢成一条可见、可归因、可追溯的审计路径。它不读取聊天记录，而是观察操作系统里真实发生的数据外发。": "EgressScope turns outbound traffic from local AI agents and desktop apps into one visible, attributable and traceable audit trail. It does not read chat history; it observes data egress that actually happens in the operating system.",
-  "查看架构": "See architecture",
-  "本地运行 · 无需内核驱动": "Runs locally · no kernel driver",
-  "数据不离开设备": "Data never leaves this device",
-  "EgressScope · 本机审计台": "EgressScope · Local console",
-  "实时": "Live",
-  "工作台": "Workspace",
-  "态势总览": "Overview",
-  "流量记录": "Traffic",
-  "外发规则": "Rules",
-  "证据链": "Evidence",
-  "隐私设置": "Privacy",
-  "仅绑定 127.0.0.1": "Bound to 127.0.0.1 only",
-  "无云同步 · 无外部脚本": "No cloud sync · no external scripts",
-  "过去 24 小时": "Last 24 hours",
-  "今日请求": "Requests today",
-  "高风险": "High risk",
-  "时间": "Time",
-  "进程 / 端点": "Process / endpoint",
-  "风险": "Risk",
-  "动作": "Action",
-  "告警": "Alert",
-  "观察": "Observe",
-  "PID 归因完成": "PID attributed",
-  "证据已加密": "Evidence encrypted",
-  "* 产品界面示意，数据为样例": "* Product mockup · sample data",
-  "进程级可见性": "Process-level visibility",
-  "端口到 PID 的本地关联": "Local port-to-PID mapping",
-  "内容只在本地": "Content stays local",
-  "SQLite 存储 · 无云同步": "SQLite storage · no cloud sync",
-  "可验证证据链": "Verifiable evidence chain",
-  "SHA-256 逐条链接": "SHA-256 hash-linked entries",
-  "可撤销的系统变更": "Reversible system changes",
-  "代理备份 · CA 可移除": "Proxy backup · removable CA",
-  "01 / 盲区": "01 / BLIND SPOT",
-  "问题不在模型，": "The problem is not the model.",
-  "而在看不见的出站路径。": "It is the invisible egress path.",
-  "当 Agent 获得文件系统、终端和代码库的访问权，它同时获得了把这些上下文送出本机的能力。传统安全工具关心连接是否存在，却很少回答：是谁、在什么时候、把什么内容、送到了哪里。": "When an agent gains access to the filesystem, terminal and codebase, it also gains the ability to send that context off the machine. Traditional security tools ask whether a connection exists; they rarely answer who sent what, when and where.",
-  "Agent 自动装载上下文": "Agents load context automatically",
-  "工作区文件、终端输出、环境变量和密钥可能在一次会话里被装入提示词。会话日志能告诉你会话内容，却不能证明这些内容是否、何时、向何处发生了外发。": "Workspace files, terminal output, environment variables and secrets can all enter a prompt in one session. Session logs show what was discussed, but not whether, when or where that content left the device.",
-  "HTTPS 让异常失去内容": "HTTPS hides what is anomalous",
-  "流氓软件、被劫持的编辑器插件与合法 Agent 使用同一条加密通道。流量面板只显示字节数；没有应用配合与本地 TLS 终止，你无法判断上传的是遥测、代码，还是客户数据。": "Adware, hijacked editor extensions and legitimate agents use the same encrypted channel. Traffic panels show bytes, not intent. Without app cooperation and local TLS termination, you cannot tell whether an upload is telemetry, code or customer data.",
-  "连接不等于发起者": "A connection is not an actor",
-  "日志里的一条": "A single",
-  "没有意义，如果不知道它来自哪个进程、哪条父进程链。没有归因，风险告警只会变成噪声；有了归因，才能定位到具体工具与工作流。": "in the logs means nothing unless you know which process and parent chain it came from. Without attribution, risk alerts are just noise. With attribution, you can pinpoint the tool and workflow.",
-  "真正的空白不是“有没有网络监控”，而是": "The real gap is not “is there network monitoring”, but ",
-  "网络元数据与内容、进程、文件线索之间缺少一条连续的证据链": "the missing continuous evidence chain between network metadata, content, processes and file clues",
-  "。EgressScope 选择在这条链上做工程，而不是再做一个流量计数器。": ". EgressScope chose to engineer that chain, not build another traffic counter.",
-  "02 / 架构取舍": "02 / TRADE-OFFS",
-  "本地代理 + 本地 CA +": "Local proxy + local CA +",
-  "进程归因，是最可落地的组合。": "process attribution: the most practical combination.",
-  "我们比较了透明重定向、浏览器扩展、Agent 会话旁路和内核级采集。最终选择用户态本地代理作为第一版主干：它不要求驱动签名，不依赖某个 Agent 的私有格式，能在应用配合时还原内容，也允许用户清楚知道审计边界在哪里。": "We compared transparent redirection, browser extensions, agent session sidecars and kernel-level collection. We chose a user-mode local proxy for v1: no driver signing, no dependency on one agent's private format, content recovery when apps cooperate, and a boundary users can understand.",
-  "应用 / Agent": "App / Agent",
-  "Claude Code、Codex、编辑器、SDK 或普通桌面程序发起 HTTPS 请求。": "Claude Code, Codex, editors, SDKs or ordinary desktop apps send HTTPS requests.",
-  "本地转发代理": "Local forward proxy",
-  "仅监听 127.0.0.1。系统代理或进程环境变量把流量引到这里，不影响局域网。": "Listens on 127.0.0.1 only. System proxy or per-process environment variables route traffic here without touching the LAN.",
-  "TLS 终止": "TLS termination",
-  "使用当前用户信任的本地 CA，对应用配合的 TLS 1.2 / 1.3 连接还原 HTTP 语义。": "Uses a local CA trusted by the current user to restore HTTP semantics for cooperating TLS 1.2 / 1.3 connections.",
-  "进程归因": "Process attribution",
-  "客户端临时端口匹配本机 TCP 表，缓存 PID + 创建时间，避免 PID 复用误判。": "Maps client ephemeral ports through the local TCP table and caches PID + start time to avoid PID-reuse errors.",
-  "策略与证据": "Policy & evidence",
-  "端点分类、DLP 信号、风险分；正文加密、审计链、脱敏预览与策略处置。": "Endpoint classification, DLP signals and risk scores; encrypted bodies, audit chain, redacted previews and policy actions.",
-  "进程流量": "Process traffic",
-  "内容可读": "Content readable",
-  "是谁发起": "Who sent it",
-  "可验证证据": "Verifiable evidence",
-  "本机审计台": "Local console",
-  "失败模式清晰。": "Clear failure modes. ",
-  "应用不配合，就看不到；不会假装全量可见。系统代理修改前备份，退出时尝试恢复。已有 Clash 等回环代理时自动串联，避免接管后断网。": "If an app does not cooperate, you will not see it; we do not pretend to see everything. The system proxy is backed up before changes and restored on exit. Existing loopback proxies such as Clash are chained automatically to avoid dropping connectivity.",
-  "不重复造 TLS。": "We do not rebuild TLS. ",
-  "成熟的开源代理负责 HTTP/2、证书签发与流式转发，项目把精力放在归因、策略与证据链。": "A mature open-source proxy handles HTTP/2, certificate issuance and streaming. We focus on attribution, policy and evidence.",
-  "内容需要应用同意。": "Content needs app consent. ",
-  "CA 只安装到当前用户信任根，且不会自动安装；固定证书、mTLS、E2EE 不被攻破。": "The CA is installed in the current user's trust root only and never silently. Certificate pinning, mTLS and E2EE are not broken.",
-  "技术路径": "Approach",
-  "内容可见性": "Content visibility",
-  "部署与维护": "Deployment",
-  "覆盖面": "Coverage",
-  "用户可解释性": "Explainability",
-  "本地代理 + 本地 CA": "Local proxy + local CA",
-  "本版": "THIS BUILD",
-  "高：协议语义、正文、进程": "High: protocol semantics, bodies, processes",
-  "中低：用户态、无驱动签名": "Medium-low: user mode, no driver signing",
-  "中：需应用遵循代理 / 信任 CA": "Medium: app must honor proxy / trust CA",
-  "高：授权与边界可见": "High: consent and boundaries visible",
-  "WFP / WinDivert 透明重定向": "WFP / WinDivert transparent redirect",
-  "中：仍受 TLS 固定与信任限制": "Medium: still limited by pinning and trust",
-  "高：驱动、签名、兼容性": "High: drivers, signing, compatibility",
-  "较高：不依赖应用代理设置": "High-ish: independent of app proxy settings",
-  "中：用户不易感知": "Medium: less visible to users",
-  "Agent 会话 / MCP 旁路": "Agent session / MCP sidecar",
-  "高：可读会话内容": "High: session content readable",
-  "低：只需读本地数据": "Low: reads local data only",
-  "窄：只覆盖特定 Agent，不看真实外发": "Narrow: only specific agents, not real egress",
-  "中：依赖私有格式": "Medium: depends on private formats",
-  "浏览器扩展": "Browser extension",
-  "中：仅浏览器内页面与请求": "Medium: browser pages and requests only",
-  "低：无需系统权限": "Low: no system permissions",
-  "窄：桌面 Agent、CLI、后台服务不可见": "Narrow: invisible to desktop agents, CLIs and background services",
-  "高": "High",
-  "ETW / 内核文件审计": "ETW / kernel file audit",
-  "不提供内容": "No content",
-  "高：需要管理员与规则工程": "High: admin rights and rules engineering",
-  "广：网络 / 文件系统事件": "Broad: network / filesystem events",
-  "中：事件量大、噪声高": "Medium: high volume, noisy",
-  "选择标准：在可交付、可解释、可撤销的前提下，获得最高的单机内容可见性。": "Selection rule: maximize single-host content visibility while staying deliverable, explainable and reversible.",
-  "透明重定向与 ETW / SACL 已列入路线图。": "Transparent redirect and ETW / SACL are on the roadmap.",
-  "03 / 审计结果": "03 / RESULTS",
-  "从“有一条连接”，到": "From “a connection exists”",
-  "“这一次外发是什么”。": "to “what was actually sent.”",
-  "审计结果不是要制造恐慌，而是让安全判断建立在可复核的事实上：进程、端点、内容信号、处置动作和存储完整性。": "Audit results should not create panic. They should ground decisions in verifiable facts: process, endpoint, content signals, action taken and storage integrity.",
-  "精确到进程": "Exact process attribution",
-  "缓存进程创建时间，减少 PID 复用带来的错误归属；同时保留父进程链与脱敏命令行，帮助识别 Agent、编辑器子进程和脚本运行时。": "Caches process creation time to reduce misattribution from PID reuse, while retaining the parent chain and redacted command line to identify agents, editor children and script runtimes.",
-  "内容级风险信号": "Content-level risk signals",
-  "识别 AI 服务端点与常见 API 密钥、私钥、证件号、银行卡、手机号和代码块。风险分可解释，证据保留脱敏，避免审计本身成为密钥泄露源。": "Detects AI service endpoints plus common API keys, private keys, ID numbers, bank cards, phone numbers and code blocks. Scores are explainable and evidence stays redacted, so the audit itself does not become a secret leak.",
-  "可观察，也可阻断": "Observe, and block when asked",
-  "默认只观察。需要时对达到阈值的请求返回 403，让“是否放行”成为显式策略，而不是事后的猜测。阻断开关默认关闭，避免误伤。": "Observe by default. When needed, return 403 for requests above a threshold, making allow/deny an explicit policy rather than an afterthought. Blocking is off by default to avoid false positives.",
-  "脱敏在前，解密在后": "Redact first, decrypt later",
-  "列表与导出只展示脱敏预览。原始正文仅有选择地加密保存，在详情中再次确认后才于当前会话解密。导出的 JSONL 不包含正文。": "Lists and exports show redacted previews only. Raw bodies are selectively encrypted and decrypted only after a second confirmation in the current session. Exported JSONL never contains bodies.",
-  "证据链可验证": "Verifiable evidence chain",
-  "每条流量写库时，将关键摘要与上一条哈希链接。审计台可随时校验链条是否断裂，为事后取证提供一个廉价的完整性基线。": "Each flow's key summary is hash-linked to the previous entry on write. The console can verify chain integrity at any time, providing a cheap baseline for post-incident forensics.",
-  "网络 × 文件线索": "Network × file clues",
-  "Beta 版把近期外发进程与其打开的文件句柄做时间关联，并用虚构诱饵文件观察异常触达。只记录元数据，不读取用户文件内容。": "The beta correlates recent egress processes with open file handles and uses fictional canary files to observe unexpected access. It records metadata only and never reads user file content.",
-  "04 / 覆盖边界": "04 / BOUNDARIES",
-  "我们主动写清楚了": "We document",
-  "“看不到”的部分。": "what we cannot see.",
-  "没有一种用户态方案能看见所有加密流量。一个可信的审计产品，不应该把“代理已启动”宣传成“全部可见”。下面是第一版的真实边界。": "No user-mode approach can see all encrypted traffic. A trustworthy audit product should not market “the proxy is running” as “everything is visible”. These are v1's real boundaries.",
-  "在配合路径上可以看见": "Visible on cooperating paths",
-  "经过本地代理的 HTTP/HTTPS 请求与响应元数据；系统代理、环境变量代理和手动指定的代理都属于这个范围。": "HTTP/HTTPS request and response metadata that passes through the local proxy, including system proxy, environment-variable proxy and manually configured proxy paths.",
-  "启动时自动继承本机回环 HTTP 代理（如 Clash 的 127.0.0.1:7890）并串联转发；只转发重新加密后的 TLS 字节，上游看不到审计器已解密的正文。": "At startup, inherits and chains any loopback HTTP proxy such as Clash at 127.0.0.1:7890. Only re-encrypted TLS bytes are forwarded upstream; the upstream never sees the body decrypted by the auditor.",
-  "应用信任本地 CA 且未启用证书固定的 TLS 1.2 / 1.3 流量，可还原请求方法、路径、头、正文和响应。": "TLS 1.2 / 1.3 traffic from apps that trust the local CA and do not enforce pinning: request method, path, headers, bodies and responses can be recovered.",
-  "正文保存有体积上限；AI 请求或风险分 ≥ 25 的流量才加密保留原始正文，其他流量保留脱敏预览。": "Body retention has a size cap. Raw bodies are encrypted only for AI requests or flows with a risk score of 25 or higher; other flows keep redacted previews.",
-  "客户端进程 PID、父进程链、脱敏命令行与进程创建时间，用于区分真实发起者与 PID 复用。": "Client PID, parent chain, redacted command line and process creation time distinguish the real originator from PID reuse.",
-  "AI 服务分类、模型名、密钥 / PII / 代码 / 文件引用等规则信号，以及可配置的阻断动作。": "AI service classification, model names, rule signals for secrets / PII / code / file references, and configurable blocking actions.",
-  "不承诺、也看不到": "Not promised, not visible",
-  "未经过代理的直连流量。": "Direct traffic that bypasses the proxy. ",
-  "忽略系统代理的应用必须用环境变量或后续的透明重定向接入。": "Apps that ignore the system proxy must be onboarded with environment variables or future transparent redirection.",
-  "证书固定、mTLS、双向证书校验。": "Certificate pinning, mTLS and mutual certificate validation. ",
-  "这些是应用有意建立的安全边界，不被本项目攻破。": "These are intentional security boundaries and are not broken by this project.",
-  "QUIC / HTTP3 与非 HTTP 协议。": "QUIC / HTTP3 and non-HTTP protocols. ",
-  "第一版不解析，无法给出内容级结论。": "v1 does not parse them and cannot draw content-level conclusions.",
-  "应用层端到端加密。": "Application-layer end-to-end encryption. ",
-  "没有密钥时，即使流量经过代理也只能看到密文和元数据。": "Without keys, even proxied traffic reveals only ciphertext and metadata.",
-  "Windows 服务 / SYSTEM 会话的完整归因。": "Full attribution for Windows services / SYSTEM sessions. ",
-  "当前面向登录用户进程，服务账户路径在路线图中。": "Current builds target logged-in user processes; service-account paths are on the roadmap.",
-  "完整文件读取历史。": "Complete file-read history. ",
-  "打开句柄抽样无法证明文件已被读取，也不覆盖已经关闭的句柄。": "Open-handle sampling cannot prove a file was read and does not cover handles already closed.",
-  "重要安全边界：": "Important safety boundary: ",
-  "不要在日常使用、存有真实凭据的设备上分析疑似恶意软件。受信 CA 会扩大本机可被中间人解密的范围。请在隔离虚拟机 / 快照中处理未知样本，分析结束后移除 CA 并恢复系统代理。": "Do not analyze suspected malware on a daily-use device that holds real credentials. A trusted CA expands what can be decrypted on that host. Use an isolated VM or snapshot for unknown samples, then remove the CA and restore the system proxy.",
-  "05 / 下载": "05 / DOWNLOAD",
-  "六个原生构建，": "Six native builds,",
-  "选择你的系统。": "pick your platform.",
-  "每次发布同时提供六个原生构建与 SHA-256 校验。Windows x64 与 ARM64 都是完整桌面版；Linux / macOS 共享审计引擎与本机 Web 审计台，系统代理与 CA 需要手动配置。": "Every release ships six native builds with SHA-256 checks. Windows x64 and ARM64 are full desktop builds; Linux and macOS share the audit engine and local web console, with manual proxy and CA setup.",
-  "主要支持": "Primary",
-  "完整桌面控制台、系统代理备份与恢复、当前用户 CA 一键安装、进程归因。": "Full desktop console, system-proxy backup and restore, one-click current-user CA install and process attribution.",
-  "原生 ARM64": "Native ARM64",
-  "原生 Windows 11 ARM64 桌面版；在 GitHub 的 ARM runner 上编译依赖，并完成源码冒烟与打包验收。": "Native Windows 11 ARM64 desktop build; dependencies compile on GitHub's ARM runner, followed by source smoke tests and packaged acceptance.",
-  "单文件 EXE": "Single EXE",
-  "审计引擎与本机 Web 审计台。需手动信任 CA，并通过环境变量接入目标 Agent。": "Audit engine and local web console. Trust the CA manually and point the target agent at it through environment variables.",
-  "未签名": "Unsigned",
-  "面向 Intel Mac 的审计引擎与 Web 审计台，使用兼容的 cryptography 版本构建。": "Audit engine and web console for Intel Macs, built with a compatible cryptography release.",
-  "审计引擎与 Web 审计台；PID 归因依赖 /proc/net/tcp，手动配置代理与 CA。": "Audit engine and web console; PID attribution uses /proc/net/tcp, with manual proxy and CA setup.",
-  "面向 ARM64 Linux 服务器与开发机的审计引擎，能力与 Linux x64 一致。": "Audit engine for ARM64 Linux servers and workstations, with the same capabilities as Linux x64.",
-  "每个产物附带独立校验。": "Every artifact has an independent checksum. ",
-  "发布页提供": "The release page includes",
-  "与": "and",
-  "，下载后可先校验再运行。": ". Verify before running.",
-  "前往 GitHub Releases": "View GitHub Releases",
-  "查看平台边界": "Review platform boundaries",
-  "构建说明：": "Build notes: ",
-  "Windows ARM64 是原生构建，不是 x64 模拟运行；桌面 Tk 控制台尚未做 ARM64 实机 UI 验收。macOS 与 Linux 二进制未签名，Gatekeeper 与 SmartScreen 可能要求手动放行。": "Windows ARM64 is a native build, not x64 emulation; the desktop Tk console has not yet had full ARM64 UI acceptance. macOS and Linux binaries are unsigned, so Gatekeeper and SmartScreen may require manual approval.",
-  "06 / 快速开始": "06 / QUICK START",
-  "三步接入，": "Three steps,",
-  "不自动接管系统。": "no automatic takeover.",
-  "桌面控制台和本地审计台会同时启动。系统代理、根证书与阻断策略都需要显式确认；你可以随时暂停采集或恢复原代理设置。": "The desktop console and local web console start together. System proxy, root CA and blocking policy all require explicit confirmation; you can pause capture or restore the original proxy at any time.",
-  "启动 EgressScope": "Launch EgressScope",
-  "双击可执行文件，或使用": "Double-click the executable, or run",
-  "运行无窗口模式。代理默认监听": "for headless mode. The proxy listens on",
-  "，审计台绑定回环地址。": ", with the console bound to loopback.",
-  "确认根证书": "Confirm the root CA",
-  "在控制台点击“安装根证书”，将公开 CA 加入当前用户信任根。私钥始终留在本机数据目录，不会分发；安装后可随时移除。": "Click “Install root CA” in the console to add the public CA to the current user's trust root. The private key stays in the local data directory and is never distributed; the CA can be removed at any time.",
-  "选择流量入口": "Choose a traffic entry",
-  "开启系统代理，或只给目标 Agent 注入": "Enable the system proxy, or inject",
-  "等变量。若本机原本通过 Clash 等回环代理（如": "into the target agent. If the machine already uses a loopback proxy such as Clash (e.g.",
-  "）上网，程序会在启动时自动串联，避免接管后断网。": "), EgressScope chains to it at startup to avoid dropping connectivity.",
-  "EgressScope · 控制窗口": "EgressScope · Control",
-  "本机数据外发审计": "Local egress audit",
-  "运行中": "Running",
-  "本地代理": "Local proxy",
-  "本地 CA": "Local CA",
-  "等待信任": "Awaiting trust",
-  "系统代理": "System proxy",
-  "未启用": "Off",
-  "文件触达": "File access",
-  "Beta 抽样中": "Beta sampling",
-  "本机审计已就绪。下一步：安装 CA，再启用系统代理或使用 Agent 环境变量。": "Local audit is ready. Next: install the CA, then enable the system proxy or use agent env vars.",
-  "安装根证书": "Install root CA",
-  "启用系统代理": "Enable system proxy",
-  "复制环境变量": "Copy env vars",
-  "打开审计台": "Open console",
-  "仅限授权设备": "Authorized devices only",
-  "07 / 隐私设计": "07 / PRIVACY",
-  "审计工具本身，": "An audit tool itself",
-  "不应该成为新的泄露面。": "should not become a new leak surface.",
-  "数据边界不是靠一句“我们很重视隐私”。它需要落实在密钥位置、导出格式、默认设置和系统变更的撤销路径上。": "Data boundaries are not a promise about “taking privacy seriously”. They must be enforced through key location, export format, defaults and reversible system changes.",
-  "正文加密存储": "Encrypted body storage",
-  "AES-256-GCM 加密请求 / 响应正文；主密钥由当前 Windows 用户的 DPAPI 保护。更换用户或离线拷走数据库都无法直接解密。": "AES-256-GCM encrypts request and response bodies; the master key is protected by the current Windows user's DPAPI. Another user or an offline copy of the database cannot decrypt them directly.",
-  "脱敏是默认值": "Redacted by default",
-  "列表、搜索、预览和 JSONL 导出只包含脱敏后的内容与哈希。原始正文需要显式的二次确认才会解密显示，且不回写数据库。": "Lists, search, previews and JSONL exports contain only redacted content and hashes. Raw bodies require explicit second confirmation to decrypt and are never written back to the database.",
-  "最小化系统变更": "Minimal system changes",
-  "CA 只装当前用户，不自动安装；系统代理修改前备份，检测到 PAC 时拒绝接管；退出时仅在设置仍属于本工具时恢复。": "The CA is installed for the current user only and never silently. The system proxy is backed up before changes, PAC configurations are refused, and settings are restored on exit only if they still belong to this tool.",
-  "本地回环服务": "Local loopback service",
-  "Web 审计台只绑定 127.0.0.1，使用每次启动随机生成的会话令牌，校验 Host 并应用严格 CSP。没有云同步，没有外部字体或脚本。": "The web console binds to 127.0.0.1 only, uses a random session token per launch, validates Host and applies a strict CSP. No cloud sync, no external fonts or scripts.",
-  "你掌握密钥、": "You hold the keys,",
-  "保留期与删除权。": "retention and deletion.",
-  "数据库位置": "Database location",
-  "原始正文": "Raw bodies",
-  "主密钥保护": "Master key",
-  "内容上云": "Cloud upload",
-  "不启用": "Disabled",
-  "上游链路": "Upstream link",
-  "仅回环 · 可关闭": "Loopback only · optional",
-  "默认审计动作": "Default action",
-  "观察，不阻断": "Observe, do not block",
-  "证据保留": "Retention",
-  "默认 7 天 · 可配置": "7 days default · configurable",
-  "删除": "Delete",
-  "本地一键清空": "One-click local wipe",
-  "EgressScope 是审计工具，不是杀毒软件。它不保证发现所有恶意行为，也不对证书固定、端到端加密或未经过本地代理的流量提供内容可见性。": "EgressScope is an audit tool, not antivirus. It cannot detect every malicious action, and it offers no content visibility for certificate pinning, end-to-end encryption or traffic that bypasses the local proxy.",
-  "08 / 路线图": "08 / ROADMAP",
-  "第一版把闭环跑通，": "Ship the loop first,",
-  "再把覆盖面做深。": "then deepen coverage.",
-  "路线图按“可验证的收益 / 增加的信任成本”排序。不会承诺破解加密，也不以驱动或隐蔽手段扩张采集范围。": "The roadmap is ordered by verifiable benefit against added trust cost. We do not promise to break encryption or expand collection with drivers or covert methods.",
-  "可交付的本机闭环": "Deliverable local loop",
-  "嵌入式代理、本地 CA、TLS 解密、PID 归因、AI/敏感数据规则、风险评分与阻断、加密证据、哈希链、桌面控制台与本地 Web 审计台。": "Embedded proxy, local CA, TLS decryption, PID attribution, AI and sensitive-data rules, risk scoring and blocking, encrypted evidence, hash chain, desktop console and local web console.",
-  "Windows 当前用户路径": "Windows current-user path",
-  "系统代理备份 / 恢复": "System proxy backup / restore",
-  "Agent 环境变量接入": "Agent environment-variable onboarding",
-  "回环上游代理自动串联": "Automatic loopback upstream chaining",
-  "文件句柄抽样 Beta": "File-handle sampling beta",
-  "扩大流量入口": "Expand traffic entry points",
-  "以 WFP / WinDivert 做显式的透明重定向，支持不遵循系统代理的应用；补充 QUIC 元数据策略与代理链路健康诊断。": "Explicit transparent redirection with WFP / WinDivert for apps that ignore the system proxy, plus QUIC metadata policy and proxy-chain health diagnostics.",
-  "驱动签名与兼容性测试": "Driver signing and compatibility tests",
-  "按进程 / 端口重定向": "Per-process / per-port redirection",
-  "QUIC 无法解密时明确降级": "Explicit degradation when QUIC cannot be decrypted",
-  "接入安装器与服务账户入口": "Installer and service-account entry points",
-  "补齐系统与文件视角": "Add system and file views",
-  "通过 ETW / SACL / 文件系统微过滤完善读取事件，与网络外发时间线合并；加入策略包、告警导出与团队级只读审计视图。": "Use ETW / SACL / filesystem minifilters to complete read events and merge them with the egress timeline; add policy packs, alert export and team read-only audit views.",
-  "完整文件读取证据": "Complete file-read evidence",
-  "Windows 服务 / SYSTEM 进程": "Windows services / SYSTEM processes",
-  "可签名的策略与证据导出": "Signed policy and evidence export",
-  "企业部署与保留策略": "Enterprise deployment and retention policy",
-  "从第一条可解释的": "Start with the first explainable",
-  "外发记录开始。": "egress record.",
-  "打开本机审计台，查看代理、CA 与证据链状态。仅在你拥有或明确获授权的设备上使用。": "Open the local console to inspect proxy, CA and evidence-chain state. Use it only on devices you own or are explicitly authorized to audit.",
-  "再次查看边界": "Review boundaries again",
-  "v0.2.0 · WINDOWS / MACOS / LINUX · 仅用于拥有或明确获授权的设备": "v0.2.0 · WINDOWS / MACOS / LINUX · authorized devices only",
-  "本机数据外发审计。为授权的 Windows 设备提供完整的桌面控制与系统代理接入；Linux / macOS 版本提供审计引擎与本机 Web 审计台。界面与数据均在此设备上运行。": "Local egress audit. Windows builds include the full desktop console and system-proxy integration; Linux and macOS provide the audit engine and local web console. UI and data run on this device.",
-  "LOCAL-FIRST · 无云同步": "LOCAL-FIRST · no cloud sync",
-  "产品": "Product",
-  "为什么需要审计": "Why audit",
-  "架构与取舍": "Architecture & trade-offs",
-  "获取": "Get EgressScope",
-  "六平台构建": "Six platform builds",
-  "GitHub 仓库": "GitHub repository",
-  "使用前提": "Requirements",
-  "仅限拥有或明确获授权的设备": "Owned or explicitly authorized devices only",
-  "不要在日常主机分析未知样本": "Do not analyze unknown samples on a daily-use host",
-  "不承诺攻破证书固定 / mTLS / E2EE": "Does not break certificate pinning / mTLS / E2EE",
-  "CA 与系统代理均可撤销": "CA and system proxy are reversible",
-  "打开本机审计台": "Open local console"
+ "跳到主要内容": "Skip to main content",
+ "v0.2.0 已发布": "v0.2.0 released",
+ "：新增断网保护，异常关机或进程退出后自动恢复系统代理。": ": a network fail-safe restores the system proxy after a crash or power loss.",
+ "查看断网保护": "Read about the fail-safe",
+ "本机数据外发审计": "Local egress audit",
+ "能力": "Capabilities",
+ "工作原理": "How it works",
+ "覆盖边界": "Coverage",
+ "断网保护": "Network fail-safe",
+ "下载": "Download",
+ "常见问题": "FAQ",
+ "下载 v0.2.0": "Download v0.2.0",
+ "v0.2.0 · 六平台原生构建 · 本地优先": "v0.2.0 · six native builds · local-first",
+ "看清本机 AI Agent 的": "See every egress request",
+ "每一次数据外发": "your local AI agents make",
+ "EgressScope 在本机运行一个只绑定 127.0.0.1 的审计代理：还原 HTTPS 外发内容、定位发起进程、识别密钥与敏感数据，并把结果写入可验证的本地证据链。": "EgressScope runs an audit proxy bound to 127.0.0.1 only: it reconstructs HTTPS egress, identifies the originating process, detects secrets and sensitive data, and writes the results into a verifiable local evidence chain.",
+ "阅读技术文档": "Read the docs",
+ "默认只观察、不阻断；阻断需要显式开启": "Observes by default; blocking must be enabled explicitly",
+ "证据留在本机，正文以 AES-256-GCM 加密保存": "Evidence stays on this device, bodies encrypted with AES-256-GCM",
+ "根证书与系统代理都可以一键撤销": "Root CA and system proxy are both one click to revoke",
+ "EgressScope · 本机审计台": "EgressScope · local console",
+ "实时": "Live",
+ "审计": "Audit",
+ "态势总览": "Overview",
+ "流量审计": "Traffic",
+ "风险发现": "Findings",
+ "关联": "Correlation",
+ "文件触达": "File access",
+ "覆盖范围": "Coverage",
+ "系统": "System",
+ "策略与设置": "Policy & settings",
+ "证据链 有效": "Chain valid",
+ "AES-GCM · DPAPI · 不上云": "AES-GCM · DPAPI · no cloud",
+ "本机审计台": "Local console",
+ "代理运行中": "Proxy running",
+ "今日请求": "Requests today",
+ "较昨日 +8%": "+8% vs yesterday",
+ "AI 外发": "AI egress",
+ "6 个端点": "6 endpoints",
+ "高风险": "High risk",
+ "2 条已阻断": "2 blocked",
+ "进程归因": "Attribution",
+ "PID 命中率": "PID hit rate",
+ "全部请求": "All requests",
+ "AI 相关": "AI related",
+ "高风险 / 已阻断": "High risk / blocked",
+ "时间": "Time",
+ "发起进程 → 目标端点": "Process → endpoint",
+ "风险": "Risk",
+ "处置": "Action",
+ "告警": "Alert",
+ "观察": "Observe",
+ "界面预览 · 表中数据为样例": "UI preview · sample data",
+ "代理监听": "Proxy listen",
+ "审计台": "Console",
+ "正文加密": "Body encryption",
+ "证据完整性": "Integrity",
+ "SHA-256 链": "SHA-256 chain",
+ "原生构建": "Native builds",
+ "6 个平台目标": "6 platform targets",
+ "云同步": "Cloud sync",
+ "无": "None",
+ "能力总览": "Capabilities",
+ "把“有一条连接”变成一次可复核的外发记录": "Turn “a connection happened” into a reviewable egress record",
+ "每一项能力都对应本机证据链上的一个环节：从流量入口、内容还原、进程归因，到风险判定与加密留存。审计台可随时校验链条是否完整。": "Each capability is one link in the local evidence chain: traffic ingress, content reconstruction, process attribution, risk decisions and encrypted retention. The console can verify the chain at any time.",
+ "HTTPS 外发可见性": "HTTPS egress visibility",
+ "本地代理终止 TLS，还原请求方法、路径、请求头与正文，并记录响应状态与体积。不遵循代理设置的应用不会被假装看见。": "The local proxy terminates TLS and reconstructs method, path, headers and body, plus response status and size. Apps that ignore proxy settings are never reported as seen.",
+ "进程级归因": "Process-level attribution",
+ "用客户端临时端口匹配本机 TCP 归属表，缓存 PID 与进程创建时间以减少 PID 复用误判，并保留父进程链与脱敏命令行。": "Client ephemeral ports are matched against the local TCP owner table; PID and creation time are cached to reduce PID-reuse errors, and the parent chain plus a redacted command line are kept.",
+ "AI 端点识别": "AI endpoint classification",
+ "识别主流 AI 服务与本地自建端点，提取模型名与 token 用量，把 AI 外发与普通遥测、下载流量区分开。": "Recognises major AI services and self-hosted endpoints, extracts model names and token usage, and separates AI egress from ordinary telemetry or downloads.",
+ "敏感数据规则": "Sensitive data rules",
+ "匹配常见 API 密钥、私钥、证件号、银行卡、手机号、源码块与文件路径引用，形成可解释、可复核的风险分。": "Matches common API keys, private keys, national IDs, card numbers, phone numbers, source blocks and file-path references into an explainable, reviewable risk score.",
+ "加密证据链": "Encrypted evidence chain",
+ "每条记录的关键摘要与上一条哈希链接，正文加密保存，列表与导出默认脱敏；可随时校验链条并导出 JSONL 证据。": "Each record links its digest to the previous hash; bodies are encrypted, lists and exports are redacted by default, and the chain can be verified and exported as JSONL at any time.",
+ "文件触达关联（Beta）": "File access correlation (beta)",
+ "抽样近期外发进程打开的文件句柄，并用虚构诱饵文件观察异常触达。只记录路径与时间等元数据，不读取文件内容。": "Samples file handles opened by recently active egress processes and watches decoy files for unexpected access. Only metadata such as path and time is recorded; file contents are never read.",
+ "用户态本地代理 + 本地 CA + 进程归因": "User-space local proxy + local CA + process attribution",
+ "这条路径不需要内核驱动签名，不依赖任何 Agent 的私有数据格式，并且失败模式清晰：应用不配合就看不到，不会把“代理已启动”说成“全部可见”。": "This path needs no signed kernel driver and no agent-specific data format, and it fails visibly: if an app does not cooperate nothing is captured, and “proxy running” is never presented as “everything visible”.",
+ "应用 / Agent 发起请求": "App or agent sends a request",
+ "Claude Code、Codex、编辑器插件、SDK 或普通桌面程序发出 HTTPS 请求。": "Claude Code, Codex, editor plugins, SDKs or ordinary desktop apps issue HTTPS requests.",
+ "进入本地转发代理": "Enters the local forwarding proxy",
+ "代理只监听 127.0.0.1，通过系统代理或进程环境变量接入，不影响局域网。": "The proxy listens on 127.0.0.1 only, reached through the system proxy or per-process environment variables, and never affects the LAN.",
+ "本地 CA 终止 TLS": "Local CA terminates TLS",
+ "使用当前用户信任的本地 CA 签发站点证书，还原 HTTP 语义后再重新加密转发。": "Site certificates are issued by a local CA trusted by the current user; HTTP semantics are reconstructed, then traffic is re-encrypted and forwarded.",
+ "归因到发起进程": "Attributed to the originating process",
+ "客户端端口匹配本机 TCP 表，得到 PID、进程名、父进程链与创建时间。": "The client port is matched against the local TCP table to obtain PID, process name, parent chain and creation time.",
+ "策略判定与证据留存": "Policy decision and evidence retention",
+ "端点分类、DLP 规则、风险评分与处置动作，正文加密写入哈希链证据库。": "Endpoint classification, DLP rules, risk scoring and actions; bodies are encrypted into a hash-chained evidence store.",
+ "进程流量": "Process traffic",
+ "内容可读": "Readable content",
+ "是谁发起": "Who sent it",
+ "可验证证据": "Verifiable evidence",
+ "为什么选择本地代理": "Why a local proxy",
+ "失败模式清晰、可解释、可撤销。修改系统代理前先备份，退出时恢复；检测到 PAC 脚本时拒绝接管；已有 Clash 等回环代理时自动串联，避免接管后断网。": "Failure modes are explicit, explainable and reversible. The system proxy is backed up before it changes and restored on exit, takeover is refused when a PAC script is detected, and an existing loopback proxy such as Clash is chained automatically so you are not cut off.",
+ "为什么使用 mitmproxy": "Why mitmproxy",
+ "不重复造 TLS。成熟的开源代理负责 HTTP/2、证书签发与流式转发，项目把工程精力集中在归因、策略、证据链与产品边界上。": "No reinventing TLS. A mature open-source proxy handles HTTP/2, certificate issuance and streaming, so the project can focus on attribution, policy, evidence and product boundaries.",
+ "为什么需要本地 CA": "Why a local CA",
+ "还原内容必须经过应用同意。CA 只安装到当前用户信任根且不会自动安装；证书固定、mTLS 与端到端加密不被本项目攻破。": "Reconstructing content requires the app's consent. The CA is installed only into the current user's trust store and never automatically; certificate pinning, mTLS and E2EE are not bypassed.",
+ "技术路径": "Approach",
+ "内容可见性": "Content visibility",
+ "部署与维护": "Deployment & upkeep",
+ "覆盖面": "Coverage",
+ "用户可解释性": "Explainability",
+ "本地代理 + 本地 CA": "Local proxy + local CA",
+ "本版": "This release",
+ "高：协议语义、正文、进程": "High: protocol semantics, bodies, processes",
+ "中低：用户态、无驱动签名": "Medium-low: user space, no signed driver",
+ "中：需应用遵循代理 / 信任 CA": "Medium: app must honour the proxy / trust the CA",
+ "高：授权与边界可见": "High: consent and boundaries are visible",
+ "WFP / WinDivert 透明重定向": "WFP / WinDivert transparent redirection",
+ "中：仍受 TLS 固定与信任限制": "Medium: still limited by pinning and trust",
+ "高：驱动、签名、兼容性": "High: drivers, signing, compatibility",
+ "较高：不依赖应用代理设置": "Higher: independent of app proxy settings",
+ "中：用户不易感知": "Medium: hard for users to notice",
+ "Agent 会话 / MCP 旁路": "Agent session / MCP side-channel",
+ "高：可读会话内容": "High: session content is readable",
+ "低：只需读本地数据": "Low: only reads local data",
+ "窄：只覆盖特定 Agent，不看真实外发": "Narrow: one agent only, not real egress",
+ "中：依赖私有格式": "Medium: depends on private formats",
+ "浏览器扩展": "Browser extension",
+ "中：仅浏览器内页面与请求": "Medium: in-browser pages and requests only",
+ "低：无需系统权限": "Low: no system privileges",
+ "窄：桌面 Agent、CLI、后台服务不可见": "Narrow: desktop agents, CLIs and services invisible",
+ "高": "High",
+ "ETW / 内核文件审计": "ETW / kernel file auditing",
+ "不提供内容": "No content",
+ "高：需要管理员与规则工程": "High: needs admin rights and rule engineering",
+ "广：网络 / 文件系统事件": "Broad: network and filesystem events",
+ "中：事件量大、噪声高": "Medium: high volume, noisy",
+ "选择标准：在可交付、可解释、可撤销的前提下，获得最高的单机内容可见性。": "Selection criteria: the highest single-machine content visibility that is still shippable, explainable and reversible.",
+ "透明重定向与 ETW / SACL 已列入路线图。": "Transparent redirection and ETW / SACL are on the roadmap.",
+ "我们主动写清楚了“看不到”的部分": "We document what cannot be seen",
+ "没有一种用户态方案能看见所有加密流量。一个可信的审计产品，不应该把“代理已启动”宣传成“全部可见”。下面是当前版本的真实边界。": "No user-space approach can see all encrypted traffic. A trustworthy audit product should not advertise “proxy running” as “everything visible”. These are the real boundaries of the current release.",
+ "在配合路径上可以看见": "Visible on cooperating paths",
+ "经过本地代理的 HTTP/HTTPS 请求与响应元数据；系统代理、环境变量代理和手动指定的代理都属于这个范围。": "Request and response metadata for HTTP/HTTPS that passes the local proxy — via the system proxy, environment variables or an explicitly configured proxy.",
+ "启动时自动继承本机回环 HTTP 代理（如 Clash 的 127.0.0.1:7890）并串联转发；只转发重新加密后的 TLS 字节，上游看不到审计器已解密的正文。": "An existing loopback HTTP proxy (for example Clash on 127.0.0.1:7890) is inherited at startup and chained; only re-encrypted TLS bytes are forwarded, so upstream never sees decrypted bodies.",
+ "应用信任本地 CA 且未启用证书固定的 TLS 1.2 / 1.3 流量，可还原请求方法、路径、头、正文和响应。": "TLS 1.2 / 1.3 traffic from apps that trust the local CA and do not pin certificates: method, path, headers, body and response can be reconstructed.",
+ "正文保存有体积上限；AI 请求或风险分 ≥ 25 的流量才加密保留原始正文，其他流量保留脱敏预览。": "Body retention has a size cap; raw bodies are encrypted and kept only for AI requests or flows scoring 25 and above, everything else keeps a redacted preview.",
+ "客户端进程 PID、父进程链、脱敏命令行与进程创建时间，用于区分真实发起者与 PID 复用。": "Client PID, parent chain, redacted command line and process creation time, used to separate the real originator from PID reuse.",
+ "AI 服务分类、模型名、密钥 / PII / 代码 / 文件引用等规则信号，以及可配置的阻断动作。": "AI service classification, model names, rule signals for secrets / PII / code / file references, and configurable blocking actions.",
+ "不承诺、也看不到": "Not claimed, not visible",
+ "未经过代理的直连流量。": "Direct traffic that bypasses the proxy.",
+ "忽略系统代理的应用必须用环境变量或后续的透明重定向接入。": "Apps that ignore the system proxy must be onboarded with environment variables or, later, transparent redirection.",
+ "证书固定、mTLS、双向证书校验。": "Certificate pinning, mTLS, mutual certificate validation.",
+ "这些是应用有意建立的安全边界，不被本项目攻破。": "These are deliberate application security boundaries and are not bypassed by this project.",
+ "QUIC / HTTP3 与非 HTTP 协议。": "QUIC / HTTP3 and non-HTTP protocols.",
+ "当前版本不解析，无法给出内容级结论。": "Not parsed in this release, so no content-level conclusions are drawn.",
+ "应用层端到端加密。": "Application-layer end-to-end encryption.",
+ "没有密钥时，即使流量经过代理也只能看到密文和元数据。": "Without the keys, proxied traffic still only yields ciphertext and metadata.",
+ "Windows 服务 / SYSTEM 会话的完整归因。": "Full attribution for Windows services and SYSTEM sessions.",
+ "当前面向登录用户进程，服务账户路径在路线图中。": "This release targets logged-on user processes; service accounts are on the roadmap.",
+ "完整文件读取历史。": "A complete file-read history.",
+ "打开句柄抽样无法证明文件已被读取，也不覆盖已经关闭的句柄。": "Handle sampling cannot prove a file was read and does not cover handles that are already closed.",
+ "重要安全边界：": "Important safety boundary: ",
+ "不要在日常使用、存有真实凭据的设备上分析疑似恶意软件。受信 CA 会扩大本机可被中间人解密的范围。请在隔离虚拟机 / 快照中处理未知样本，分析结束后移除 CA 并恢复系统代理。": "Do not analyse suspected malware on a daily-use device that holds real credentials. A trusted CA widens what can be decrypted by a man in the middle on this machine. Work in an isolated VM or snapshot, then remove the CA and restore the system proxy.",
+ "接管系统代理之后，本机不能失联": "After taking over the system proxy, this machine must stay online",
+ "这是一个真实存在的失败模式：如果电脑突然断电、程序崩溃或被强制结束，Windows 的系统代理仍会指向 127.0.0.1 上已经停止的端口，浏览器与多数应用会连接失败——和某些 VPN 客户端退出后留下的问题一样。v0.2.0 用三层机制处理它。": "This is a real failure mode: after a power loss, crash or forced kill, the Windows system proxy can still point at a 127.0.0.1 port that is no longer listening, so browsers and most apps fail to connect — the same problem some VPN clients leave behind. v0.2.0 handles it with three layers.",
+ "启动时校正": "Startup reconciliation",
+ "程序启动会检查系统代理是否仍指向本工具：端口变了就重新指向新的监听端口；本地代理没能启动，就立刻恢复原始设置，不把机器留在断网状态。": "On startup the app checks whether the system proxy still points at it: if the port changed it is repointed to the live listener, and if the local proxy failed to start the original settings are restored immediately instead of leaving the machine offline.",
+ "AUTOMATIC · 无需配置": "AUTOMATIC · no setup",
+ "独立看门狗任务": "Independent watchdog task",
+ "启用系统代理时可以选择注册一个仅当前用户的计划任务：登录时以及每 2 分钟检查一次，如果系统代理仍指向已停止的回环端口，等待 30 秒宽限后恢复备份的原始值、刷新 WinINET 设置，然后自动停用任务，避免无意义的重复运行。": "When you enable the system proxy you can register a per-user scheduled task: it checks at logon and every 2 minutes, and if the system proxy still points at a stopped loopback port it waits a 30-second grace period, restores the backed-up values, refreshes WinINET, then disables itself to avoid pointless repeats.",
+ "OPT-IN · 每用户 · 不需要管理员": "OPT-IN · per user · no admin",
+ "手动恢复": "Manual recovery",
+ "桌面控制台提供“恢复系统代理”，也可以直接运行命令行恢复；极端情况下还能在 Windows 设置的网络代理页手动关闭。备份文件被保留，直到恢复成功。": "The desktop console offers “restore system proxy”, and the same can be done from the command line; in the worst case you can turn the proxy off in the Windows proxy settings page. The backup file is kept until a restore succeeds.",
+ "MANUAL · 始终可用": "MANUAL · always available",
+ "# 恢复启用系统代理前的原始设置": "# Restore the settings captured before the proxy was enabled",
+ "# 仅当系统代理指向本工具且端口已停止时恢复": "# Restore only if the proxy points at us and the port is dead",
+ "# 看门狗脚本与日志位置（当前用户）": "# Watchdog script and log location (current user)",
+ "# 任务计划程序中的每用户任务": "# Per-user tasks in Task Scheduler",
+ "# 登录时 + 每 2 分钟": "# at logon + every 2 minutes",
+ "# 登录时启动审计": "# start auditing at logon",
+ "诚实的限制：": "Honest limits: ",
+ "断电瞬间无法执行任何代码，恢复发生在下一次登录后；看门狗依赖 Windows 任务计划程序且只覆盖当前登录用户；只要备份文件存在，指向已停止回环端口的系统代理会被视为本工具的设置。Linux 与 macOS 版本不修改系统代理，不受此问题影响。如果不能接受任何全局代理风险，请只用 Agent 环境变量接入。": "No code can run during a power cut, so recovery happens after the next logon; the watchdog depends on Windows Task Scheduler and covers only the signed-in user; while a backup file exists, a system proxy pointing at a stopped loopback port is treated as ours. Linux and macOS builds never change the system proxy and are unaffected. If you cannot accept any global-proxy risk, onboard agents with environment variables only.",
+ "六个原生构建，全部由 GitHub Actions 编译": "Six native builds, all compiled on GitHub Actions",
+ "每次发布同时提供六个平台目标与 SHA-256 校验文件。Windows x64 与 ARM64 都是完整桌面版；Linux 与 macOS 提供审计引擎与本机 Web 审计台，系统代理与根证书需要手动配置。": "Every release ships six platform targets with SHA-256 checksums. Windows x64 and ARM64 are full desktop builds; Linux and macOS provide the audit engine and local web console, with the system proxy and root CA configured manually.",
+ "平台": "Platform",
+ "产物文件": "Artifact",
+ "桌面控制台": "Desktop console",
+ "一键 CA / 系统代理": "One-click CA / system proxy",
+ "说明": "Notes",
+ "主要支持": "Primary",
+ "支持": "Included",
+ "单文件 EXE，含系统代理备份恢复、当前用户 CA 安装、断网保护与进程归因。": "Single-file EXE with system proxy backup and restore, current-user CA install, network fail-safe and process attribution.",
+ "原生 ARM64": "Native ARM64",
+ "在 ARM runner 上编译 OpenSSL 与 Rust 依赖，非 x64 模拟；Tk 界面尚未做实机 UI 验收。": "OpenSSL and Rust dependencies compiled on an ARM runner, not x64 emulation; the Tk UI has not been verified on real ARM64 hardware.",
+ "命令行 / Web": "CLI / web",
+ "手动": "Manual",
+ "需手动信任 CA，并通过环境变量接入目标 Agent；二进制未签名。": "Trust the CA manually and onboard agents with environment variables; binaries are unsigned.",
+ "使用兼容的 cryptography 版本构建；二进制未签名，Gatekeeper 可能要求放行。": "Built with a compatible cryptography release; unsigned, so Gatekeeper may ask you to allow it.",
+ "PID 归因依赖 /proc/net/tcp；代理与 CA 需手动配置。": "PID attribution relies on /proc/net/tcp; proxy and CA are configured manually.",
+ "面向 ARM64 服务器与开发机，能力与 Linux x64 一致。": "For ARM64 servers and dev machines, with the same capabilities as Linux x64.",
+ "每个产物附带": "Every artifact ships with a",
+ "，发布页同时提供": " file, and the release page also provides",
+ "；建议先校验再运行。": "; verify before you run.",
+ "构建未做代码签名，SmartScreen 与 Gatekeeper 可能提示未知发布者。": "Builds are not code signed, so SmartScreen and Gatekeeper may report an unknown publisher.",
+ "前往 GitHub Releases": "Go to GitHub Releases",
+ "查看构建流水线": "View build pipelines",
+ "快速开始": "Quick start",
+ "三步接入，不自动接管系统": "Three steps, no automatic takeover",
+ "桌面控制台与本机审计台会同时启动。根证书、系统代理与阻断策略都需要显式确认，你可以随时暂停采集或恢复原始代理设置。": "The desktop console and the local web console start together. The root CA, the system proxy and blocking all need explicit confirmation, and you can pause capture or restore the original proxy settings at any time.",
+ "启动 EgressScope": "Start EgressScope",
+ "双击可执行文件，或用": "Double-click the executable, or run",
+ "运行无窗口模式。代理默认监听": "for headless mode. The proxy listens on",
+ "，审计台绑定回环地址并带随机访问令牌。": "by default; the console binds to loopback with a random access token.",
+ "确认根证书": "Confirm the root certificate",
+ "在控制台点击“安装根证书”，把公开 CA 加入当前用户信任根。私钥始终留在本机数据目录，不会分发；安装后可随时移除。": "Click “install root certificate” in the console to add the public CA to the current user's trust store. The private key never leaves the local data directory and the CA can be removed again at any time.",
+ "选择流量入口": "Choose the traffic entry point",
+ "开启系统代理（可勾选断网保护），或只给目标 Agent 注入环境变量。若本机原本通过 Clash 等回环代理上网，程序会在启动时自动串联，避免接管后断网。": "Enable the system proxy (optionally with the network fail-safe), or inject environment variables into the target agent only. If this machine already reaches the internet through a loopback proxy such as Clash, it is chained automatically at startup so you are not cut off.",
+ "只影响当前终端": "Affects this terminal only",
+ ":: 只给一个终端注入代理与 CA，不改动系统设置": ":: Inject the proxy and CA into one terminal without touching system settings",
+ ":: 验证链路是否被审计": ":: Verify the path is being audited",
+ "EgressScope · 控制窗口": "EgressScope · control window",
+ "运行中": "Running",
+ "本地代理": "Local proxy",
+ "本地 CA": "Local CA",
+ "等待信任": "Awaiting trust",
+ "系统代理": "System proxy",
+ "未启用": "Off",
+ "未注册": "Not registered",
+ "本机审计已就绪。下一步：安装 CA，再启用系统代理或使用 Agent 环境变量。": "Local auditing is ready. Next: install the CA, then enable the system proxy or use agent environment variables.",
+ "安装根证书": "Install root CA",
+ "启用系统代理": "Enable system proxy",
+ "复制环境变量": "Copy env variables",
+ "打开审计台": "Open console",
+ "仅限授权设备": "Authorized devices only",
+ "隐私与安全设计": "Privacy & security design",
+ "审计工具本身不应该成为新的泄露面": "The audit tool must not become a new leak",
+ "数据边界不能只靠一句“我们很重视隐私”。它需要落实在密钥位置、导出格式、默认设置与系统变更的撤销路径上。": "A data boundary cannot rest on “we take privacy seriously”. It has to be implemented in key location, export format, defaults and the reversal path for every system change.",
+ "正文加密存储": "Bodies encrypted at rest",
+ "AES-256-GCM 加密请求与响应正文，主密钥由当前 Windows 用户的 DPAPI 保护。更换用户或离线拷走数据库都无法直接解密。": "Request and response bodies are encrypted with AES-256-GCM and the master key is protected by the current Windows user's DPAPI. Another user, or a copied database, cannot decrypt them.",
+ "脱敏是默认值": "Redaction is the default",
+ "列表、搜索、预览与 JSONL 导出只包含脱敏后的内容与哈希。原始正文需要显式二次确认才会在当前会话解密，且不回写数据库。": "Lists, search, previews and JSONL exports contain redacted content and hashes only. Raw bodies are decrypted in the current session after an explicit second confirmation and are never written back.",
+ "最小化系统变更": "Minimal system changes",
+ "CA 只装当前用户且不自动安装；系统代理修改前先备份，检测到 PAC 时拒绝接管；退出时仅在设置仍属于本工具时恢复。": "The CA is installed for the current user only and never automatically; the system proxy is backed up before it changes and takeover is refused when a PAC is detected; on exit it is restored only if the settings still belong to this tool.",
+ "本地回环服务": "Loopback-only services",
+ "Web 审计台只绑定 127.0.0.1，使用每次启动随机生成的会话令牌，校验 Host 头并应用严格 CSP。没有云同步、外部字体或第三方脚本。": "The web console binds to 127.0.0.1 only, uses a session token generated at each start, validates the Host header and applies a strict CSP. No cloud sync, external fonts or third-party scripts.",
+ "你掌握密钥、保留期与删除权": "You control the keys, retention and deletion",
+ "数据目录": "Data directory",
+ "原始正文": "Raw bodies",
+ "主密钥保护": "Master key",
+ "内容上云": "Cloud upload",
+ "不启用": "Disabled",
+ "上游链路": "Upstream",
+ "仅回环 · 可关闭": "Loopback only · optional",
+ "默认审计动作": "Default action",
+ "观察，不阻断": "Observe, never block",
+ "证据保留": "Retention",
+ "默认 7 天 · 可配置": "7 days · configurable",
+ "删除": "Deletion",
+ "本地一键清空": "One-click local wipe",
+ "EgressScope 是审计工具，不是杀毒软件。它不保证发现所有恶意行为，也不对证书固定、端到端加密或未经过本地代理的流量提供内容可见性。": "EgressScope is an audit tool, not antivirus. It does not guarantee detection of all malicious behaviour and offers no content visibility into pinned, end-to-end encrypted or non-proxied traffic.",
+ "关于能力边界与使用前提": "Boundaries and preconditions",
+ "下面这些问题决定了它是否适合你的场景。答案与本产品的实际实现一致，不做超出能力的承诺。": "These questions decide whether it fits your scenario. The answers match the implementation and make no claim beyond what the product can do.",
+ "提交问题或反馈": "Open an issue",
+ "电脑突然关机或程序崩溃后，本机还能上网吗？": "After a sudden shutdown or crash, can this machine still reach the internet?",
+ "系统代理仍指向已停止的回环端口时，浏览器与多数应用会连接失败——这是真实存在的失败模式。v0.2.0 提供三层处理：启动时校正过期设置、可选的每用户计划任务看门狗在登录后自动恢复原始代理，以及": "While the system proxy still points at a stopped loopback port, browsers and most apps fail to connect — a real failure mode. v0.2.0 handles it in three layers: startup reconciliation of stale settings, an optional per-user scheduled-task watchdog that restores the original proxy after logon, and",
+ "手动恢复。断电瞬间无法执行任何代码，恢复发生在下一次登录后。": "manual recovery. No code runs during a power cut, so recovery happens after the next logon.",
+ "它是杀毒软件或 EDR 吗？": "Is it antivirus or an EDR?",
+ "不是。EgressScope 只做外发流量的可见性、归因、策略判定与证据留存，不做恶意代码检测，也不提供阻断未知威胁的能力。风险分是启发式信号，用于辅助人工判断，不能直接当作处置结论。": "No. EgressScope provides egress visibility, attribution, policy decisions and evidence retention. It does not detect malicious code and cannot block unknown threats. Risk scores are heuristic signals that support human judgement, not verdicts.",
+ "它会读取我的聊天记录吗？": "Does it read my chat history?",
+ "只有在你启用系统代理或注入环境变量、并信任本地 CA 之后，经过代理的 HTTPS 正文才会被解析。列表与导出默认脱敏，原始正文需要在详情里再次确认才解密显示，且不回写数据库。它不读取任何 Agent 的本地会话文件。": "HTTPS bodies are only reconstructed after you enable the system proxy or inject environment variables and trust the local CA. Lists and exports are redacted by default, raw bodies need a second confirmation in the detail view and are not written back. It never reads any agent's local session files.",
+ "能看见所有加密流量吗？": "Can it see all encrypted traffic?",
+ "不能。证书固定、mTLS、QUIC / HTTP3、应用层端到端加密，以及完全绕过代理的直连流量都在覆盖边界之外。本产品不承诺、也不会尝试攻破这些机制。详见": "No. Certificate pinning, mTLS, QUIC / HTTP3, application-layer E2EE and direct traffic that bypasses the proxy are all outside the coverage boundary. This product neither claims nor attempts to break them. See the",
+ "一节。": "section.",
+ "审计数据会上传到云端吗？": "Is audit data uploaded to the cloud?",
+ "不会。证据保存在本机 SQLite，正文用 AES-256-GCM 加密，主密钥由当前用户的 DPAPI 保护。Web 审计台只绑定回环地址，使用每次启动随机生成的令牌，页面不含外部字体、脚本或统计代码。": "No. Evidence is stored in a local SQLite database, bodies are encrypted with AES-256-GCM and the master key is protected by the current user's DPAPI. The web console binds to loopback with a token generated at each start, and the page contains no external fonts, scripts or analytics.",
+ "需要管理员权限吗？": "Does it need administrator rights?",
+ "不需要。CA 只安装到当前用户信任根，系统代理是每用户设置，断网保护用的是每用户计划任务。这也是它的边界：Windows 服务与 SYSTEM 会话的完整归因不在当前版本范围内。": "No. The CA is installed into the current user's trust store, the system proxy is a per-user setting and the fail-safe uses per-user scheduled tasks. That is also the boundary: full attribution for Windows services and SYSTEM sessions is out of scope for this release.",
+ "已经在用 Clash 或其他本地代理怎么办？": "What if I already run Clash or another local proxy?",
+ "启动时会自动继承本机回环 HTTP 代理（例如": "At startup the existing loopback HTTP proxy (for example",
+ "）并串联转发，避免接管后断网。上游只看到重新加密后的 TLS 字节。带用户名密码的上游、PAC 脚本与 SOCKS 目前不支持，这些场景请改用单 Agent 环境变量接入。": ") is inherited and chained so you are not cut off. Upstream only sees re-encrypted TLS bytes. Authenticated upstreams, PAC scripts and SOCKS are not supported yet — use per-agent environment variables in those cases.",
+ "对性能与磁盘有多大影响？": "What is the performance and disk impact?",
+ "代理运行在用户态、只走本机回环。正文保存有单条体积上限，只有 AI 请求或风险分达到阈值的流量才加密保留原文；证据默认保留 7 天，可在设置中调整，也可以一键清空。": "The proxy runs in user space over loopback only. Body storage has a per-record size cap and raw bodies are kept only for AI requests or flows above the risk threshold; evidence is retained for 7 days by default, adjustable in settings, and can be wiped in one click.",
+ "支持哪些操作系统？": "Which operating systems are supported?",
+ "Windows 10 / 11 的 x64 与 ARM64 是功能完整的桌面版本，含系统代理接入、CA 一键安装与断网保护。macOS 与 Linux 提供同一套审计引擎与本机 Web 审计台，代理与 CA 需要手动配置；macOS 在非 root 下无法读取 TCP 归属表，会降级为不含 PID 的记录。": "Windows 10 / 11 on x64 and ARM64 are full desktop builds with system proxy onboarding, one-click CA install and the network fail-safe. macOS and Linux share the same audit engine and local web console, with proxy and CA configured manually; on macOS without root the TCP owner table is unavailable, so records degrade to flows without a PID.",
+ "可以用它审计别人的设备吗？": "Can I use it to audit someone else's device?",
+ "只应用于你拥有或已获得明确书面授权的设备，未经授权拦截他人流量可能违法。也不要在存有真实凭据的日常主机上分析疑似恶意软件：受信 CA 会扩大本机可被中间人解密的范围，请在隔离虚拟机或快照中进行，结束后移除 CA。": "Only on devices you own or are explicitly authorised to audit in writing; intercepting other people's traffic without authorisation may be illegal. Do not analyse suspected malware on a daily-use host holding real credentials — a trusted CA widens what can be decrypted locally. Use an isolated VM or snapshot and remove the CA afterwards.",
+ "项目是开源的吗？许可是什么？": "Is the project open source, and under what licence?",
+ "源码与构建流水线公开在 GitHub，可自行审计与复现构建。仓库当前未附带标准开源许可证，使用即表示你理解并接受 README 中的授权、安全与覆盖边界声明。": "Source code and build pipelines are public on GitHub so you can audit and reproduce builds. The repository currently ships without a standard open-source licence; using it means you understand and accept the authorisation, safety and coverage statements in the README.",
+ "路线图": "Roadmap",
+ "先把闭环跑通，再把覆盖面做深": "Close the loop first, then deepen coverage",
+ "路线图按“可验证的收益 / 增加的信任成本”排序。不承诺破解加密，也不以驱动或隐蔽手段扩张采集范围。": "The roadmap is ordered by verifiable benefit over added trust cost. It does not promise to break encryption and does not expand capture through drivers or covert means.",
+ "可交付的本机闭环": "A shippable local loop",
+ "嵌入式代理、本地 CA、TLS 解密、PID 归因、AI 与敏感数据规则、风险评分与阻断、加密证据、哈希链、桌面控制台与本机 Web 审计台。": "Embedded proxy, local CA, TLS reconstruction, PID attribution, AI and sensitive-data rules, risk scoring and blocking, encrypted evidence, hash chain, desktop console and local web console.",
+ "Windows 当前用户路径": "Current-user path on Windows",
+ "系统代理备份 / 恢复 / 断网保护": "System proxy backup / restore / fail-safe",
+ "Agent 环境变量接入": "Agent environment variable onboarding",
+ "回环上游代理自动串联": "Automatic loopback upstream chaining",
+ "文件句柄抽样 Beta": "File handle sampling (beta)",
+ "扩大流量入口": "Widen the traffic entry points",
+ "以 WFP / WinDivert 做显式的透明重定向，支持不遵循系统代理的应用；补充 QUIC 元数据策略与代理链路健康诊断。": "Explicit transparent redirection with WFP / WinDivert for apps that ignore the system proxy, plus QUIC metadata policy and proxy-chain health diagnostics.",
+ "驱动签名与兼容性测试": "Driver signing and compatibility testing",
+ "按进程 / 端口重定向": "Per-process and per-port redirection",
+ "QUIC 无法解密时明确降级": "Explicit degradation when QUIC cannot be decrypted",
+ "安装器与服务账户入口": "Installer and service-account onboarding",
+ "补齐系统与文件视角": "Add the system and file perspective",
+ "通过 ETW / SACL / 文件系统微过滤完善读取事件，与网络外发时间线合并；加入策略包、告警导出与团队级只读审计视图。": "Complete read events with ETW / SACL / filesystem minifilters and merge them with the network egress timeline; add policy packs, alert export and a read-only team audit view.",
+ "完整文件读取证据": "Complete file-read evidence",
+ "Windows 服务 / SYSTEM 进程": "Windows services and SYSTEM processes",
+ "可签名的策略与证据导出": "Signable policy and evidence export",
+ "企业部署与保留策略": "Enterprise deployment and retention policy",
+ "从第一条可解释的外发记录开始": "Start with your first explainable egress record",
+ "下载后打开本机审计台，查看代理、CA、断网保护与证据链状态。仅在你拥有或明确获授权的设备上使用。": "After installing, open the local console to check proxy, CA, fail-safe and evidence-chain status. Use it only on devices you own or are explicitly authorised to audit.",
+ "再次查看边界": "Review the boundaries again",
+ "v0.2.0 · WINDOWS / MACOS / LINUX · 仅用于拥有或明确获授权的设备": "v0.2.0 · WINDOWS / MACOS / LINUX · authorized devices only",
+ "本机数据外发审计工具。Windows 版本提供完整桌面控制与系统代理接入；Linux 与 macOS 版本提供审计引擎与本机 Web 审计台。界面与数据都在这台设备上运行。": "Local data egress audit. The Windows build provides the full desktop console and system proxy onboarding; Linux and macOS provide the audit engine and local web console. UI and data both run on this device.",
+ "LOCAL-FIRST · 无云同步": "LOCAL-FIRST · no cloud sync",
+ "产品": "Product",
+ "隐私与安全": "Privacy & security",
+ "文档": "Docs",
+ "技术文档": "Documentation",
+ "平台与产物矩阵": "Platforms & artifacts",
+ "资源": "Resources",
+ "发布与校验文件": "Releases & checksums",
+ "源代码仓库": "Source repository",
+ "构建流水线": "Build pipelines",
+ "问题与反馈": "Issues & feedback",
+ "使用前提": "Preconditions",
+ "仅限拥有或明确获授权的设备": "Only devices you own or are authorized to audit",
+ "不要在日常主机分析未知样本": "Never analyse unknown samples on a daily-use host",
+ "不承诺攻破证书固定 / mTLS / E2EE": "No claims against pinning / mTLS / E2EE",
+ "CA 与系统代理均可撤销": "CA and system proxy are both revocable"
 }
 </script>
-
 <script>
 const REPO_URL = "__REPO_URL__";
 const hasRepo = REPO_URL.startsWith("https://");
 const isFile = location.protocol === "file:";
 const isLocal = ["127.0.0.1", "localhost", "::1"].includes(location.hostname);
 
-document.querySelectorAll("[data-repo]").forEach((link) => {
-  if (hasRepo) {
-    link.href = REPO_URL;
-  } else {
-    link.hidden = true;
-  }
-});
+function wireRepoLinks(selector, build) {
+  document.querySelectorAll(selector).forEach((link) => {
+    if (hasRepo) {
+      link.href = build(link);
+    } else {
+      link.hidden = true;
+    }
+  });
+}
+wireRepoLinks("[data-repo]", () => REPO_URL);
+wireRepoLinks("[data-repo-path]", (link) => REPO_URL + link.dataset.repoPath);
 
 const releaseLinks = Array.from(document.querySelectorAll("[data-release]"));
 releaseLinks.forEach((link) => {
@@ -1654,10 +1759,10 @@ const ARIA_EN = {
   "主导航": "Main navigation",
   "EgressScope 外发审计首页": "EgressScope egress audit home",
   "GitHub 仓库": "GitHub repository",
-  "核心特性": "Core features",
+  "关键参数": "Key parameters",
   "审计流程": "Audit pipeline",
-  "EgressScope 本机审计台界面示意：展示今日请求、AI 外发、高风险流量与进程归因列表": "EgressScope local console mockup: requests today, AI egress, high-risk traffic and process attribution",
-  "EgressScope 桌面控制台示意：本地代理运行中，根证书等待信任，系统代理未启用": "EgressScope desktop console mockup: local proxy running, root CA awaiting trust, system proxy off",
+  "EgressScope 本机审计台界面示意：展示今日请求、AI 外发、高风险流量与进程归因列表": "EgressScope local console preview: requests today, AI egress, high-risk traffic and process attribution",
+  "EgressScope 桌面控制台示意：本地代理运行中，根证书等待信任，系统代理未启用": "EgressScope desktop console preview: local proxy running, root CA awaiting trust, system proxy off",
   "切换到英文": "Switch to English",
   "切换深色模式": "Switch to dark mode",
   "切换浅色模式": "Switch to light mode"
@@ -1759,7 +1864,7 @@ function applyTheme(theme) {
     themeToggle.setAttribute("title", label);
     themeToggle.setAttribute("aria-pressed", dark ? "true" : "false");
   }
-  if (themeMeta) themeMeta.setAttribute("content", dark ? "#1d1915" : "#fbfbf9");
+  if (themeMeta) themeMeta.setAttribute("content", dark ? "#0a0e15" : "#ffffff");
 }
 
 function applyLangButtons() {
@@ -1843,6 +1948,13 @@ function onScroll() {
 }
 onScroll();
 window.addEventListener("scroll", onScroll, { passive: true });
+
+document.querySelectorAll('.nav-links a[href^="#"]').forEach((link) => {
+  link.addEventListener("click", () => {
+    const target = document.querySelector(link.getAttribute("href"));
+    if (target) target.setAttribute("tabindex", "-1");
+  });
+});
 
 const revealItems = document.querySelectorAll(".reveal");
 if ("IntersectionObserver" in window) {

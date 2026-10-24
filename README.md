@@ -450,7 +450,8 @@ ai-agent-audit/
 │  ├─ smoke_test.py        端到端冒烟测试（不修改系统设置）
 │  ├─ recovery_test.py     断网保护、端口校准与恢复逻辑测试
 │  ├─ upstream_test.py     上游代理串联与自动继承识别测试
-│  └─ packaged_test.py     打包后可执行文件的端到端验证
+│  ├─ packaged_test.py     打包后可执行文件的端到端验证
+│  └─ site_check.py        官网页面静态门禁（i18n 覆盖、ARIA、JSON-LD、无外部依赖）
 ├─ .gitignore              构建产物、虚拟环境、测试临时目录
 ├─ .gitattributes          跨平台换行与二进制标记
 ├─ build.spec              PyInstaller 单文件构建配置（Windows GUI，其他平台 console）
