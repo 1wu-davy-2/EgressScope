@@ -134,7 +134,7 @@ set "SSL_CERT_FILE=%LOCALAPPDATA%\EgressScope\data\certs\mitmproxy-ca-cert.pem"
 | macOS arm64 | `EgressScope-<tag>-macos-arm64.tar.gz` | 命令行 / Web | ❌ | Apple Silicon；未签名，首次运行需在系统设置中放行 |
 | Windows arm64 | — | — | — | 暂不构建：`mitmproxy_rs 0.12.15` 没有 `win_arm64` wheel |
 
-Windows 版本是功能完整的桌面产品。Linux / macOS 版本共享同一套代理、归因、策略、证据和 Web 审计台，面向“手动配置代理与环境变量”的审计场景；系统代理备份/恢复、当前用户 CA 一键安装仍只支持 Windows。
+Windows 版本是功能完整的桌面产品。Linux / macOS 版本共享同一套代理、归因、策略、证据和 Web 审计台，面向“手动配置代理与环境变量”的审计场景；系统代理备份/恢复、当前用户 CA 一键安装仍只支持 Windows。Linux 的 PID 归因依赖 `/proc/net/tcp`；macOS 在非 root 下无法读取系统 TCP 归属表，会诚实降级为不含 PID 的流量记录。
 
 非 Windows 启动示例：
 
@@ -172,6 +172,8 @@ git push origin v0.1.0
 2. 手动运行一次 **Deploy intro page**，或修改 `web/intro.html` 后推送到 `main`。
 3. 页面地址通常为 `https://<owner>.github.io/egress-scope/`。
 4. Pages 版本会把顶部和底部的“打开审计台”按钮改写为 **下载发布版本**，指向 `https://github.com/<owner>/egress-scope/releases/latest`；本地 `/intro` 与 `file://` 打开时仍指向本机审计台。
+
+如果首次运行在 `configure-pages` 步骤报 `Resource not accessible by integration`，说明仓库尚未启用 Pages：在 **Settings → Pages** 把 **Source** 设为 **GitHub Actions**，再重新运行工作流。该一次性设置需要仓库管理员权限。
 
 `macos-15-intel` 与 `ubuntu-24.04-arm` 属于 GitHub 公共仓库的托管运行器；如果仓库是私有且运行器不可用，保留其余平台构建或改用自托管 runner。
 
@@ -532,6 +534,7 @@ certutil -hashfile dist\EgressScope.exe SHA256
 - 流式响应正文不保存，仅保留元数据。
 - 上游链路修改需重启生效；不支持代理认证、PAC 自动发现、SOCKS 上游。
 - Linux / macOS 构建不提供一键安装 CA 或接管系统代理；需手动信任公开证书并注入环境变量。
+- Linux 进程归因依赖 `/proc/net/tcp`；macOS 非 root 无法读取系统 TCP 归属表，PID 归因会降级；Windows 为完整归因路径。
 - Linux / macOS、macOS Intel、Windows ARM 等产物未在本机逐一验证；以 GitHub Actions 的构建结果为准。
 - mac 与 Linux 二进制未签名；macOS Gatekeeper 与 Windows SmartScreen 都可能要求手动放行。
 - Windows arm64 暂无官方构建，原因是 `mitmproxy_rs 0.12.15` 缺少 `win_arm64` wheel。

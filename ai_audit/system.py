@@ -175,6 +175,17 @@ def _notify_settings_changed() -> bool:
 
 
 def proxy_state(expected_port: int | None = None) -> dict[str, Any]:
+    if sys.platform != "win32":
+        return {
+            "available": False,
+            "error": "System proxy control is only supported on Windows",
+            "enabled": False,
+            "server": "",
+            "override": "",
+            "auto_config_url": "",
+            "ours": False,
+            "pac_active": False,
+        }
     try:
         values = _read_values()
     except OSError as exc:

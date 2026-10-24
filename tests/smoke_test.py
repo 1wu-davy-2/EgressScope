@@ -11,6 +11,7 @@ from __future__ import annotations
 import contextlib
 import datetime
 import json
+import os
 import re
 import socket
 import ssl
@@ -45,6 +46,8 @@ def check(name: str, condition: bool, detail: str = "") -> None:
     else:
         FAILED.append(name)
         print(f"  FAIL  {name}{(' — ' + detail) if detail else ''}")
+        if os.environ.get("GITHUB_ACTIONS"):
+            print(f"::error title=EgressScope test::{name} {detail}".rstrip())
 
 
 def free_port() -> int:
@@ -274,7 +277,26 @@ def run() -> None:
                 check("flow was persisted", bool(flows))
                 flow = flows[0] if flows else {}
                 check("host and path captured", flow.get("host") == "localhost" and flow.get("path") == "/v1/chat/completions", str(flow)[:200])
-                check("client process attributed", bool(flow.get("pid")) and flow.get("proc_name") == "python.exe", f"pid={flow.get('pid')} proc={flow.get('proc_name')}")
+                proc_name = str(flow.get("proc_name") or "")
+                expected_proc = Path(sys.executable).name
+                if sys.platform == "win32":
+                    check(
+                        "client process attributed",
+                        bool(flow.get("pid")) and proc_name == expected_proc,
+                        f"pid={flow.get('pid')} proc={proc_name} expected={expected_proc}",
+                    )
+                elif sys.platform == "linux" and not app.resolver.last_error:
+                    check(
+                        "client process attributed",
+                        bool(flow.get("pid")) and proc_name.lower().startswith("python"),
+                        f"pid={flow.get('pid')} proc={proc_name} resolve_error={app.resolver.last_error}",
+                    )
+                else:
+                    check(
+                        "process attribution degrades without TCP owner access",
+                        not flow.get("pid") or proc_name.lower().startswith("python"),
+                        f"pid={flow.get('pid')} proc={proc_name} resolve_error={app.resolver.last_error}",
+                    )
                 check("AI local endpoint classified", flow.get("category") == "ai_local", str(flow.get("category")))
                 check("model extracted", flow.get("model") == "gpt-4o-mini", str(flow.get("model")))
                 check("TLS metadata captured", "TLS" in str(flow.get("tls", "")), str(flow.get("tls")))
