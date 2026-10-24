@@ -1700,7 +1700,11 @@ function renderSettingsMeta() {
   const reload = s.config_reload || {};
   if (reload.at) {
     const when = new Date(reload.at * 1000).toLocaleTimeString("zh-CN", {hour12: false});
-    setText("#cfg-reload", when + " · " + (reload.source === "file" ? "配置文件" : "控制台") + " · " + ((reload.keys || []).length) + " 项已生效", "ok");
+    if (reload.error) {
+      setText("#cfg-reload", when + " · 配置有误 · 保留原设置", "bad");
+    } else {
+      setText("#cfg-reload", when + " · " + (reload.source === "file" ? "配置文件" : "控制台") + " · " + ((reload.keys || []).length) + " 项已生效", "ok");
+    }
   } else {
     setText("#cfg-reload", "无需重启 · 等待配置变更");
   }

@@ -129,6 +129,9 @@ class EgressApp:
                 self._apply_settings_side_effects(changed)
                 self.config_reload = {"at": time.time(), "source": "file", "keys": changed}
                 log.info("config hot-reloaded from disk: %s", ", ".join(changed))
+            elif self.config.reload_error and self.config.reload_error != (self.config_reload or {}).get("error"):
+                self.config_reload = {"at": time.time(), "source": "file", "keys": [], "error": self.config.reload_error}
+                log.warning("config reload skipped: %s", self.config.reload_error)
 
     def stop(self, restore_proxy: bool = True) -> None:
         if self._shutdown_done:

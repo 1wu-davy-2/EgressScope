@@ -249,7 +249,10 @@ class ControlWindow:
         else:
             self._values["autostart"].configure(text="未注册", fg=MUTED)
         reload_info = status.get("config_reload") or {}
-        if reload_info.get("at"):
+        if reload_info.get("error"):
+            stamp = time.strftime("%H:%M:%S", time.localtime(reload_info.get("at")))
+            self._values["reload"].configure(text=f"{stamp} · 配置有误 · 保留原设置", fg=DANGER)
+        elif reload_info.get("at"):
             stamp = time.strftime("%H:%M:%S", time.localtime(reload_info.get("at")))
             source = "配置文件" if reload_info.get("source") == "file" else "控制台"
             keys = len(reload_info.get("keys") or [])

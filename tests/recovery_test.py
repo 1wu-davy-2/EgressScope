@@ -260,19 +260,44 @@ def test_config_hot_reload() -> None:
         raw["retention_days"] = 30
         raw["listen_port"] = 1234
         path.write_text(json.dumps(raw), encoding="utf-8")
+        os.utime(path, (0, 0))
         changed = store.reload_if_changed()
         check("external edit is adopted without restart", "retention_days" in changed and store.settings.retention_days == 30, str(changed))
         check("non-editable keys are ignored on reload", "listen_port" not in changed and store.settings.listen_port == 8899, str(changed))
         check("second poll reports no further change", store.reload_if_changed() == [])
 
+        path.write_text("{ not json", encoding="utf-8")
+        changed = store.reload_if_changed()
+        check(
+            "malformed external edit keeps current settings",
+            changed == [] and store.settings.retention_days == 30 and "rejected" in store.reload_error,
+            store.reload_error,
+        )
+        raw["retention_days"] = 45
+        path.write_text(json.dumps(raw), encoding="utf-8")
+        changed = store.reload_if_changed()
+        check(
+            "applying a valid edit clears the reload error",
+            "retention_days" in changed and store.settings.retention_days == 45 and store.reload_error == "",
+            str(changed),
+        )
+        path.unlink()
+        changed = store.reload_if_changed()
+        check(
+            "deleting the config keeps current settings",
+            changed == [] and store.settings.retention_days == 45 and "missing" in store.reload_error,
+            store.reload_error,
+        )
+
 
 def test_release_notes() -> None:
+    from ai_audit import __version__
     from ai_audit.release_notes import notes_for_version
 
     text = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
-    notes = notes_for_version(text, "0.3.0")
-    check("changelog provides notes for the current version", bool(notes) and "断网保护" in notes, notes[:120])
-    check("notes stop before the next version heading", "## v0.2.0" not in notes)
+    notes = notes_for_version(text, __version__)
+    check("changelog provides notes for the current version", bool(notes) and "配置热更新" in notes, notes[:120])
+    check("notes stop before the next version heading", "## v0.3.0" not in notes)
     check("unknown version yields empty notes", notes_for_version(text, "9.9.9") == "")
 
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import threading
@@ -115,22 +116,29 @@ class ConfigStore:
         self.path = path
         self._lock = threading.RLock()
         self.settings = self._load()
-        self._mtime = self._current_mtime()
+        self._digest = self._current_digest()
+        self.reload_error = ""
 
-    def _current_mtime(self) -> float:
+    def _current_digest(self) -> str:
         try:
-            return self.path.stat().st_mtime
+            return hashlib.sha256(self.path.read_bytes()).hexdigest()
         except OSError:
-            return 0.0
+            return ""
+
+    @staticmethod
+    def _parse(raw: bytes) -> Settings:
+        payload = json.loads(raw.decode("utf-8"))
+        if not isinstance(payload, dict):
+            raise ValueError("config root must be a JSON object")
+        known = {f for f in Settings.__dataclass_fields__}
+        values = {k: v for k, v in payload.items() if k in known}
+        return Settings(**values).normalized()
 
     def _load(self) -> Settings:
         if not self.path.exists():
             return Settings().normalized()
         try:
-            raw = json.loads(self.path.read_text(encoding="utf-8"))
-            known = {f for f in Settings.__dataclass_fields__}
-            values = {k: v for k, v in raw.items() if k in known}
-            return Settings(**values).normalized()
+            return self._parse(self.path.read_bytes())
         except (OSError, ValueError, TypeError):
             return Settings().normalized()
 
@@ -138,18 +146,33 @@ class ConfigStore:
         with self._lock:
             self.path.parent.mkdir(parents=True, exist_ok=True)
             tmp = self.path.with_suffix(".tmp")
-            tmp.write_text(json.dumps(self.settings.public_dict(), indent=2, ensure_ascii=False), encoding="utf-8")
+            payload = json.dumps(self.settings.public_dict(), indent=2, ensure_ascii=False).encode("utf-8")
+            tmp.write_bytes(payload)
             os.replace(tmp, self.path)
-            self._mtime = self._current_mtime()
+            self._digest = hashlib.sha256(payload).hexdigest()
 
     def reload_if_changed(self) -> list[str]:
         """Adopt edits made to the config file outside the running process."""
         with self._lock:
-            mtime = self._current_mtime()
-            if mtime == self._mtime:
+            try:
+                raw = self.path.read_bytes()
+            except OSError:
+                if not self._digest:
+                    return []
+                self._digest = ""
+                self.reload_error = "config file is missing or unreadable; keeping current settings"
                 return []
-            fresh = self._load()
-            self._mtime = mtime
+            digest = hashlib.sha256(raw).hexdigest()
+            if digest == self._digest:
+                return []
+            try:
+                fresh = self._parse(raw)
+            except (ValueError, TypeError) as exc:
+                self._digest = digest
+                self.reload_error = f"config file rejected; keeping current settings ({exc})"
+                return []
+            self._digest = digest
+            self.reload_error = ""
             changed = [
                 key
                 for key in Settings.__dataclass_fields__

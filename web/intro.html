@@ -44,7 +44,7 @@
       "applicationCategory": "SecurityApplication",
       "applicationSubCategory": "Data Loss Prevention",
       "operatingSystem": "Windows 10, Windows 11, macOS, Linux",
-      "softwareVersion": "0.3.0",
+      "softwareVersion": "0.3.1",
       "softwareRequirements": "Python 3.12+（源码运行）或平台对应的原生构建",
       "description": "EgressScope 是本地优先的 AI Agent 与桌面应用数据外发审计工具。通过本地 HTTP/HTTPS 代理、本地 CA、进程归因与内容策略，查看外发去了哪里、由哪个进程发起、带走了什么，并保留可验证的本地证据链。",
       "url": "https://1wu-davy-2.github.io/EgressScope/",
@@ -73,7 +73,7 @@
         {
           "@type": "Question",
           "name": "电脑突然关机或程序崩溃后，系统代理会不会让本机断网？",
-          "acceptedAnswer": { "@type": "Answer", "text": "这是真实存在的失败模式：系统代理仍指向 127.0.0.1 上已停止的监听端口时，浏览器与多数应用会连接失败。v0.3.0 提供四层处理：关机、重启或注销时收到 Windows 会话结束通知后立刻恢复原始代理；启动时校正过期设置；启用系统代理时默认勾选的每用户计划任务看门狗在登录后自动恢复；以及 EgressScope.exe --restore-proxy 手动恢复。直接拔电源、内核崩溃或强制结束进程时收不到会话结束通知，恢复发生在下一次登录后。" }
+          "acceptedAnswer": { "@type": "Answer", "text": "这是真实存在的失败模式：系统代理仍指向 127.0.0.1 上已停止的监听端口时，浏览器与多数应用会连接失败。v0.3.1 提供四层处理：关机、重启或注销时收到 Windows 会话结束通知后立刻恢复原始代理；启动时校正过期设置；启用系统代理时默认勾选的每用户计划任务看门狗在登录后自动恢复；以及 EgressScope.exe --restore-proxy 手动恢复。直接拔电源、内核崩溃或强制结束进程时收不到会话结束通知，恢复发生在下一次登录后。" }
         },
         {
           "@type": "Question",
@@ -649,7 +649,7 @@ table{border-collapse:collapse;width:100%}
 <div class="announce">
   <div class="wrap announce-inner">
     <span class="dot" aria-hidden="true"></span>
-    <span><b>v0.3.0 已发布</b>：关机 / 注销时优雅恢复系统代理，默认开机自启，配置热更新无需重启。</span>
+    <span><b>v0.3.1 已发布</b>：关机 / 注销时优雅恢复系统代理，默认开机自启，配置热更新无需重启。</span>
     <a href="#safety">查看四层断网保护<svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg></a>
   </div>
 </div>
@@ -682,7 +682,7 @@ table{border-collapse:collapse;width:100%}
         <svg class="ic icon-sun" aria-hidden="true"><use href="#i-sun"/></svg>
       </button>
       <a class="btn btn-primary btn-sm" data-release href="__REPO_URL__/releases/latest">
-        <span class="cta-label">下载 v0.3.0</span>
+        <span class="cta-label">下载 v0.3.1</span>
       </a>
     </div>
   </div>
@@ -692,12 +692,12 @@ table{border-collapse:collapse;width:100%}
   <section class="hero" id="top">
     <div class="wrap hero-grid">
       <div class="hero-copy">
-        <div class="hero-badge"><i aria-hidden="true"></i>v0.3.0 · 六平台原生构建 · 本地优先</div>
+        <div class="hero-badge"><i aria-hidden="true"></i>v0.3.1 · 六平台原生构建 · 本地优先</div>
         <h1>看清本机 AI Agent 的<br>每一次数据外发</h1>
         <p class="hero-sub">EgressScope 在本机运行一个只绑定 127.0.0.1 的审计代理：还原 HTTPS 外发内容、定位发起进程、识别密钥与敏感数据，并把结果写入可验证的本地证据链。</p>
         <div class="hero-actions">
           <a class="btn btn-primary btn-lg" data-release href="__REPO_URL__/releases/latest">
-            <span class="cta-label">下载 v0.3.0</span>
+            <span class="cta-label">下载 v0.3.1</span>
             <svg class="ic" aria-hidden="true"><use href="#i-download"/></svg>
           </a>
           <a class="btn btn-ghost btn-lg" data-repo-path="/blob/main/README.md" href="__REPO_URL__/blob/main/README.md" target="_blank" rel="noopener">
@@ -956,7 +956,7 @@ table{border-collapse:collapse;width:100%}
           <div class="section-head left">
             <span class="eyebrow">断网保护</span>
             <h2>接管系统代理之后，本机不能失联</h2>
-            <p>这是一个真实存在的失败模式：如果电脑突然断电、程序崩溃或被强制结束，Windows 的系统代理仍会指向 127.0.0.1 上已经停止的端口，浏览器与多数应用会连接失败——和某些 VPN 客户端退出后留下的问题一样。v0.3.0 用四层机制处理它，其中三层不需要你做任何配置。</p>
+            <p>这是一个真实存在的失败模式：如果电脑突然断电、程序崩溃或被强制结束，Windows 的系统代理仍会指向 127.0.0.1 上已经停止的端口，浏览器与多数应用会连接失败——和某些 VPN 客户端退出后留下的问题一样。v0.3.1 用四层机制处理它，其中三层不需要你做任何配置。</p>
           </div>
           <div class="layers">
             <div class="layer">
@@ -964,7 +964,7 @@ table{border-collapse:collapse;width:100%}
               <div>
                 <h4>关机 / 注销时优雅恢复</h4>
                 <p>程序注册了 Windows 会话结束通知（消息窗口的 WM_QUERYENDSESSION / WM_ENDSESSION，控制台构建同时挂 SetConsoleCtrlHandler）。你点关机、重启或注销时，系统会先通知我们；程序在会话真正结束前把系统代理还原为启用前的备份值并刷新 WinINET，因此下一次开机不会继承一个指向已停止端口的代理。</p>
-                <span class="tag">AUTOMATIC · v0.3.0 · 无需配置</span>
+                <span class="tag">AUTOMATIC · v0.3.1 · 无需配置</span>
               </div>
             </div>
             <div class="layer">
@@ -1027,7 +1027,7 @@ EgressScope Proxy Recovery      <span class="c"># 每用户计划任务</span></
       <div class="section-head reveal">
         <span class="eyebrow">默认行为</span>
         <h2>安装即观察，改动即时生效</h2>
-        <p>v0.3.0 把“需要逐项勾选才能开始审计”改成了默认就位：观察能力开箱开启，配置改动不需要重启进程，登录自启与关机恢复形成闭环。会中断请求或写入文件的两项能力仍然保留显式确认。</p>
+        <p>v0.3.1 把“需要逐项勾选才能开始审计”改成了默认就位：观察能力开箱开启，配置改动不需要重启进程，登录自启与关机恢复形成闭环。会中断请求或写入文件的两项能力仍然保留显式确认。</p>
       </div>
       <div class="card-grid">
         <article class="card reveal">
@@ -1184,7 +1184,7 @@ curl https://api.openai.com/v1/models</pre>
             <div class="control-body">
               <div class="control-head">
                 <div class="control-logo"><svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg></div>
-                <div><h4>本机数据外发审计</h4><span>EgressScope v0.3.0 · Windows</span></div>
+                <div><h4>本机数据外发审计</h4><span>EgressScope v0.3.1 · Windows</span></div>
                 <span class="control-state"><i></i>运行中</span>
               </div>
               <div class="control-cards">
@@ -1260,7 +1260,7 @@ curl https://api.openai.com/v1/models</pre>
       <div class="faq reveal">
         <details open>
           <summary><span class="q">01</span>电脑突然关机或程序崩溃后，本机还能上网吗？<svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
-          <div class="a">系统代理仍指向已停止的回环端口时，浏览器与多数应用会连接失败——这是真实存在的失败模式。v0.3.0 提供四层处理：关机、重启或注销时收到 Windows 会话结束通知后立刻恢复原始代理；启动时校正过期设置；启用系统代理时默认勾选的每用户计划任务看门狗在登录后自动恢复；以及 <code>EgressScope.exe --restore-proxy</code> 手动恢复。直接拔电源、内核崩溃或强制结束进程时收不到会话结束通知，此时恢复发生在下一次登录后。</div>
+          <div class="a">系统代理仍指向已停止的回环端口时，浏览器与多数应用会连接失败——这是真实存在的失败模式。v0.3.1 提供四层处理：关机、重启或注销时收到 Windows 会话结束通知后立刻恢复原始代理；启动时校正过期设置；启用系统代理时默认勾选的每用户计划任务看门狗在登录后自动恢复；以及 <code>EgressScope.exe --restore-proxy</code> 手动恢复。直接拔电源、内核崩溃或强制结束进程时收不到会话结束通知，此时恢复发生在下一次登录后。</div>
         </details>
         <details>
           <summary><span class="q">02</span>它是杀毒软件或 EDR 吗？<svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
@@ -1350,13 +1350,13 @@ curl https://api.openai.com/v1/models</pre>
         </div>
         <div class="final-actions">
           <a class="btn btn-invert btn-lg" data-release href="__REPO_URL__/releases/latest">
-            <span class="cta-label">下载 v0.3.0</span>
+            <span class="cta-label">下载 v0.3.1</span>
             <svg class="ic" aria-hidden="true"><use href="#i-download"/></svg>
           </a>
           <a class="btn btn-quiet btn-lg" href="#coverage">再次查看边界</a>
         </div>
       </div>
-      <div class="final-note">v0.3.0 · WINDOWS / MACOS / LINUX · 仅用于拥有或明确获授权的设备</div>
+      <div class="final-note">v0.3.1 · WINDOWS / MACOS / LINUX · 仅用于拥有或明确获授权的设备</div>
     </div>
   </section>
 </main>
@@ -1432,7 +1432,7 @@ curl https://api.openai.com/v1/models</pre>
     </div>
 
     <div class="footer-bottom">
-      <span>© 2026 EgressScope · v0.3.0</span>
+      <span>© 2026 EgressScope · v0.3.1</span>
       <span class="sep" aria-hidden="true"></span>
       <span>WINDOWS-FIRST · LOCAL-FIRST · NO CLOUD</span>
       <div class="footer-lang" data-no-i18n aria-label="Language">
@@ -1447,7 +1447,7 @@ curl https://api.openai.com/v1/models</pre>
 <script type="application/json" id="i18n-en">
 {
  "跳到主要内容": "Skip to main content",
- "v0.3.0 已发布": "v0.3.0 released",
+ "v0.3.1 已发布": "v0.3.1 released",
  "：关机 / 注销时优雅恢复系统代理，默认开机自启，配置热更新无需重启。": ": the system proxy is now restored gracefully at shutdown and logoff, logon autostart is on by default, and settings hot-reload without a restart.",
  "查看四层断网保护": "Read about the four-layer fail-safe",
  "本机数据外发审计": "Local egress audit",
@@ -1457,8 +1457,8 @@ curl https://api.openai.com/v1/models</pre>
  "断网保护": "Network fail-safe",
  "下载": "Download",
  "常见问题": "FAQ",
- "下载 v0.3.0": "Download v0.3.0",
- "v0.3.0 · 六平台原生构建 · 本地优先": "v0.3.0 · six native builds · local-first",
+ "下载 v0.3.1": "Download v0.3.1",
+ "v0.3.1 · 六平台原生构建 · 本地优先": "v0.3.1 · six native builds · local-first",
  "看清本机 AI Agent 的": "See every egress request",
  "每一次数据外发": "your local AI agents make",
  "EgressScope 在本机运行一个只绑定 127.0.0.1 的审计代理：还原 HTTPS 外发内容、定位发起进程、识别密钥与敏感数据，并把结果写入可验证的本地证据链。": "EgressScope runs an audit proxy bound to 127.0.0.1 only: it reconstructs HTTPS egress, identifies the originating process, detects secrets and sensitive data, and writes the results into a verifiable local evidence chain.",
@@ -1603,10 +1603,10 @@ curl https://api.openai.com/v1/models</pre>
  "重要安全边界：": "Important safety boundary: ",
  "不要在日常使用、存有真实凭据的设备上分析疑似恶意软件。受信 CA 会扩大本机可被中间人解密的范围。请在隔离虚拟机 / 快照中处理未知样本，分析结束后移除 CA 并恢复系统代理。": "Do not analyse suspected malware on a daily-use device that holds real credentials. A trusted CA widens what can be decrypted by a man in the middle on this machine. Work in an isolated VM or snapshot, then remove the CA and restore the system proxy.",
  "接管系统代理之后，本机不能失联": "After taking over the system proxy, this machine must stay online",
- "这是一个真实存在的失败模式：如果电脑突然断电、程序崩溃或被强制结束，Windows 的系统代理仍会指向 127.0.0.1 上已经停止的端口，浏览器与多数应用会连接失败——和某些 VPN 客户端退出后留下的问题一样。v0.3.0 用四层机制处理它，其中三层不需要你做任何配置。": "This is a real failure mode: after a power loss, a crash or a forced kill, the Windows system proxy can still point at a 127.0.0.1 port that is no longer listening, so browsers and most apps fail to connect — the same problem some VPN clients leave behind. v0.3.0 handles it with four layers, and three of them need no configuration from you.",
+ "这是一个真实存在的失败模式：如果电脑突然断电、程序崩溃或被强制结束，Windows 的系统代理仍会指向 127.0.0.1 上已经停止的端口，浏览器与多数应用会连接失败——和某些 VPN 客户端退出后留下的问题一样。v0.3.1 用四层机制处理它，其中三层不需要你做任何配置。": "This is a real failure mode: after a power loss, a crash or a forced kill, the Windows system proxy can still point at a 127.0.0.1 port that is no longer listening, so browsers and most apps fail to connect — the same problem some VPN clients leave behind. v0.3.1 handles it with four layers, and three of them need no configuration from you.",
  "关机 / 注销时优雅恢复": "Graceful restore at shutdown and logoff",
  "程序注册了 Windows 会话结束通知（消息窗口的 WM_QUERYENDSESSION / WM_ENDSESSION，控制台构建同时挂 SetConsoleCtrlHandler）。你点关机、重启或注销时，系统会先通知我们；程序在会话真正结束前把系统代理还原为启用前的备份值并刷新 WinINET，因此下一次开机不会继承一个指向已停止端口的代理。": "The program registers for the Windows session-end notification (WM_QUERYENDSESSION / WM_ENDSESSION on a message-only window, plus SetConsoleCtrlHandler in console builds). When you shut down, restart or sign out, Windows tells us first; before the session actually ends the program puts the system proxy back to the backup values captured before takeover and refreshes WinINET, so the next boot never inherits a proxy pointing at a dead port.",
- "AUTOMATIC · v0.3.0 · 无需配置": "AUTOMATIC · v0.3.0 · NO SETUP",
+ "AUTOMATIC · v0.3.1 · 无需配置": "AUTOMATIC · v0.3.1 · NO SETUP",
  "启动时校正": "Startup reconciliation",
  "程序启动会检查系统代理是否仍指向本工具：端口变了就重新指向新的监听端口；本地代理没能启动，就立刻恢复原始设置，不把机器留在断网状态。配合默认开启的开机自启，登录后这条链路会重新建立。": "At startup the program checks whether the system proxy still points at this tool: if the port changed it is repointed to the new listening port, and if the local proxy failed to start the original settings are restored right away instead of leaving the machine offline. With logon autostart on by default, that chain is rebuilt after you sign in.",
  "AUTOMATIC · 无需配置": "AUTOMATIC · no setup",
@@ -1714,7 +1714,7 @@ curl https://api.openai.com/v1/models</pre>
  "下面这些问题决定了它是否适合你的场景。答案与本产品的实际实现一致，不做超出能力的承诺。": "These questions decide whether it fits your scenario. The answers match the implementation and make no claim beyond what the product can do.",
  "提交问题或反馈": "Open an issue",
  "电脑突然关机或程序崩溃后，本机还能上网吗？": "After a sudden shutdown or crash, can this machine still reach the internet?",
- "系统代理仍指向已停止的回环端口时，浏览器与多数应用会连接失败——这是真实存在的失败模式。v0.3.0 提供四层处理：关机、重启或注销时收到 Windows 会话结束通知后立刻恢复原始代理；启动时校正过期设置；启用系统代理时默认勾选的每用户计划任务看门狗在登录后自动恢复；以及": "While the system proxy still points at a stopped loopback port, browsers and most apps fail to connect — a real failure mode. v0.3.0 handles it in four layers: the original proxy is restored as soon as the Windows session-end notification arrives at shutdown, restart or sign-out; stale settings are reconciled at startup; the per-user scheduled-task watchdog, checked by default when you enable the system proxy, restores it after logon; and",
+ "系统代理仍指向已停止的回环端口时，浏览器与多数应用会连接失败——这是真实存在的失败模式。v0.3.1 提供四层处理：关机、重启或注销时收到 Windows 会话结束通知后立刻恢复原始代理；启动时校正过期设置；启用系统代理时默认勾选的每用户计划任务看门狗在登录后自动恢复；以及": "While the system proxy still points at a stopped loopback port, browsers and most apps fail to connect — a real failure mode. v0.3.1 handles it in four layers: the original proxy is restored as soon as the Windows session-end notification arrives at shutdown, restart or sign-out; stale settings are reconciled at startup; the per-user scheduled-task watchdog, checked by default when you enable the system proxy, restores it after logon; and",
  "手动恢复。直接拔电源、内核崩溃或强制结束进程时收不到会话结束通知，此时恢复发生在下一次登录后。": " manual restore. A pulled power cord, a kernel crash or a forced kill never receives the session-end notification, so recovery then happens after the next logon.",
  "它是杀毒软件或 EDR 吗？": "Is it antivirus or an EDR?",
  "不是。EgressScope 只做外发流量的可见性、归因、策略判定与证据留存，不做恶意代码检测，也不提供阻断未知威胁的能力。风险分是启发式信号，用于辅助人工判断，不能直接当作处置结论。": "No. EgressScope provides egress visibility, attribution, policy decisions and evidence retention. It does not detect malicious code and cannot block unknown threats. Risk scores are heuristic signals that support human judgement, not verdicts.",
@@ -1765,7 +1765,7 @@ curl https://api.openai.com/v1/models</pre>
  "从第一条可解释的外发记录开始": "Start with your first explainable egress record",
  "下载后打开本机审计台，查看代理、CA、断网保护与证据链状态。仅在你拥有或明确获授权的设备上使用。": "After installing, open the local console to check proxy, CA, fail-safe and evidence-chain status. Use it only on devices you own or are explicitly authorised to audit.",
  "再次查看边界": "Review the boundaries again",
- "v0.3.0 · WINDOWS / MACOS / LINUX · 仅用于拥有或明确获授权的设备": "v0.3.0 · WINDOWS / MACOS / LINUX · authorized devices only",
+ "v0.3.1 · WINDOWS / MACOS / LINUX · 仅用于拥有或明确获授权的设备": "v0.3.1 · WINDOWS / MACOS / LINUX · authorized devices only",
  "本机数据外发审计工具。Windows 版本提供完整桌面控制与系统代理接入；Linux 与 macOS 版本提供审计引擎与本机 Web 审计台。界面与数据都在这台设备上运行。": "Local data egress audit. The Windows build provides the full desktop console and system proxy onboarding; Linux and macOS provide the audit engine and local web console. UI and data both run on this device.",
  "LOCAL-FIRST · 无云同步": "LOCAL-FIRST · no cloud sync",
  "产品": "Product",
@@ -1785,7 +1785,7 @@ curl https://api.openai.com/v1/models</pre>
  "CA、系统代理与开机自启均可撤销": "The CA, the system proxy and logon autostart can all be revoked",
  "默认行为": "Defaults",
  "安装即观察，改动即时生效": "Observing as soon as it is installed, changes apply instantly",
- "v0.3.0 把“需要逐项勾选才能开始审计”改成了默认就位：观察能力开箱开启，配置改动不需要重启进程，登录自启与关机恢复形成闭环。会中断请求或写入文件的两项能力仍然保留显式确认。": "v0.3.0 replaces “tick every box before auditing starts” with defaults already in place: observation is on out of the box, configuration changes do not need a process restart, and logon autostart plus shutdown restore close the loop. The two capabilities that interrupt requests or write files still require explicit confirmation.",
+ "v0.3.1 把“需要逐项勾选才能开始审计”改成了默认就位：观察能力开箱开启，配置改动不需要重启进程，登录自启与关机恢复形成闭环。会中断请求或写入文件的两项能力仍然保留显式确认。": "v0.3.1 replaces “tick every box before auditing starts” with defaults already in place: observation is on out of the box, configuration changes do not need a process restart, and logon autostart plus shutdown restore close the loop. The two capabilities that interrupt requests or write files still require explicit confirmation.",
  "默认开启的观察能力": "Observation capabilities on by default",
  "流量采集、AI 端点识别、敏感数据规则与文件句柄抽样默认全部开启，装完就能看到完整证据链，不必先研究一遍开关。两项例外仍需你显式打开：风险阻断会直接返回 403 中断请求，Canary 诱饵会往 Documents 写入含虚构凭据的文件。": "Traffic capture, AI endpoint detection, sensitive-data rules and file-handle sampling are all enabled by default, so the full evidence chain is there right after install — you do not have to study the switches first. Two exceptions still need an explicit opt-in: risk blocking returns 403 and interrupts the request, and Canary decoys write files containing fictitious credentials into Documents.",
  "控制台开关、Web 审计台开关，或直接编辑": "Console toggles, web console toggles, or direct edits to",

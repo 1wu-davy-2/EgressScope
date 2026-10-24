@@ -2,6 +2,18 @@
 
 每个 `v*` 标签的 GitHub Release 会自动携带本文件中对应版本的说明。
 
+## v0.3.1
+
+- 配置热更新修复：改为按文件内容摘要判断变更，在修改时间精度较低的文件系统上或快速连续编辑时也能可靠生效。
+- 配置写入保护：外部编辑出现非法 JSON、文件暂时不可读或被删除时，保留当前设置并在控制台、Web 审计台标红提示，不再静默回退默认值。
+- 回归测试：新增非法配置、删除配置与修改时间不变三类检查，`tests/recovery_test.py` 当前 43 项全部通过。
+
+**English**
+
+- Hot reload fix: edits are now detected by content digest, so they are still adopted on filesystems with coarse modification timestamps or during rapid consecutive edits.
+- Config safety: malformed JSON, a temporarily unreadable file or a deleted file keeps the current settings and is surfaced in the desktop console and web console instead of silently resetting to defaults.
+- Regression coverage: added malformed, deleted and unchanged-mtime config checks; `tests/recovery_test.py` now has 43 passing checks.
+
 ## v0.3.0
 
 - 关机 / 注销优雅恢复：Windows 关机或注销时自动把系统代理恢复为启用前的设置（消息窗口与控制台双通道），与启动校正、看门狗、手动恢复共同组成四层断网保护。
