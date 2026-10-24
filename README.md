@@ -132,7 +132,7 @@ set "SSL_CERT_FILE=%LOCALAPPDATA%\EgressScope\data\certs\mitmproxy-ca-cert.pem"
 | Linux arm64 | `EgressScope-<tag>-linux-arm64.tar.gz` | 命令行 / Web | ❌ | 使用 `ubuntu-24.04-arm` 构建 |
 | macOS x64 | `EgressScope-<tag>-macos-x64.tar.gz` | 命令行 / Web | ❌ | `macos-15-intel` 构建；Intel 版固定使用兼容的 `cryptography 47.0.0` |
 | macOS arm64 | `EgressScope-<tag>-macos-arm64.tar.gz` | 命令行 / Web | ❌ | Apple Silicon；未签名，首次运行需在系统设置中放行 |
-| Windows arm64 | — | — | — | 暂不构建：`mitmproxy_rs 0.12.15` 没有 `win_arm64` wheel |
+| Windows arm64 | — | — | — | 暂不构建原生版本：`mitmproxy_rs 0.12.15` 没有 `win_arm64` wheel；可在 Windows 11 ARM64 上尝试运行 x64 构建（系统模拟层，未单独验证） |
 
 Windows 版本是功能完整的桌面产品。Linux / macOS 版本共享同一套代理、归因、策略、证据和 Web 审计台，面向“手动配置代理与环境变量”的审计场景；系统代理备份/恢复、当前用户 CA 一键安装仍只支持 Windows。Linux 的 PID 归因依赖 `/proc/net/tcp`；macOS 在非 root 下无法读取系统 TCP 归属表，会诚实降级为不含 PID 的流量记录。
 
@@ -149,13 +149,13 @@ source ~/.egressscope/data/agent-env.sh
 | 文件 | 触发 | 内容 |
 | --- | --- | --- |
 | `.github/workflows/ci.yml` | push / PR / 手动 | Windows、Linux、macOS 上运行源码冒烟与上游链路测试 |
-| `.github/workflows/release.yml` | `v*` tag / 手动 | 五平台构建，上传 Actions artifact；tag 时创建 GitHub Release |
+| `.github/workflows/release.yml` | `v*` tag / 手动 | 五平台构建并上传 Actions artifact；tag 时由一个 publish job 汇总所有产物、生成 `SHA256SUMS.txt` 并创建 GitHub Release |
 | `.github/workflows/pages.yml` | push main（介绍页变更）/ 手动 | 把 `web/intro.html` 发布到 GitHub Pages |
 
 ### 首次推送到 GitHub
 
 ```bash
-git remote add origin git@github.com:<owner>/egress-scope.git
+git remote add origin git@github.com:<owner>/EgressScope.git
 git push -u origin main
 ```
 
@@ -170,8 +170,8 @@ git push origin v0.1.0
 
 1. 推送代码后，在仓库 **Settings → Pages** 将 **Source** 设为 **GitHub Actions**（工作流也会尝试自动启用）。
 2. 手动运行一次 **Deploy intro page**，或修改 `web/intro.html` 后推送到 `main`。
-3. 页面地址通常为 `https://<owner>.github.io/egress-scope/`。
-4. Pages 版本会把顶部和底部的“打开审计台”按钮改写为 **下载发布版本**，指向 `https://github.com/<owner>/egress-scope/releases/latest`；本地 `/intro` 与 `file://` 打开时仍指向本机审计台。
+3. 页面地址通常为 `https://<owner>.github.io/EgressScope/`。
+4. Pages 版本会把顶部和底部的“打开审计台”按钮改写为 **下载发布版本**，指向 `https://github.com/<owner>/EgressScope/releases/latest`；本地 `/intro` 与 `file://` 打开时仍指向本机审计台。
 
 如果首次运行在 `configure-pages` 步骤报 `Resource not accessible by integration`，说明仓库尚未启用 Pages：在 **Settings → Pages** 把 **Source** 设为 **GitHub Actions**，再重新运行工作流。该一次性设置需要仓库管理员权限。
 
@@ -535,7 +535,7 @@ certutil -hashfile dist\EgressScope.exe SHA256
 - 上游链路修改需重启生效；不支持代理认证、PAC 自动发现、SOCKS 上游。
 - Linux / macOS 构建不提供一键安装 CA 或接管系统代理；需手动信任公开证书并注入环境变量。
 - Linux 进程归因依赖 `/proc/net/tcp`；macOS 非 root 无法读取系统 TCP 归属表，PID 归因会降级；Windows 为完整归因路径。
-- Linux / macOS、macOS Intel、Windows ARM 等产物未在本机逐一验证；以 GitHub Actions 的构建结果为准。
+- Linux / macOS、macOS Intel、Windows ARM 等产物未在本机逐一验证；以 GitHub Actions 的构建结果为准。Windows ARM64 目前只能尝试 x64 模拟运行，不宣称原生支持。
 - mac 与 Linux 二进制未签名；macOS Gatekeeper 与 Windows SmartScreen 都可能要求手动放行。
 - Windows arm64 暂无官方构建，原因是 `mitmproxy_rs 0.12.15` 缺少 `win_arm64` wheel。
 - 单文件可执行包较大，首次启动有解压开销。

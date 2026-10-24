@@ -296,6 +296,24 @@ table.compare{border-collapse:collapse;width:100%;min-width:800px}
 .road li::marker{color:#4f7a70}
 .road .ic{width:12px;height:12px}
 
+/* ------- downloads ------- */
+.download-section{background:linear-gradient(180deg,transparent,rgba(8,16,25,.44) 24%,rgba(8,16,25,.44) 76%,transparent)}
+.dl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:40px}
+.dl-card{border:1px solid var(--line);border-radius:14px;padding:22px;background:linear-gradient(155deg,rgba(15,26,40,.82),rgba(8,15,24,.7));position:relative;overflow:hidden}
+.dl-card.main{border-color:rgba(60,232,194,.24);box-shadow:0 0 0 1px rgba(60,232,194,.03) inset}
+.dl-card.muted{background:rgba(10,18,29,.42);border-style:dashed}
+.dl-badge{position:absolute;right:14px;top:14px;font-family:var(--mono);font-size:7px;letter-spacing:.6px;color:var(--mint);border:1px solid rgba(60,232,194,.2);background:rgba(60,232,194,.06);border-radius:3px;padding:2px 5px}
+.dl-os{font-family:var(--mono);font-size:8px;letter-spacing:1.2px;color:#5b817a;margin-bottom:10px}
+.dl-card.main .dl-os{color:var(--mint)}
+.dl-card h3{font-size:15px;margin:0 0 7px;font-weight:600;letter-spacing:-.2px}
+.dl-card p{margin:0;color:#788da2;font-size:10.5px;line-height:1.75;min-height:55px}
+.dl-file{margin-top:15px;padding-top:12px;border-top:1px solid var(--line);font-family:var(--mono);font-size:8.5px;color:#76978f;word-break:break-all}
+.dl-meta{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:7px;font-family:var(--mono);font-size:7.5px;color:#50657a}
+.dl-meta .ok{color:#78a99b}
+.dl-actions{display:flex;align-items:center;gap:10px;margin-top:22px;flex-wrap:wrap}
+.dl-foot{display:flex;gap:8px;margin-top:18px;color:#61788c;font-size:9.5px;line-height:1.7}
+.dl-foot .ic{width:13px;height:13px;color:#6c9b90;flex:none;margin-top:2px}
+
 /* ------- final cta ------- */
 .final{padding:90px 0;position:relative;overflow:hidden}
 .final-box{border:1px solid rgba(60,232,194,.18);border-radius:20px;background:
@@ -338,6 +356,7 @@ section[id]{scroll-margin-top:82px}
   .start-grid{grid-template-columns:1fr;gap:40px}
   .privacy-grid{grid-template-columns:1fr;gap:35px}
   .roadmap{grid-template-columns:1fr 1fr}
+  .dl-grid{grid-template-columns:1fr 1fr}
   .final-box{flex-direction:column;align-items:flex-start;padding:40px}
   .final-actions{z-index:1}
   .trust-grid{grid-template-columns:1fr 1fr}
@@ -351,7 +370,7 @@ section[id]{scroll-margin-top:82px}
   .hero h1{letter-spacing:-1.8px}
   .hero{padding:52px 0 70px}
   .section{padding:70px 0}
-  .problem-grid,.outcome-grid,.roadmap{grid-template-columns:1fr}
+  .problem-grid,.outcome-grid,.roadmap,.dl-grid{grid-template-columns:1fr}
   .trust-grid{grid-template-columns:1fr}
   .trust-item{border-right:0;border-bottom:1px solid var(--line)}
   .trust-item:last-child{border-bottom:0}
@@ -417,6 +436,7 @@ section[id]{scroll-margin-top:82px}
       <a href="#problem">问题</a>
       <a href="#architecture">架构</a>
       <a href="#coverage">覆盖边界</a>
+      <a href="#download">下载</a>
       <a href="#start">快速开始</a>
       <a href="#privacy">隐私设计</a>
     </div>
@@ -650,6 +670,66 @@ section[id]{scroll-margin-top:82px}
     </div>
   </section>
 
+  <section class="section download-section" id="download">
+    <div class="wrap">
+      <div class="reveal">
+        <div class="kicker">Downloads / five build targets</div>
+        <h2 class="h2">按操作系统与架构，<br>选择对应构建。</h2>
+        <p class="lead">每次发布同时提供五个原生构建与 SHA-256 校验。Windows 是完整桌面版；Linux / macOS 共享审计引擎与本机 Web 审计台，系统代理与 CA 需要手动配置。</p>
+      </div>
+      <div class="dl-grid">
+        <article class="dl-card main reveal">
+          <span class="dl-badge">主要支持</span>
+          <div class="dl-os">WINDOWS · X64</div>
+          <h3>Windows 10 / 11</h3>
+          <p>完整桌面控制台、系统代理备份与恢复、当前用户 CA 一键安装、进程归因。</p>
+          <div class="dl-file">EgressScope-&lt;tag&gt;-windows-x64.exe</div>
+          <div class="dl-meta"><span>Windows x64</span><span class="ok">单文件 EXE</span></div>
+        </article>
+        <article class="dl-card reveal">
+          <div class="dl-os">MACOS · APPLE SILICON</div>
+          <h3>macOS Apple Silicon</h3>
+          <p>审计引擎与本机 Web 审计台。需手动信任 CA，并通过环境变量接入目标 Agent。</p>
+          <div class="dl-file">EgressScope-&lt;tag&gt;-macos-arm64.tar.gz</div>
+          <div class="dl-meta"><span>arm64</span><span class="ok">未签名</span></div>
+        </article>
+        <article class="dl-card reveal">
+          <div class="dl-os">MACOS · INTEL</div>
+          <h3>macOS Intel</h3>
+          <p>面向 Intel Mac 的审计引擎与 Web 审计台，使用兼容的 cryptography 版本构建。</p>
+          <div class="dl-file">EgressScope-&lt;tag&gt;-macos-x64.tar.gz</div>
+          <div class="dl-meta"><span>x86_64</span><span class="ok">未签名</span></div>
+        </article>
+        <article class="dl-card reveal">
+          <div class="dl-os">LINUX · X64</div>
+          <h3>Linux x64</h3>
+          <p>审计引擎与 Web 审计台；PID 归因依赖 /proc/net/tcp，手动配置代理与 CA。</p>
+          <div class="dl-file">EgressScope-&lt;tag&gt;-linux-x64.tar.gz</div>
+          <div class="dl-meta"><span>x86_64</span><span class="ok">glibc</span></div>
+        </article>
+        <article class="dl-card reveal">
+          <div class="dl-os">LINUX · ARM64</div>
+          <h3>Linux arm64</h3>
+          <p>面向 ARM64 Linux 服务器与开发机的审计引擎，能力与 Linux x64 一致。</p>
+          <div class="dl-file">EgressScope-&lt;tag&gt;-linux-arm64.tar.gz</div>
+          <div class="dl-meta"><span>aarch64</span><span class="ok">glibc</span></div>
+        </article>
+        <article class="dl-card muted reveal">
+          <div class="dl-os">WINDOWS · ARM64</div>
+          <h3>Windows on ARM</h3>
+          <p>可直接运行 Windows x64 构建，由系统模拟层执行；尚未提供原生 win_arm64 产物。</p>
+          <div class="dl-file">使用 windows-x64.exe（未单独验证）</div>
+          <div class="dl-meta"><span>原生 arm64：待上游依赖</span><span>兼容方案</span></div>
+        </article>
+      </div>
+      <div class="dl-actions reveal">
+        <a class="btn primary" data-release href="__REPO_URL__/releases/latest"><span class="cta-label">前往 GitHub Releases</span> <svg class="ic"><use href="#i-arrow"/></svg></a>
+        <a class="btn" href="#coverage">查看平台能力边界</a>
+      </div>
+      <div class="dl-foot reveal"><svg class="ic"><use href="#i-info"/></svg><span>发布页为每个产物附带 <b>.sha256</b> 校验文件。原生 Windows arm64 构建仍受 <b>mitmproxy_rs</b> 缺少 win_arm64 wheel 的限制；请勿把 x64 模拟运行描述为原生 ARM 支持。</span></div>
+    </div>
+  </section>
+
   <section class="section" id="start">
     <div class="wrap">
       <div class="start-grid">
@@ -790,6 +870,18 @@ if (location.protocol === "file:") {
     if (label) label.textContent = "下载发布版本";
   });
 }
+document.querySelectorAll("a[data-release]").forEach((link) => {
+  const label = link.querySelector(".cta-label");
+  if (REPO_URL.startsWith("https://")) {
+    link.href = REPO_URL + "/releases/latest";
+  } else if (location.protocol === "file:") {
+    link.href = "http://127.0.0.1:8898/";
+    if (label) label.textContent = "打开本机审计台";
+  } else if (localHost) {
+    link.href = "/";
+    if (label) label.textContent = "打开本机审计台";
+  }
+});
 const observer = new IntersectionObserver((entries) => {
   entries.forEach((entry) => {
     if (entry.isIntersecting) { entry.target.classList.add("in"); observer.unobserve(entry.target); }
