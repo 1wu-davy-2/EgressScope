@@ -42,20 +42,28 @@ jobs:
         shell: pwsh
         run: |
           Write-Output "VCPKG_INSTALLATION_ROOT=$env:VCPKG_INSTALLATION_ROOT"
+          $found = @()
           $roots = @("C:\Program Files\OpenSSL*", "$env:VCPKG_INSTALLATION_ROOT", "C:\Strawberry")
           foreach ($root in $roots) {
             if ($root -and (Test-Path $root)) {
-              Get-ChildItem -Path $root -Filter libcrypto.lib -Recurse -Depth 6 -ErrorAction SilentlyContinue |
+              $found += Get-ChildItem -Path $root -Filter libcrypto.lib -Recurse -Depth 6 -ErrorAction SilentlyContinue |
                 Select-Object -First 10 -ExpandProperty FullName
             }
           }
+          $found | ForEach-Object { Write-Output "libcrypto: $_" }
+          "### OpenSSL probe" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+          '```' | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+          "VCPKG_INSTALLATION_ROOT=$env:VCPKG_INSTALLATION_ROOT" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+          if ($found) { $found | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8 }
+          else { "no libcrypto.lib found" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8 }
+          '```' | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
 
       - name: Install aioquic from source
         shell: pwsh
         run: |
           python -m pip install --upgrade pip 2>&1 | Tee-Object -FilePath pip-install.log
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
-          python -m pip install --no-cache-dir aioquic==1.2.0 2>&1 | Tee-Object -FilePath aioquic-install.log
+          python -m pip install --no-cache-dir aioquic==1.2.0 cryptography==46.0.3 pyOpenSSL==26.2.0 service-identity==24.2.0 2>&1 | Tee-Object -FilePath aioquic-install.log
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
 
       - name: Install dependencies
