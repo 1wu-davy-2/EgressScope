@@ -79,11 +79,11 @@ EgressScope 是一个以 Windows 为主的本机审计工具。它在用户明�
 2. 在控制窗口中点击 **打开审计控制台**，先熟悉界面与当前覆盖状态。
 3. 如需审计 HTTPS 正文，点击 **安装本地 CA（当前用户）**，确认 Windows 安全警告中的证书名为 `EgressScope Local Audit CA`。
 4. 二选一接入流量：
-   - **系统代理**：点击 **启用系统代理**。只影响遵循 WinINet / 系统代理设置的应用；退出时会尝试恢复原设置。
+   - **系统代理**：点击 **启用系统代理**。只影响遵循 WinINet / 系统代理设置的应用；正常退出时会恢复原设置。建议同时启用 **断网保护**，详见[系统代理的失败模式与断网保护](#系统代理的失败模式与断网保护)。
    - **单 Agent 环境变量**：点击 **复制 Agent 环境变量**，在启动目标 Agent 的终端先运行生成的脚本。影响范围更小，适合先验证一个 Agent 或 IDE 插件。
 5. 如果本机原本通过 Clash、v2rayN 等本地 HTTP 代理上网，EgressScope 启动时会自动识别 **当前生效的回环系统代理** 并串联它，避免接管后断网；也可以在“策略与设置 → 上行链路”手动指定。该设置需重启程序生效。
 6. 回到审计控制台，查看流量、风险和发现。
-7. 结束审计时关闭控制窗口：程序会停止代理并尝试恢复系统代理；仍不再需要 HTTPS 解密时，点击 **移除本地 CA**。
+7. 结束审计时关闭控制窗口：程序会停止代理、恢复系统代理并移除断网保护任务；仍不再需要 HTTPS 解密时，点击 **移除本地 CA**。如果程序崩溃、被强制结束或直接断电，下次登录时由独立的断网保护任务恢复网络，见下一节。
 
 ### 方式二：从源码运行
 
@@ -114,6 +114,10 @@ python -m venv .venv
 --insecure-upstream  关闭上游 TLS 校验（仅测试）
 --no-fileguard       关闭打开句柄抽样
 --open               启动后打开审计台
+--restore-proxy      恢复 EgressScope 启用前的系统代理后退出（无需启动审计）
+--recover-proxy      仅在本地代理端口已停止监听时恢复系统代理后退出
+--recover-grace SEC  配合 --recover-proxy，等待本地代理启动的秒数
+--autostart          最小化启动（供断网保护的登录自启任务使用）
 --log-level LEVEL    DEBUG / INFO / WARNING / ERROR
 ```
 
@@ -138,6 +142,38 @@ set "SSL_CERT_FILE=%LOCALAPPDATA%\EgressScope\data\certs\mitmproxy-ca-cert.pem"
 ```
 
 > 这组变量只在当前终端窗口有效。IDE/Agent 如果由自身的桌面启动器拉起，需要在其启动配置中注入同样的变量，或改用系统代理接入。Linux / macOS 上生成的脚本是 `data/agent-env.sh`，用 `source` 加载。
+
+### 系统代理的失败模式与断网保护
+
+Windows 会把“当前用户的手动代理”持久保存在 WinINet 注册表设置中。EgressScope 在**正常退出**时会恢复原值，但以下情况不会触发正常退出：
+
+- 直接关机、断电、蓝屏或强制重启；
+- 在任务管理器中结束进程；
+- 程序崩溃、更新覆盖或被安全软件终止。
+
+此时注册表仍指向已停止的 `127.0.0.1:8899`，浏览器和部分桌面应用会表现为“没有网络”，和某些 VPN 异常退出后的现象一致。
+
+EgressScope 提供三层处理：
+
+1. **启动校准**：代理成功启动后读取代理备份。如果系统代理仍指向上一实例的端口，自动改指当前监听端口；如果新代理启动失败，立即恢复原始系统代理，避免把机器留在断网状态。
+2. **独立断网保护（推荐，启用系统代理后可选择）**：注册两个仅作用于当前用户的计划任务，不需要管理员权限：
+   - `EgressScope Audit`：登录时自动启动 EgressScope；
+   - `EgressScope Proxy Recovery`：登录时以及每 2 分钟检查一次。发现系统代理指向的回环端口已停止监听时，最多等待 30 秒；仍未恢复就写回启用前的 `ProxyEnable` / `ProxyServer` / `ProxyOverride` / `AutoConfigURL`，刷新 WinINet，删除备份并停用自身。
+
+   守护逻辑位于 `%LOCALAPPDATA%\EgressScope\data\proxy-guard.ps1`，日志位于 `data\logs\proxy-recovery.log`。它只读取注册表代理值与 `proxy-backup.json`，不读取流量内容。
+3. **手动恢复**：
+   - 控制窗口的 **恢复原始系统代理**（同时移除断网保护任务）；
+   - `EgressScope.exe --restore-proxy`；即使不启动审计台也能执行；
+   - Windows **设置 → 网络和 Internet → 代理**，关闭“使用代理服务器”；
+   - 自动化场景可用 `EgressScope.exe --recover-proxy`，只在代理端口已停止监听时恢复。
+
+**边界与注意事项：**
+
+- 守护任务只在用户登录后运行；如果 Task Scheduler 被策略禁用、任务被删除、数据目录被手动清理，保护会失效，此时使用手动恢复。
+- 在备份文件存在期间，守护任务会把“已启用但已停止监听的回环系统代理”视为 EgressScope 的代理。如果你在启用期间改用另一个本地代理，并在备份仍存在时让它异常退出，守护任务可能恢复为 EgressScope 启用前的设置。
+- 系统代理只影响遵循 WinINet / 系统代理的应用；服务、SYSTEM 会话、证书固定应用与忽略系统代理的程序本来就不在覆盖范围内。
+- Linux / macOS 不提供系统代理接管，因此也不存在这类“全局断网”失败模式；Agent 环境变量方式同样把影响范围限制在单个终端或进程，是更保守的接入方式。
+- 如果无法接受任何全局代理风险，请优先使用 **Agent 环境变量**，不要启用系统代理。
 
 ---
 
@@ -374,7 +410,10 @@ data\
   certs\              审计 CA（公开证书可下载，私钥仅本地）
   exports\            JSONL 脱敏证据导出
   logs\               运行日志
+  logs\proxy-recovery.log  断网保护恢复记录（仅恢复时写入）
   agent-env.cmd       Agent 环境变量脚本
+  proxy-backup.json   启用系统代理前的原始设置（恢复后删除）
+  proxy-guard.ps1     独立断网保护脚本（启用保护时生成）
 canaries\             可选诱饵文件目录（如启用）
 ```
 
@@ -409,6 +448,7 @@ ai-agent-audit/
 │  └─ intro.html           产品介绍官网页面
 ├─ tests/
 │  ├─ smoke_test.py        端到端冒烟测试（不修改系统设置）
+│  ├─ recovery_test.py     断网保护、端口校准与恢复逻辑测试
 │  ├─ upstream_test.py     上游代理串联与自动继承识别测试
 │  └─ packaged_test.py     打包后可执行文件的端到端验证
 ├─ .gitignore              构建产物、虚拟环境、测试临时目录
@@ -451,6 +491,14 @@ ai-agent-audit/
 - **不会**安装根证书、修改系统代理或触碰真实业务数据。
 
 当前基线：53 项检查全部通过。测试使用 `--insecure-upstream` 仅针对 Mock 服务端，生产运行不要开启；同时显式关闭系统代理继承，避免连接本机日常使用的代理。CI 会在 Windows、Linux、macOS 三平台运行同一套源码测试；Windows 的本地验证同时覆盖打包 EXE。
+
+断网保护与恢复逻辑测试：
+
+```bat
+.venv\Scripts\python.exe tests\recovery_test.py
+```
+
+覆盖代理端口精确匹配、外部代理不被覆盖、端口变化后的自动改指、失效代理的恢复、守护脚本语法与备份恢复路径、计划任务注册权限，以及“守护脚本缺失”降级状态。当前基线：26 项检查全部通过。测试**不读写**真实代理注册表；Windows 上会创建一个指向 `cmd.exe /c exit 0` 的临时计划任务并在测试结束时删除，用于验证当前用户的 Task Scheduler 权限和触发器结构。
 
 上游链路测试：
 
@@ -508,7 +556,8 @@ certutil -hashfile dist\EgressScope.exe SHA256
 3. 在审计台看到流量后，确认进程名、TLS、风险与覆盖方式。
 4. 发送一段包含测试密钥（如 `sk-proj-` 前缀的假值）的请求，验证风险发现、预览脱敏与显式解密。
 5. 开启阻断，重复请求，确认返回 `403` 且证据库标记为已阻断。
-6. 结束后移除 CA、恢复系统代理并清空测试数据。
+6. 勾选断网保护后启用系统代理，打开「任务计划程序」确认存在 `EgressScope Proxy Recovery` 与 `EgressScope Audit`；手动结束程序进程，2 分钟内观察 `%LOCALAPPDATA%\EgressScope\logs\proxy-recovery.log` 中系统代理被恢复、任务被自动停用。
+7. 结束后移除 CA、恢复系统代理并清空测试数据。
 
 ---
 
@@ -555,6 +604,7 @@ certutil -hashfile dist\EgressScope.exe SHA256
 - 流式响应正文不保存，仅保留元数据。
 - 上游链路修改需重启生效；不支持代理认证、PAC 自动发现、SOCKS 上游。
 - Linux / macOS 构建不提供一键安装 CA 或接管系统代理；需手动信任公开证书并注入环境变量。
+- 断网保护依赖 Windows 任务计划程序，且只在本用户登录后运行。若策略禁止创建计划任务、任务被删除或数据目录被清理，异常退出后需要手动恢复代理（`--restore-proxy` 或 Windows 设置）。
 - Linux 进程归因依赖 `/proc/net/tcp`；macOS 非 root 无法读取系统 TCP 归属表，PID 归因会降级；Windows 为完整归因路径。
 - Linux / macOS 与 Windows ARM64 产物未在开发机上逐一执行；Windows ARM64 的源码冒烟与打包验收在 GitHub 的 `windows-11-arm` runner 上完成，桌面 Tk 控制台未做 ARM64 实机 UI 验收。
 - mac 与 Linux 二进制未签名；macOS Gatekeeper 与 Windows SmartScreen 都可能要求手动放行。

@@ -22,6 +22,10 @@ from .paths import AppPaths
 CREATE_NO_WINDOW = 0x08000000 if sys.platform == "win32" else 0
 INTERNET_SETTINGS = r"Software\Microsoft\Windows\CurrentVersion\Internet Settings"
 CA_CN = "EgressScope Local Audit CA"
+GUARD_TASK = "EgressScope Proxy Recovery"
+AUDIT_TASK = "EgressScope Audit"
+GUARD_SCRIPT = "proxy-guard.ps1"
+GUARD_LOG = "proxy-recovery.log"
 
 
 class SystemControlError(RuntimeError):
@@ -174,6 +178,40 @@ def _notify_settings_changed() -> bool:
         return False
 
 
+def _proxy_endpoints(server: str) -> list[tuple[str, str, int | None]]:
+    endpoints: list[tuple[str, str, int | None]] = []
+    for raw in str(server or "").split(";"):
+        part = raw.strip()
+        if not part:
+            continue
+        scheme = "http"
+        addr = part
+        if "=" in part:
+            scheme, addr = part.split("=", 1)
+            scheme = scheme.strip().lower()
+            addr = addr.strip()
+        if not addr:
+            continue
+        try:
+            parsed = urlsplit(addr if "://" in addr else "//" + addr)
+            port = parsed.port
+        except ValueError:
+            continue
+        endpoints.append((scheme, (parsed.hostname or "").lower(), port))
+    return endpoints
+
+
+def _server_has_port(server: str, port: int) -> bool:
+    if not port:
+        return False
+    for scheme, host, candidate in _proxy_endpoints(server):
+        if scheme not in ("http", "https") or candidate != port:
+            continue
+        if host in ("127.0.0.1", "localhost", "::1"):
+            return True
+    return False
+
+
 def proxy_state(expected_port: int | None = None) -> dict[str, Any]:
     if sys.platform != "win32":
         return {
@@ -191,9 +229,7 @@ def proxy_state(expected_port: int | None = None) -> dict[str, Any]:
     except OSError as exc:
         return {"available": False, "error": str(exc), "enabled": False, "ours": False}
     server = str(values.get("ProxyServer") or "")
-    ours = False
-    if expected_port:
-        ours = f"127.0.0.1:{expected_port}" in server or f"localhost:{expected_port}" in server
+    ours = bool(expected_port) and _server_has_port(server, int(expected_port))
     return {
         "available": True,
         "enabled": bool(values.get("ProxyEnable")),
@@ -249,6 +285,12 @@ def detect_loopback_proxy(exclude_ports: set[int] | None = None) -> str:
     return ""
 
 
+def _save_proxy_backup(paths: AppPaths, backup: dict[str, Any]) -> None:
+    tmp = paths.proxy_backup.with_suffix(".tmp")
+    tmp.write_text(json.dumps(backup, indent=2, ensure_ascii=False), encoding="utf-8")
+    os.replace(tmp, paths.proxy_backup)
+
+
 def enable_system_proxy(paths: AppPaths, port: int) -> dict[str, Any]:
     if sys.platform != "win32":
         raise SystemControlError("System proxy control is only supported on Windows")
@@ -267,9 +309,11 @@ def enable_system_proxy(paths: AppPaths, port: int) -> dict[str, Any]:
             "port": port,
             "values": values,
         }
-        tmp = paths.proxy_backup.with_suffix(".tmp")
-        tmp.write_text(json.dumps(backup, indent=2, ensure_ascii=False), encoding="utf-8")
-        os.replace(tmp, paths.proxy_backup)
+    else:
+        backup["managed"] = True
+        backup["host"] = "127.0.0.1"
+        backup["port"] = port
+    _save_proxy_backup(paths, backup)
     override_parts = [p.strip() for p in str(values.get("ProxyOverride") or "").split(";") if p.strip()]
     for token in ("localhost", "127.0.0.1", "<local>"):
         if token not in override_parts:
@@ -290,7 +334,7 @@ def enable_system_proxy(paths: AppPaths, port: int) -> dict[str, Any]:
     }
 
 
-def restore_system_proxy(paths: AppPaths) -> dict[str, Any]:
+def restore_system_proxy(paths: AppPaths, remove_guard: bool = True) -> dict[str, Any]:
     if sys.platform != "win32":
         raise SystemControlError("System proxy control is only supported on Windows")
     backup = load_proxy_backup(paths)
@@ -313,7 +357,14 @@ def restore_system_proxy(paths: AppPaths) -> dict[str, Any]:
                 pass
     notified = _notify_settings_changed()
     paths.proxy_backup.unlink(missing_ok=True)
-    return {"ok": True, "notified": notified, "state": proxy_state(), "restored_at": time.time()}
+    guard = uninstall_proxy_guard(paths) if remove_guard else {"ok": True, "skipped": True}
+    return {
+        "ok": True,
+        "notified": notified,
+        "state": proxy_state(),
+        "guard": guard,
+        "restored_at": time.time(),
+    }
 
 
 def load_proxy_backup(paths: AppPaths) -> dict[str, Any] | None:
@@ -323,6 +374,396 @@ def load_proxy_backup(paths: AppPaths) -> dict[str, Any] | None:
         return json.loads(paths.proxy_backup.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return None
+
+
+def _backup_port(backup: dict[str, Any] | None) -> int:
+    if not backup:
+        return 0
+    try:
+        return int(backup.get("port") or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def is_proxy_alive(port: int, timeout: float = 0.6) -> bool:
+    if not port:
+        return False
+    try:
+        with socket.create_connection(("127.0.0.1", int(port)), timeout=timeout):
+            return True
+    except OSError:
+        return False
+
+
+def _write_proxy_server(port: int) -> None:
+    import winreg
+
+    with _open_internet_settings() as key:
+        winreg.SetValueEx(key, "ProxyServer", 0, winreg.REG_SZ, f"127.0.0.1:{port}")
+
+
+def reconcile_system_proxy(paths: AppPaths, port: int) -> dict[str, Any]:
+    """Point a previously managed system proxy at the current live port.
+
+    Windows persists the per-user system proxy across reboots. If EgressScope
+    starts on a different port after an unclean exit, the stale registry value
+    would send traffic to a dead port.
+    """
+    supported = sys.platform == "win32"
+    backup = load_proxy_backup(paths)
+    if not backup:
+        return {"supported": supported, "action": "noop", "reason": "no-backup"}
+    previous = _backup_port(backup)
+    if not previous:
+        return {"supported": supported, "action": "noop", "reason": "invalid-backup"}
+    state = proxy_state(previous)
+    if not state.get("ours"):
+        return {"supported": supported, "action": "noop", "reason": "not-managed", "previous_port": previous}
+    if previous == port:
+        return {"supported": supported, "action": "healthy", "port": port}
+    _write_proxy_server(port)
+    _notify_settings_changed()
+    backup["port"] = port
+    backup["reconciled_at"] = time.time()
+    _save_proxy_backup(paths, backup)
+    return {"supported": supported, "action": "repointed", "previous_port": previous, "port": port}
+
+
+def recover_stale_proxy(paths: AppPaths, grace_seconds: float = 0.0) -> dict[str, Any]:
+    """Restore the original proxy if our managed proxy is no longer listening."""
+    supported = sys.platform == "win32"
+    backup = load_proxy_backup(paths)
+    if not backup:
+        return {"supported": supported, "action": "noop", "reason": "no-backup"}
+    port = _backup_port(backup)
+    if not port:
+        return {"supported": supported, "action": "noop", "reason": "invalid-backup"}
+    if not proxy_state(port).get("ours"):
+        return {"supported": supported, "action": "noop", "reason": "not-managed", "port": port}
+    deadline = time.time() + max(0.0, float(grace_seconds or 0))
+    while True:
+        if is_proxy_alive(port):
+            return {"supported": supported, "action": "noop", "reason": "healthy", "port": port}
+        remaining = deadline - time.time()
+        if remaining <= 0:
+            break
+        time.sleep(min(2.0, remaining))
+    result = restore_system_proxy(paths)
+    return {"supported": supported, "action": "restored", "port": port, "restore": result}
+
+
+# ---------- independent proxy guard ----------
+GUARD_SCRIPT_TEMPLATE = r'''param(
+    [Parameter(Mandatory=$true)][string]$Backup,
+    [Parameter(Mandatory=$true)][string]$Log,
+    [int]$GraceSeconds = 20
+)
+
+$ErrorActionPreference = "SilentlyContinue"
+
+function Write-GuardLog([string]$Message) {
+    try {
+        $dir = Split-Path -Parent $Log
+        if ($dir -and -not (Test-Path -LiteralPath $dir)) {
+            New-Item -ItemType Directory -Path $dir -Force | Out-Null
+        }
+        Add-Content -LiteralPath $Log -Value ("{0} {1}" -f (Get-Date -Format "yyyy-MM-dd HH:mm:ss"), $Message) -Encoding UTF8
+    } catch { }
+}
+
+function Test-EgressScopeListener([int]$Port) {
+    $client = New-Object System.Net.Sockets.TcpClient
+    try {
+        $async = $client.BeginConnect("127.0.0.1", $Port, $null, $null)
+        if (-not $async.AsyncWaitHandle.WaitOne(800)) { return $false }
+        $client.EndConnect($async)
+        return $true
+    } catch {
+        return $false
+    } finally {
+        $client.Close()
+    }
+}
+
+$regPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings"
+
+function Get-EgressScopeLoopbackPort {
+    $current = Get-ItemProperty -Path $regPath
+    if ($null -eq $current -or [int]$current.ProxyEnable -ne 1) { return 0 }
+    foreach ($part in ([string]$current.ProxyServer).Split(";")) {
+        $piece = $part.Trim()
+        if (-not $piece) { continue }
+        $scheme = "http"
+        $addr = $piece
+        if ($piece.Contains("=")) {
+            $scheme = $piece.Split("=", 2)[0].Trim().ToLower()
+            $addr = $piece.Split("=", 2)[1].Trim()
+        }
+        if ($scheme -ne "http" -and $scheme -ne "https") { continue }
+        if ($addr -match '^(127\.0\.0\.1|localhost):(\d+)$') { return [int]$Matches[2] }
+    }
+    return 0
+}
+
+$deadline = (Get-Date).AddSeconds($GraceSeconds)
+while ($true) {
+    if (-not (Test-Path -LiteralPath $Backup)) { exit 0 }
+    $port = Get-EgressScopeLoopbackPort
+    if ($port -lt 1) { exit 0 }
+    if (Test-EgressScopeListener $port) { exit 0 }
+    if ((Get-Date) -ge $deadline) { break }
+    Start-Sleep -Seconds 2
+}
+$port = Get-EgressScopeLoopbackPort
+if ($port -lt 1 -or (Test-EgressScopeListener $port)) { exit 0 }
+
+try {
+    $backup = Get-Content -LiteralPath $Backup -Raw -Encoding UTF8 | ConvertFrom-Json
+    if ($null -eq $backup.values) { throw "backup has no values" }
+} catch {
+    Write-GuardLog "backup file became unreadable; leaving the system proxy untouched"
+    exit 0
+}
+
+$failed = $false
+foreach ($name in @("ProxyEnable", "ProxyServer", "ProxyOverride", "AutoConfigURL")) {
+    $value = $backup.values.$name
+    try {
+        if ($null -eq $value) {
+            if (Get-ItemProperty -Path $regPath -Name $name -ErrorAction SilentlyContinue) {
+                Remove-ItemProperty -Path $regPath -Name $name -ErrorAction Stop
+            }
+        } elseif ($name -eq "ProxyEnable") {
+            Set-ItemProperty -Path $regPath -Name $name -Value ([int]$value) -Type DWord -ErrorAction Stop
+        } else {
+            Set-ItemProperty -Path $regPath -Name $name -Value ([string]$value) -Type String -ErrorAction Stop
+        }
+    } catch {
+        $failed = $true
+        Write-GuardLog ("failed to restore {0}: {1}" -f $name, $_.Exception.Message)
+    }
+}
+
+$signature = @"
+using System;
+using System.Runtime.InteropServices;
+public static class EgressScopeWinInet {
+    [DllImport("wininet.dll", SetLastError = true)]
+    public static extern bool InternetSetOption(IntPtr hInternet, int option, IntPtr buffer, int length);
+}
+"@
+try {
+    Add-Type -TypeDefinition $signature
+    [EgressScopeWinInet]::InternetSetOption([IntPtr]::Zero, 39, [IntPtr]::Zero, 0) | Out-Null
+    [EgressScopeWinInet]::InternetSetOption([IntPtr]::Zero, 37, [IntPtr]::Zero, 0) | Out-Null
+} catch {
+    Write-GuardLog "WinINet refresh failed; sign out and back in if a browser still shows no network"
+}
+
+if ($failed) {
+    Write-GuardLog "restore incomplete; backup kept for the next guard run"
+    exit 1
+}
+
+Remove-Item -LiteralPath $Backup -Force
+Write-GuardLog "restored the original system proxy because 127.0.0.1:$port was not listening"
+schtasks.exe /Change /TN "__GUARD_TASK__" /DISABLE | Out-Null
+schtasks.exe /Change /TN "__AUDIT_TASK__" /DISABLE | Out-Null
+exit 0
+'''
+
+
+def _guard_script_text() -> str:
+    return GUARD_SCRIPT_TEMPLATE.replace("__GUARD_TASK__", GUARD_TASK).replace("__AUDIT_TASK__", AUDIT_TASK)
+
+
+def guard_script_path(paths: AppPaths) -> Path:
+    return paths.data / GUARD_SCRIPT
+
+
+def guard_log_path(paths: AppPaths) -> Path:
+    return paths.logs / GUARD_LOG
+
+
+def proxy_guard_status(paths: AppPaths) -> dict[str, Any]:
+    backup = load_proxy_backup(paths)
+    guard = (backup or {}).get("guard") or {}
+    script_exists = guard_script_path(paths).exists()
+    enabled = bool(guard.get("enabled"))
+    return {
+        "supported": sys.platform == "win32",
+        "enabled": enabled,
+        "installed": enabled and script_exists,
+        "degraded": enabled and not script_exists,
+        "script": str(guard_script_path(paths)),
+        "log": str(guard_log_path(paths)),
+        "recovery_task": GUARD_TASK,
+        "audit_task": AUDIT_TASK,
+        "interval_minutes": 2,
+    }
+
+
+def _register_scheduled_task(
+    name: str,
+    command: str,
+    arguments: str,
+    repeat_minutes: int = 0,
+    limit_minutes: int = 0,
+) -> dict[str, Any]:
+    """Register a per-user interactive task without elevation.
+
+    schtasks /SC ONLOGON and raw task XML are rejected for standard users on
+    some Windows configurations; the ScheduledTasks object model is not.
+    """
+    env = os.environ.copy()
+    env.update({
+        "EGRESS_TASK_NAME": name,
+        "EGRESS_TASK_EXE": command,
+        "EGRESS_TASK_ARGS": arguments,
+        "EGRESS_TASK_REPEAT": str(max(0, int(repeat_minutes))),
+        "EGRESS_TASK_LIMIT": str(max(0, int(limit_minutes))),
+    })
+    script = r'''
+$ErrorActionPreference = "Stop"
+$me = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
+$action = New-ScheduledTaskAction -Execute $env:EGRESS_TASK_EXE -Argument $env:EGRESS_TASK_ARGS
+$limit = [TimeSpan]::Zero
+if ([int]$env:EGRESS_TASK_LIMIT -gt 0) { $limit = New-TimeSpan -Minutes ([int]$env:EGRESS_TASK_LIMIT) }
+$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -MultipleInstances IgnoreNew -ExecutionTimeLimit $limit
+$triggers = @(New-ScheduledTaskTrigger -AtLogOn -User $me)
+if ([int]$env:EGRESS_TASK_REPEAT -gt 0) {
+    $triggers += New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(1) -RepetitionInterval (New-TimeSpan -Minutes ([int]$env:EGRESS_TASK_REPEAT))
+}
+$principal = New-ScheduledTaskPrincipal -UserId $me -LogonType Interactive -RunLevel Limited
+Register-ScheduledTask -TaskName $env:EGRESS_TASK_NAME -Action $action -Trigger $triggers -Settings $settings -Principal $principal -Force | Out-Null
+'''
+    try:
+        result = subprocess.run(
+            ["powershell", "-NoProfile", "-NonInteractive", "-Command", script],
+            capture_output=True,
+            text=True,
+            errors="replace",
+            timeout=90,
+            creationflags=CREATE_NO_WINDOW,
+            env=env,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        return {"ok": False, "returncode": -1, "message": str(exc)}
+    message = (result.stdout or result.stderr or "").strip()[-1200:]
+    return {"ok": result.returncode == 0, "returncode": result.returncode, "message": message}
+
+
+def _remove_task(name: str, disable_only: bool = False) -> dict[str, Any]:
+    query = subprocess.run(
+        ["schtasks", "/Query", "/TN", name],
+        capture_output=True,
+        text=True,
+        errors="replace",
+        timeout=60,
+        creationflags=CREATE_NO_WINDOW,
+    )
+    if query.returncode != 0:
+        return {"ok": True, "disabled": disable_only, "message": "task not present"}
+    command = ["schtasks", "/Change", "/TN", name, "/DISABLE"] if disable_only else ["schtasks", "/Delete", "/TN", name, "/F"]
+    result = subprocess.run(
+        command,
+        capture_output=True,
+        text=True,
+        errors="replace",
+        timeout=60,
+        creationflags=CREATE_NO_WINDOW,
+    )
+    output = (result.stdout or result.stderr or "").strip()
+    return {"ok": result.returncode == 0, "disabled": disable_only, "message": output[-800:]}
+
+
+def _launch_command(paths: AppPaths) -> tuple[str, str]:
+    exe = sys.executable
+    prefix: list[str] = []
+    if not getattr(sys, "frozen", False):
+        pythonw = Path(exe).with_name("pythonw.exe")
+        if pythonw.exists():
+            exe = str(pythonw)
+        prefix = [str(Path(__file__).resolve().parent.parent / "app.py")]
+    arguments = prefix + ["--autostart", "--home", str(paths.home)]
+    return exe, subprocess.list2cmdline(arguments)
+
+
+def install_proxy_guard(paths: AppPaths) -> dict[str, Any]:
+    if sys.platform != "win32":
+        raise SystemControlError("断网保护只支持 Windows")
+    backup = load_proxy_backup(paths)
+    if not backup:
+        raise SystemControlError("请先启用系统代理，再启用断网保护")
+    script = guard_script_path(paths)
+    script.parent.mkdir(parents=True, exist_ok=True)
+    script.write_text(_guard_script_text(), encoding="utf-8-sig")
+
+    system_root = Path(os.environ.get("SystemRoot") or r"C:\Windows")
+    powershell = system_root / "System32" / "WindowsPowerShell" / "v1.0" / "powershell.exe"
+    powershell_cmd = str(powershell) if powershell.exists() else "powershell.exe"
+    guard_args = subprocess.list2cmdline([
+        "-NoProfile",
+        "-NonInteractive",
+        "-WindowStyle",
+        "Hidden",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        str(script),
+        "-Backup",
+        str(paths.proxy_backup),
+        "-Log",
+        str(guard_log_path(paths)),
+        "-GraceSeconds",
+        "30",
+    ])
+    recovery_result = _register_scheduled_task(GUARD_TASK, powershell_cmd, guard_args, repeat_minutes=2, limit_minutes=5)
+
+    audit_exe, audit_args = _launch_command(paths)
+    audit_result = _register_scheduled_task(AUDIT_TASK, audit_exe, audit_args, repeat_minutes=0, limit_minutes=0) if recovery_result.get("ok") else {
+        "ok": False,
+        "message": "skipped because the recovery task could not be registered",
+    }
+
+    if recovery_result.get("ok"):
+        guard = {
+            "enabled": True,
+            "installed_at": time.time(),
+            "script": str(script),
+            "recovery_task": GUARD_TASK,
+            "audit_task": AUDIT_TASK,
+        }
+        backup["guard"] = guard
+        _save_proxy_backup(paths, backup)
+    return {
+        "ok": bool(recovery_result.get("ok")),
+        "recovery_task": recovery_result,
+        "audit_task": audit_result,
+        "script": str(script),
+        "log": str(guard_log_path(paths)),
+        "recovery_task_name": GUARD_TASK,
+        "audit_task_name": AUDIT_TASK,
+    }
+
+
+def uninstall_proxy_guard(paths: AppPaths, disable_only: bool = False) -> dict[str, Any]:
+    if sys.platform != "win32":
+        return {"ok": True, "supported": False}
+    results = {
+        "recovery": _remove_task(GUARD_TASK, disable_only=disable_only),
+        "audit": _remove_task(AUDIT_TASK, disable_only=disable_only),
+    }
+    if not disable_only:
+        try:
+            (paths.data / GUARD_SCRIPT).unlink(missing_ok=True)
+        except OSError:
+            pass
+    return {
+        "ok": all(item.get("ok") for item in results.values()),
+        "disabled": disable_only,
+        "tasks": results,
+    }
 
 
 def is_port_free(host: str, port: int) -> bool:

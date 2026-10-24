@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import logging
 import logging.handlers
 import os
@@ -63,10 +64,23 @@ class EgressApp:
         try:
             port = self.proxy.start()
             self.listen_port = port
+            reconciled = system.reconcile_system_proxy(self.paths, port)
+            if reconciled.get("action") == "repointed":
+                log.warning(
+                    "system proxy repointed from port %s to %s after restart",
+                    reconciled.get("previous_port"),
+                    port,
+                )
             log.info("system proxy can be enabled for 127.0.0.1:%s", port)
         except Exception as exc:
             self.startup_error = f"{type(exc).__name__}: {exc}"
             log.exception("proxy failed to start")
+            try:
+                recovered = system.recover_stale_proxy(self.paths, grace_seconds=0)
+                if recovered.get("action") == "restored":
+                    log.warning("restored the original system proxy because the local proxy did not start")
+            except Exception:
+                log.exception("failed to restore a stale system proxy after a startup error")
         if self.settings.file_guard_enabled:
             self.fileguard.start()
         if self.settings.canary_enabled:
@@ -89,6 +103,7 @@ class EgressApp:
                         system.restore_system_proxy(self.paths)
                         log.info("system proxy restored on shutdown")
                     else:
+                        system.uninstall_proxy_guard(self.paths, disable_only=True)
                         log.warning("system proxy was changed externally; backup preserved at %s", self.paths.proxy_backup)
             except Exception:
                 log.exception("failed to restore system proxy")
@@ -242,6 +257,12 @@ class EgressApp:
     def restore_system_proxy(self) -> dict:
         return system.restore_system_proxy(self.paths)
 
+    def install_proxy_guard(self) -> dict:
+        return system.install_proxy_guard(self.paths)
+
+    def recover_stale_proxy(self, grace_seconds: float = 0) -> dict:
+        return system.recover_stale_proxy(self.paths, grace_seconds=grace_seconds)
+
     def env_text(self) -> str:
         self._ensure_ca()
         return system.env_snippet(self.listen_port or self.settings.listen_port, self.paths.ca_cert_pem)
@@ -285,6 +306,7 @@ class EgressApp:
             "ca_expires": ca.get("expires_at", ""),
             "system_proxy": state,
             "proxy_backup": bool(backup),
+            "proxy_guard": system.proxy_guard_status(self.paths),
             "fileguard": self.fileguard.status(),
             "chain": self.chain_status(),
             "blocked_count": self._blocked_count,
@@ -332,9 +354,60 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--upstream-proxy", default="", help="chain through an HTTP/HTTPS proxy, e.g. http://127.0.0.1:7890")
     parser.add_argument("--no-inherit-upstream", action="store_true", help="do not inherit the current loopback system proxy")
     parser.add_argument("--open", action="store_true", help="open the dashboard in the default browser")
+    parser.add_argument("--restore-proxy", action="store_true", help="restore the Windows system proxy saved by EgressScope, then exit")
+    parser.add_argument("--recover-proxy", action="store_true", help="restore a stale EgressScope system proxy if its port is not listening, then exit")
+    parser.add_argument("--recover-grace", type=float, default=0.0, help="seconds to wait for the local proxy before restoring (--recover-proxy)")
+    parser.add_argument("--autostart", action="store_true", help="start minimized (used by the logon task)")
     parser.add_argument("--log-level", default="INFO", choices=["DEBUG", "INFO", "WARNING", "ERROR"])
     parser.add_argument("--version", action="version", version=f"EgressScope {__version__}")
     return parser.parse_args(argv)
+
+
+def _show_recovery_message(ok: bool, text: str) -> None:
+    if sys.platform != "win32":
+        return
+    try:
+        import ctypes
+
+        ctypes.windll.user32.MessageBoxW(None, text, "EgressScope · 系统代理恢复", 0x40 if ok else 0x10)
+    except Exception:
+        pass
+
+
+def _run_recovery(args: argparse.Namespace, paths: AppPaths) -> int:
+    try:
+        if args.restore_proxy:
+            result = system.restore_system_proxy(paths)
+            text = (
+                "系统代理已恢复为 EgressScope 启用前的设置。\n"
+                "断网保护计划任务已移除。\n\n"
+                "如果浏览器仍未恢复，请重新打开浏览器，或在 Windows 设置 → 网络和 Internet → 代理 中确认。"
+            )
+        else:
+            result = system.recover_stale_proxy(paths, grace_seconds=max(0.0, float(args.recover_grace)))
+            action = result.get("action")
+            if action == "restored":
+                text = f"检测到 127.0.0.1:{result.get('port')} 已停止监听，系统代理已自动恢复。"
+            elif result.get("reason") == "healthy":
+                text = "本地代理仍在监听，系统代理无需恢复。"
+            elif result.get("reason") == "no-backup":
+                text = "没有找到 EgressScope 的代理备份，未修改系统设置。"
+            elif result.get("reason") == "not-managed":
+                text = "当前系统代理未被 EgressScope 管理，未修改系统设置。"
+            else:
+                text = "检查完成，系统代理无需修改。"
+        log.info("proxy recovery result: %s", json.dumps(result, ensure_ascii=False, default=str))
+        print(json.dumps(result, ensure_ascii=False, indent=2, default=str))
+        if not args.headless:
+            _show_recovery_message(True, text)
+        return 0
+    except Exception as exc:
+        log.exception("proxy recovery failed")
+        message = f"恢复系统代理失败：{exc}\n\n可手动在 Windows 设置 → 网络和 Internet → 代理 中关闭手动代理。"
+        print(message, file=sys.stderr)
+        if not args.headless:
+            _show_recovery_message(False, message)
+        return 1
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -344,6 +417,8 @@ def main(argv: list[str] | None = None) -> int:
     configure_logging(paths, args.log_level)
     log.info("starting %s %s (data dir: %s)", APP_NAME, __version__, paths.data)
     log.info("only use this tool on devices you own or are explicitly authorized to audit")
+    if args.restore_proxy or args.recover_proxy:
+        return _run_recovery(args, paths)
     try:
         app = EgressApp(paths)
     except Exception:
@@ -397,6 +472,8 @@ def main(argv: list[str] | None = None) -> int:
         from ai_audit.ui import ControlWindow
 
         window = ControlWindow(app)
+        if args.autostart:
+            window.start_minimized()
         window.run()
     except Exception:
         log.exception("desktop UI failed; falling back to headless mode")

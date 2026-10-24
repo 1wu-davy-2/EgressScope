@@ -49,5 +49,8 @@ jobs:
       - name: Run smoke test
         run: python tests/smoke_test.py
 
+      - name: Run proxy recovery tests
+        run: python tests/recovery_test.py
+
       - name: Run upstream chaining test
         run: python tests/upstream_test.py

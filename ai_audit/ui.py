@@ -207,8 +207,10 @@ class ControlWindow:
             fg=GREEN if ca else AMBER,
         )
         state = status.get("system_proxy") or {}
+        guard = status.get("proxy_guard") or {}
+        guard_ok = bool(guard.get("installed"))
         if state.get("ours"):
-            text, color = "已启用 · 指向 EgressScope", GREEN
+            text, color = ("已启用 · 断网保护开启" if guard_ok else "已启用 · 无断网保护"), GREEN if guard_ok else AMBER
         elif state.get("auto_config_url"):
             text, color = "PAC 自动配置已启用 · 静态代理不可用", AMBER
         elif state.get("enabled"):
@@ -243,12 +245,19 @@ class ControlWindow:
         self._buttons["dashboard"].configure(state="normal" if status.get("web_url") else "disabled")
         self._buttons["intro"].configure(state="normal" if status.get("web_url") else "disabled")
 
+        guard_note = ""
+        if state.get("ours"):
+            guard_note = (
+                "\n断网保护已启用：崩溃、强制结束或重启后会自动恢复原始代理。"
+                if guard_ok
+                else "\n注意：断网保护未启用；异常退出或断电后 Windows 可能无法上网，需手动恢复代理。"
+            )
         if proxy_ok and not ca:
-            self.banner_text.configure(text="代理运行中。要实现 HTTPS 内容审计，请先安装本地 CA，再启用系统代理或复制 Agent 环境变量。")
+            self.banner_text.configure(text="代理运行中。要实现 HTTPS 内容审计，请先安装本地 CA，再启用系统代理或复制 Agent 环境变量。" + guard_note)
         elif proxy_ok and ca and not state.get("ours"):
             self.banner_text.configure(text="CA 已信任，代理运行中。可启用 Windows 系统代理，或把环境变量脚本注入到 AI Agent 启动终端。")
         elif proxy_ok and ca and state.get("ours"):
-            self.banner_text.configure(text="正在捕获 Windows 当前用户流量。打开审计控制台查看请求、风险与证据链。")
+            self.banner_text.configure(text="正在捕获 Windows 当前用户流量。打开审计控制台查看请求、风险与证据链。" + guard_note)
         elif not proxy_ok:
             self.banner_text.configure(text="本地代理未运行，控制台仍可打开，但无法捕获流量。请检查日志后重启应用。")
 
@@ -266,28 +275,82 @@ class ControlWindow:
             "将把当前 Windows 用户的系统代理设置为 EgressScope。\n\n"
             "仅覆盖使用 WinINet/WinHTTP/系统代理的应用（多数浏览器与部分桌面应用），"
             "不覆盖服务、SYSTEM 进程和忽略系统代理的程序。\n\n"
-            "HTTPS 正文审计还需要安装本地 CA。退出 EgressScope 时会尝试恢复原始代理。\n\n继续？",
+            "HTTPS 正文审计还需要安装本地 CA。Windows 会把系统代理设置持久保存；"
+            "正常退出 EgressScope 时会恢复原设置，但崩溃或断电不会触发恢复。\n\n继续？",
             icon="warning",
         ):
             return
         try:
             result = self.app.enable_system_proxy()
-            messagebox.showinfo(
-                "系统代理已启用",
-                f"代理地址：127.0.0.1:{result.get('port')}\n"
-                f"通知 WinINet：{'成功' if result.get('notified') else '未确认'}\n\n"
-                "如果浏览器未生效，请重新打开浏览器，或使用 Agent 环境变量方式。",
-            )
         except Exception as exc:
             messagebox.showerror("启用失败", str(exc))
+            self._refresh_once()
+            return
+
+        guard_ok = False
+        guard_error = ""
+        if messagebox.askyesno(
+            "启用断网保护（推荐）",
+            "是否注册断网保护？\n\n"
+            "只会为当前用户创建两个计划任务，不需要管理员权限：\n"
+            "• 登录时自动启动 EgressScope；\n"
+            "• 每 2 分钟检查一次本机代理，若代理已停止（崩溃、强制结束或断电重启），"
+            "自动恢复启用前的系统代理。\n\n"
+            "如果不启用，异常退出后 Windows 可能仍指向已停止的本地代理，导致无法上网。\n\n"
+            "正常恢复系统代理时，这两个任务会自动移除。继续？",
+            icon="question",
+        ):
+            try:
+                guard = self.app.install_proxy_guard()
+                guard_ok = bool(guard.get("ok"))
+                if not guard_ok:
+                    errors = [
+                        str((guard.get("recovery_task") or {}).get("message") or "").strip(),
+                        str((guard.get("audit_task") or {}).get("message") or "").strip(),
+                    ]
+                    guard_error = "\n".join(e for e in errors if e)[:800]
+            except Exception as exc:
+                guard_error = str(exc)
+
+        base = (
+            f"代理地址：127.0.0.1:{result.get('port')}\n"
+            f"通知 WinINet：{'成功' if result.get('notified') else '未确认'}\n"
+            f"断网保护：{'已启用（登录自启 + 每 2 分钟守护）' if guard_ok else '未启用'}\n\n"
+            "如果浏览器未生效，请重新打开浏览器，或使用 Agent 环境变量方式。"
+        )
+        if guard_ok:
+            messagebox.showinfo("系统代理已启用", base)
+        elif guard_error:
+            messagebox.showwarning(
+                "系统代理已启用，断网保护未启用",
+                base + "\n\n断网保护注册失败：\n" + guard_error +
+                "\n\n仍可通过“恢复原始系统代理”按钮，或运行 EgressScope.exe --restore-proxy 恢复网络。",
+            )
+        else:
+            messagebox.showwarning(
+                "系统代理已启用，但无断网保护",
+                base + "\n\n崩溃、强制结束或断电后，Windows 可能仍指向已停止的代理，需要手动恢复。"
+                "可随时运行 EgressScope.exe --restore-proxy，或在 Windows 设置 → 网络和 Internet → 代理 中关闭手动代理。",
+            )
         self._refresh_once()
 
     def _restore_proxy(self) -> None:
-        if not messagebox.askyesno("恢复系统代理", "将把 Windows 当前用户代理恢复为 EgressScope 启用前的状态。继续？"):
+        if not messagebox.askyesno(
+            "恢复系统代理",
+            "将把 Windows 当前用户代理恢复为 EgressScope 启用前的状态。\n"
+            "断网保护的登录自启与守护任务也会一并移除。\n\n继续？",
+        ):
             return
         try:
-            self.app.restore_system_proxy()
-            messagebox.showinfo("已恢复", "系统代理设置已恢复。")
+            result = self.app.restore_system_proxy()
+            if (result.get("guard") or {}).get("ok") is False:
+                messagebox.showwarning(
+                    "代理已恢复，任务未完全移除",
+                    "系统代理已恢复；部分断网保护计划任务可能仍在。\n"
+                    "可在“任务计划程序”中删除 EgressScope Proxy Recovery 与 EgressScope Audit。",
+                )
+            else:
+                messagebox.showinfo("已恢复", "系统代理设置与断网保护任务已恢复/移除。")
         except Exception as exc:
             messagebox.showerror("恢复失败", str(exc))
         self._refresh_once()
@@ -395,6 +458,12 @@ class ControlWindow:
         self.root.update_idletasks()
         self.app.stop()
         self.root.destroy()
+
+    def start_minimized(self) -> None:
+        try:
+            self.root.iconify()
+        except Exception:
+            pass
 
     def run(self) -> None:
         self.root.mainloop()
