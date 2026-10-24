@@ -43,8 +43,8 @@ EgressScope 是一个以 Windows 为主的本机审计工具。它在用户明�
 | 本机审计台 | 启动后 `http://127.0.0.1:8898/` | 流量、发现、文件触达、覆盖范围、策略设置 |
 | 桌面控制窗口 | 可执行文件启动后的主窗口 | 安装/移除 CA、启用/恢复系统代理、暂停采集、导出证据 |
 | 构建校验清单 | `dist\SHA256SUMS.txt` | 可执行文件的 SHA-256，用于确认文件完整性 |
-| GitHub Actions | `.github/workflows/` | CI 冒烟、五平台发布构建、介绍页 Pages 部署 |
-| GitHub Release | [releases/latest](https://github.com/1wu-davy-2/EgressScope/releases/latest) | Windows x64、Linux x64 / arm64、macOS x64 / arm64；每个产物附带 `.sha256` 与汇总 `SHA256SUMS.txt` |
+| GitHub Actions | `.github/workflows/` | CI 冒烟、六平台发布构建、介绍页 Pages 部署 |
+| GitHub Release | [releases/latest](https://github.com/1wu-davy-2/EgressScope/releases/latest) | Windows x64 / arm64、Linux x64 / arm64、macOS x64 / arm64；每个产物附带 `.sha256` 与汇总 `SHA256SUMS.txt` |
 | 研究/执行计划 | `PLAN.md` | 本项目的技术与产品调研底稿 |
 
 审计台固定访问 `http://127.0.0.1:8898/`（端口可在设置中修改）。`18898` 只是自动化测试临时使用的端口，不是产品默认端口；临时测试进程关闭后访问会被拒绝。
@@ -132,13 +132,13 @@ set "SSL_CERT_FILE=%LOCALAPPDATA%\EgressScope\data\certs\mitmproxy-ca-cert.pem"
 | 平台 | 产物 | 桌面控制台 | 一键 CA / 系统代理 | 说明 |
 | --- | --- | --- | --- | --- |
 | Windows x64 | `EgressScope-<tag>-windows-x64.exe` | ✅ | ✅ | 主要发行版本 |
+| Windows arm64 | `EgressScope-<tag>-windows-arm64.exe` | ✅ | ✅ | 原生 Windows 11 ARM64；在 `windows-11-arm` runner 上构建 ARM64 OpenSSL，`aioquic` / `mitmproxy_rs` 从源码编译，`libcrypto` 随单文件 EXE 打包，并运行冒烟与打包验收 |
 | Linux x64 | `EgressScope-<tag>-linux-x64.tar.gz` | 命令行 / Web | ❌ | 审计引擎 + 本机审计台；手动信任 CA，使用环境变量接入 |
 | Linux arm64 | `EgressScope-<tag>-linux-arm64.tar.gz` | 命令行 / Web | ❌ | 使用 `ubuntu-24.04-arm` 构建 |
 | macOS x64 | `EgressScope-<tag>-macos-x64.tar.gz` | 命令行 / Web | ❌ | `macos-15-intel` 构建；Intel 版固定使用兼容的 `cryptography 47.0.0` |
 | macOS arm64 | `EgressScope-<tag>-macos-arm64.tar.gz` | 命令行 / Web | ❌ | Apple Silicon；未签名，首次运行需在系统设置中放行 |
-| Windows arm64 | — | — | — | 暂不构建原生版本：`mitmproxy_rs 0.12.15` 没有 `win_arm64` wheel；可在 Windows 11 ARM64 上尝试运行 x64 构建（系统模拟层，未单独验证） |
 
-Windows 版本是功能完整的桌面产品。Linux / macOS 版本共享同一套代理、归因、策略、证据和 Web 审计台，面向“手动配置代理与环境变量”的审计场景；系统代理备份/恢复、当前用户 CA 一键安装仍只支持 Windows。Linux 的 PID 归因依赖 `/proc/net/tcp`；macOS 在非 root 下无法读取系统 TCP 归属表，会诚实降级为不含 PID 的流量记录。
+Windows 版本是功能完整的桌面产品。Windows ARM64 使用同一套桌面代码，因上游只提供到 `cryptography 46.0.3` 的 `win_arm64` wheel，构建时固定该版本；`aioquic 1.2.0`、`mitmproxy_rs` 与 `brotli` 从源码编译。`aioquic` 的 `_crypto` 扩展需要 OpenSSL 头文件和导入库，CI 用 runner 自带的 vcpkg 现场构建 ARM64 OpenSSL，并把 `libcrypto` 运行库打进单文件 EXE；Rust 依赖 `ring` 则使用 `vcvarsall arm64` 的 MSVC 环境编译。Linux / macOS 版本共享同一套代理、归因、策略、证据和 Web 审计台，面向“手动配置代理与环境变量”的审计场景；系统代理备份/恢复、当前用户 CA 一键安装仍只支持 Windows。Linux 的 PID 归因依赖 `/proc/net/tcp`；macOS 在非 root 下无法读取系统 TCP 归属表，会诚实降级为不含 PID 的流量记录。
 
 非 Windows 启动示例（发布包内的可执行文件名为 `EgressScope-<tag>-<platform>`）：
 
@@ -154,7 +154,7 @@ source ~/.egressscope/data/agent-env.sh
 | 文件 | 触发 | 内容 |
 | --- | --- | --- |
 | `.github/workflows/ci.yml` | push / PR / 手动 | Windows、Linux、macOS 上运行源码冒烟与上游链路测试 |
-| `.github/workflows/release.yml` | `v*` tag / 手动 | 五平台构建并上传 Actions artifact；tag 时由一个 publish job 汇总所有产物、生成 `SHA256SUMS.txt` 并创建 GitHub Release |
+| `.github/workflows/release.yml` | `v*` tag / 手动 | 六平台构建（Windows ARM64 在原生 runner 上运行冒烟与打包验收）；tag 时由一个 publish job 汇总所有产物、生成 `SHA256SUMS.txt` 并创建 GitHub Release |
 | `.github/workflows/pages.yml` | push main（介绍页变更）/ 手动 | 把 `web/intro.html` 发布到 GitHub Pages |
 
 ### 首次推送到 GitHub
@@ -167,8 +167,8 @@ git push -u origin main
 发布一个版本：
 
 ```bash
-git tag v0.1.0
-git push origin v0.1.0
+git tag v0.1.1
+git push origin v0.1.1
 ```
 
 ### GitHub Pages 官网
@@ -180,7 +180,7 @@ git push origin v0.1.0
 
 如果首次运行在 `configure-pages` 步骤报 `Resource not accessible by integration`，说明仓库尚未启用 Pages：在 **Settings → Pages** 把 **Source** 设为 **GitHub Actions**，再重新运行工作流。该一次性设置需要仓库管理员权限。
 
-`macos-15-intel` 与 `ubuntu-24.04-arm` 属于 GitHub 公共仓库的托管运行器；如果仓库是私有且运行器不可用，保留其余平台构建或改用自托管 runner。
+`macos-15-intel`、`ubuntu-24.04-arm` 与 `windows-11-arm` 属于 GitHub 公共仓库的托管运行器；如果仓库是私有且运行器不可用，保留其余平台构建或改用自托管 runner。
 
 ---
 
@@ -372,7 +372,7 @@ canaries\             可选诱饵文件目录（如启用）
 ai-agent-audit/
 ├─ .github/workflows/
 │  ├─ ci.yml               三平台冒烟与上游链路测试
-│  ├─ release.yml          五平台构建与 GitHub Release
+│  ├─ release.yml          六平台构建与 GitHub Release
 │  └─ pages.yml            介绍页 GitHub Pages 部署
 ├─ app.py                  启动入口、桌面/无头模式、生命周期
 ├─ ai_audit/
@@ -540,9 +540,9 @@ certutil -hashfile dist\EgressScope.exe SHA256
 - 上游链路修改需重启生效；不支持代理认证、PAC 自动发现、SOCKS 上游。
 - Linux / macOS 构建不提供一键安装 CA 或接管系统代理；需手动信任公开证书并注入环境变量。
 - Linux 进程归因依赖 `/proc/net/tcp`；macOS 非 root 无法读取系统 TCP 归属表，PID 归因会降级；Windows 为完整归因路径。
-- Linux / macOS、macOS Intel、Windows ARM 等产物未在本机逐一验证；以 GitHub Actions 的构建结果为准。Windows ARM64 目前只能尝试 x64 模拟运行，不宣称原生支持。
+- Linux / macOS 与 Windows ARM64 产物未在开发机上逐一执行；Windows ARM64 的源码冒烟与打包验收在 GitHub 的 `windows-11-arm` runner 上完成，桌面 Tk 控制台未做 ARM64 实机 UI 验收。
 - mac 与 Linux 二进制未签名；macOS Gatekeeper 与 Windows SmartScreen 都可能要求手动放行。
-- Windows arm64 暂无官方构建，原因是 `mitmproxy_rs 0.12.15` 缺少 `win_arm64` wheel。
+- Windows ARM64 使用上游最后的 `cryptography 46.0.3` wheel，并在构建时从源码编译 `aioquic`、`mitmproxy_rs` 与 `brotli`；`aioquic` 依赖的 ARM64 OpenSSL 由 CI 通过 vcpkg 构建，`libcrypto` 运行库已随 EXE 打包。这是可复现的构建约束，不影响 HTTP 代理审计路径。
 - 单文件可执行包较大，首次启动有解压开销。
 - UI 与 API 面向本机单用户审计，不提供多租户或远程访问。
 

@@ -79,6 +79,7 @@ jobs:
         run: |
           $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
           $vsPath = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.ARM64 -property installationPath
+          if (-not $vsPath) { $vsPath = & $vswhere -latest -products * -property installationPath }
           if (-not $vsPath) { throw "Visual Studio with ARM64 tools not found" }
           $vcvars = Join-Path $vsPath "VC\Auxiliary\Build\vcvarsall.bat"
           if (-not (Test-Path $vcvars)) { throw "vcvarsall.bat not found at $vcvars" }

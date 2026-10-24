@@ -673,9 +673,9 @@ section[id]{scroll-margin-top:82px}
   <section class="section download-section" id="download">
     <div class="wrap">
       <div class="reveal">
-        <div class="kicker">Downloads / five build targets</div>
+        <div class="kicker">Downloads / six native builds</div>
         <h2 class="h2">按操作系统与架构，<br>选择对应构建。</h2>
-        <p class="lead">每次发布同时提供五个原生构建与 SHA-256 校验。Windows 是完整桌面版；Linux / macOS 共享审计引擎与本机 Web 审计台，系统代理与 CA 需要手动配置。</p>
+        <p class="lead">每次发布同时提供六个原生构建与 SHA-256 校验。Windows x64 与 ARM64 都是完整桌面版；Linux / macOS 共享审计引擎与本机 Web 审计台，系统代理与 CA 需要手动配置。</p>
       </div>
       <div class="dl-grid">
         <article class="dl-card main reveal">
@@ -714,19 +714,19 @@ section[id]{scroll-margin-top:82px}
           <div class="dl-file">EgressScope-&lt;tag&gt;-linux-arm64.tar.gz</div>
           <div class="dl-meta"><span>aarch64</span><span class="ok">glibc</span></div>
         </article>
-        <article class="dl-card muted reveal">
+        <article class="dl-card reveal">
           <div class="dl-os">WINDOWS · ARM64</div>
           <h3>Windows on ARM</h3>
-          <p>可直接运行 Windows x64 构建，由系统模拟层执行；尚未提供原生 win_arm64 产物。</p>
-          <div class="dl-file">使用 windows-x64.exe（未单独验证）</div>
-          <div class="dl-meta"><span>原生 arm64：待上游依赖</span><span>兼容方案</span></div>
+          <p>原生 Windows 11 ARM64 桌面版；在 GitHub 的 ARM runner 上编译依赖，并完成源码冒烟与打包验收。</p>
+          <div class="dl-file">EgressScope-&lt;tag&gt;-windows-arm64.exe</div>
+          <div class="dl-meta"><span>ARM64</span><span class="ok">单文件 EXE</span></div>
         </article>
       </div>
       <div class="dl-actions reveal">
         <a class="btn primary" data-release href="__REPO_URL__/releases/latest"><span class="cta-label">前往 GitHub Releases</span> <svg class="ic"><use href="#i-arrow"/></svg></a>
         <a class="btn" href="#coverage">查看平台能力边界</a>
       </div>
-      <div class="dl-foot reveal"><svg class="ic"><use href="#i-info"/></svg><span>发布页为每个产物附带 <b>.sha256</b> 校验文件。原生 Windows arm64 构建仍受 <b>mitmproxy_rs</b> 缺少 win_arm64 wheel 的限制；请勿把 x64 模拟运行描述为原生 ARM 支持。</span></div>
+      <div class="dl-foot reveal"><svg class="ic"><use href="#i-info"/></svg><span>发布页为每个产物附带 <b>.sha256</b> 校验文件。Windows ARM64 是原生构建，不是 x64 模拟运行；桌面 Tk 控制台尚未做 ARM64 实机 UI 验收。</span></div>
     </div>
   </section>
 
