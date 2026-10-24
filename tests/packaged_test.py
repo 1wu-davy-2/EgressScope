@@ -188,6 +188,10 @@ def main() -> int:
         temp_dir = Path(temp)
         cert_path, key_path = make_certificate(temp_dir)
         home = temp_dir / "home"
+        (home / "data").mkdir(parents=True, exist_ok=True)
+        (home / "data" / "config.json").write_text(
+            json.dumps({"autostart_enabled": False}), encoding="utf-8"
+        )
         proxy_port = free_port()
         web_port = free_port()
         mock_server, mock_port = start_mock(cert_path, key_path)

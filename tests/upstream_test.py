@@ -126,6 +126,7 @@ def run() -> None:
                 app.settings.insecure_upstream = True
                 app.settings.inherit_system_proxy = False
                 app.settings.upstream_proxy = f"http://127.0.0.1:{relay_port}"
+                app.settings.autostart_enabled = False
                 app.start()
                 check("app starts with configured upstream", not app.startup_error, app.startup_error)
                 status = app.proxy.status()

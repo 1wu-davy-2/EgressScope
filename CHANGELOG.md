@@ -1,0 +1,35 @@
+# 更新日志
+
+每个 `v*` 标签的 GitHub Release 会自动携带本文件中对应版本的说明。
+
+## v0.3.0
+
+- 关机 / 注销优雅恢复：Windows 关机或注销时自动把系统代理恢复为启用前的设置（消息窗口与控制台双通道），与启动校正、看门狗、手动恢复共同组成四层断网保护。
+- 默认开机自启：首次运行为当前用户注册 `Run` 键自启；可在控制台一键关闭，或运行 `EgressScope.exe --disable-autostart`。
+- 断网保护默认注册：启用系统代理时默认勾选看门狗（登录时 + 每 2 分钟检查，代理停止后自动恢复原始代理），可取消。
+- 配置热更新：控制台、Web 审计台或直接编辑配置文件都会在 2 秒内生效，无需重启程序；上游代理变更会自动重连本地代理并重新校准系统代理。
+- 默认开启全部观察能力：流量采集、AI 端点识别、敏感数据规则与文件句柄抽样（Beta）默认开启；风险阻断与 Canary 诱饵文件仍需显式开启。
+- 发布说明：每个打包 tag 的 Release 正文自动取自本文件对应版本章节。
+
+**English**
+
+- Graceful restore at shutdown and logoff: the system proxy is put back before the Windows session ends (message-only window plus console ctrl handler), forming a four-layer fail-safe together with startup reconciliation, the watchdog and manual restore.
+- Logon autostart by default: the first run registers a per-user `Run` key entry; turn it off in the console or with `EgressScope.exe --disable-autostart`.
+- Fail-safe watchdog on by default: the confirmation dialog for enabling the system proxy has it checked (logon plus every 2 minutes, restores the original proxy once ours stops); you can uncheck it.
+- Live config reload: console toggles, web console toggles and direct edits to the config file are adopted within 2 seconds without a restart; an upstream proxy change reconnects the local proxy and re-reconciles the system proxy.
+- Observation on by default: capture, AI endpoint detection, sensitive-data rules and file-handle sampling (Beta) start enabled; risk blocking and Canary decoy files still require an explicit opt-in.
+- Release notes: the Release body of every packaged tag is taken from the matching section of this file.
+
+## v0.2.0
+
+- 断网保护：启动时校正过期的系统代理设置；可选的每用户计划任务看门狗在登录后自动恢复原始代理；新增 `--restore-proxy` / `--recover-proxy` 手动恢复命令。
+- 官网重写为白底企业风格，支持中英切换，新增断网保护章节、六平台下载矩阵与 FAQ；`tests/site_check.py` 静态门禁进入 CI。
+- 六平台原生构建（Windows x64/ARM64、Linux x64/ARM64、macOS x64/ARM64）与 SHA-256 校验文件。
+
+## v0.1.1
+
+- 补齐六平台发布矩阵；Windows ARM64 在 ARM runner 上原生构建并做打包验收。
+
+## v0.1.0
+
+- 首个可用闭环：嵌入式本地代理、本地 CA、TLS 内容还原、PID 归因、AI 端点与敏感数据规则、风险评分与阻断、AES-256-GCM 加密证据与 SHA-256 哈希链、桌面控制台与本机 Web 审计台。

@@ -51,6 +51,7 @@ class EgressApp:
         self._ca_cache: tuple[float, dict, bool] = (0.0, {}, False)
         self._chain_cache: tuple[float, dict] = (0.0, {})
         self._blocked_count = 0
+        self.config_reload: dict[str, Any] = {}
 
     # ---------- lifecycle ----------
     def start(self) -> None:
@@ -88,6 +89,46 @@ class EgressApp:
                 create_canary_files(self.paths, self.store, self.settings.canary_dir)
             except Exception:
                 log.exception("failed to create canary files on startup")
+        self._ensure_autostart()
+        hook = system.install_shutdown_hook(self._on_os_shutdown)
+        if hook.get("window") or hook.get("console"):
+            log.info("shutdown/logoff proxy restore hook installed (%s)", hook)
+        threading.Thread(target=self._config_watch_loop, name="egressscope-config", daemon=True).start()
+
+    def _ensure_autostart(self) -> None:
+        if sys.platform != "win32":
+            return
+        try:
+            status = system.autostart_status(self.paths)
+            if self.settings.autostart_enabled and not status.get("enabled"):
+                result = system.enable_autostart(self.paths)
+                log.info("logon autostart registered: %s", result.get("command"))
+            elif not self.settings.autostart_enabled and status.get("ours"):
+                system.disable_autostart(self.paths)
+        except Exception:
+            log.exception("failed to reconcile logon autostart")
+
+    def _on_os_shutdown(self, source: str) -> None:
+        """Restore the system proxy while Windows is still shutting down."""
+        backup = system.load_proxy_backup(self.paths)
+        if not backup or not self.listen_port:
+            return
+        if not system.proxy_state(self.listen_port).get("ours"):
+            return
+        system.restore_system_proxy(self.paths)
+        log.warning("system proxy restored during OS shutdown/logoff (%s)", source)
+
+    def _config_watch_loop(self) -> None:
+        while not self._stop.wait(2.0):
+            try:
+                changed = self.config.reload_if_changed()
+            except Exception:
+                log.debug("config watch failed", exc_info=True)
+                continue
+            if changed:
+                self._apply_settings_side_effects(changed)
+                self.config_reload = {"at": time.time(), "source": "file", "keys": changed}
+                log.info("config hot-reloaded from disk: %s", ", ".join(changed))
 
     def stop(self, restore_proxy: bool = True) -> None:
         if self._shutdown_done:
@@ -149,7 +190,7 @@ class EgressApp:
     def update_settings(self, patch: dict[str, Any]) -> dict[str, Any]:
         clean: dict[str, Any] = {}
         for key, value in patch.items():
-            if key in {"capture_enabled", "blocking_enabled", "store_bodies", "file_guard_enabled", "canary_enabled", "inherit_system_proxy", "onboarded"}:
+            if key in {"capture_enabled", "blocking_enabled", "store_bodies", "file_guard_enabled", "canary_enabled", "inherit_system_proxy", "autostart_enabled", "onboarded"}:
                 clean[key] = bool(value)
             elif key == "block_risk":
                 clean[key] = max(1, min(100, int(value)))
@@ -157,27 +198,12 @@ class EgressApp:
                 clean[key] = max(1, min(365, int(value))) if key == "retention_days" else max(1.0, min(120.0, float(value)))
             elif key == "upstream_proxy":
                 clean[key] = str(value or "").strip()
-        was_guard = self.settings.file_guard_enabled
-        was_canary = self.settings.canary_enabled
+        before = {key: getattr(self.settings, key) for key in clean}
         self.config.update(clean)
-        self.fileguard.refresh_watch_paths()
-        if self.settings.file_guard_enabled and not was_guard:
-            self.fileguard.start()
-        elif not self.settings.file_guard_enabled and was_guard:
-            self.fileguard.stop()
-        canary_result = None
-        if self.settings.canary_enabled and not was_canary:
-            try:
-                canary_result = create_canary_files(self.paths, self.store, self.settings.canary_dir)
-            except Exception as exc:
-                log.exception("canary creation failed")
-                canary_result = {"error": str(exc)}
-        elif not self.settings.canary_enabled and was_canary:
-            try:
-                canary_result = remove_canary_files(self.paths, self.store, self.settings.canary_dir)
-            except Exception as exc:
-                log.exception("canary removal failed")
-                canary_result = {"error": str(exc)}
+        changed = [key for key, old in before.items() if getattr(self.settings, key) != old]
+        canary_result = self._apply_settings_side_effects(changed)
+        if changed:
+            self.config_reload = {"at": time.time(), "source": "api", "keys": changed}
         self._ca_cache = (0.0, {}, False)
         return {
             "settings": {
@@ -191,9 +217,61 @@ class EgressApp:
                 "file_guard_interval": self.settings.file_guard_interval,
                 "upstream_proxy": self.settings.upstream_proxy,
                 "inherit_system_proxy": self.settings.inherit_system_proxy,
+                "autostart_enabled": self.settings.autostart_enabled,
             },
             "canary": canary_result,
+            "changed": changed,
+            "config_reload": self.config_reload,
         }
+
+    def _apply_settings_side_effects(self, changed: list[str]) -> dict | None:
+        """Apply a settings change to running components without restarting."""
+        canary_result = None
+        if not changed:
+            return canary_result
+        self.fileguard.refresh_watch_paths()
+        if "file_guard_enabled" in changed:
+            if self.settings.file_guard_enabled and not self.fileguard.status().get("enabled"):
+                self.fileguard.start()
+            elif not self.settings.file_guard_enabled:
+                self.fileguard.stop()
+        if "canary_enabled" in changed:
+            try:
+                if self.settings.canary_enabled:
+                    canary_result = create_canary_files(self.paths, self.store, self.settings.canary_dir)
+                else:
+                    canary_result = remove_canary_files(self.paths, self.store, self.settings.canary_dir)
+            except Exception as exc:
+                log.exception("canary update failed")
+                canary_result = {"error": str(exc)}
+        if "retention_days" in changed:
+            try:
+                purged = self.store.purge_older_than(self.settings.retention_days)
+                log.info("purged %s flows after retention change", purged)
+            except Exception:
+                log.debug("retention purge failed", exc_info=True)
+        if "upstream_proxy" in changed or "inherit_system_proxy" in changed:
+            self._restart_proxy_for_config()
+        if "autostart_enabled" in changed:
+            self._ensure_autostart()
+        return canary_result
+
+    def _restart_proxy_for_config(self) -> None:
+        if not self.proxy.running:
+            return
+        try:
+            self.proxy.stop()
+            port = self.proxy.start()
+            self.listen_port = port
+            reconciled = system.reconcile_system_proxy(self.paths, port)
+            log.info("proxy restarted for config change on port %s (%s)", port, reconciled.get("action"))
+        except Exception as exc:
+            self.startup_error = f"{type(exc).__name__}: {exc}"
+            log.exception("proxy restart after config change failed")
+            try:
+                system.recover_stale_proxy(self.paths, grace_seconds=0)
+            except Exception:
+                log.exception("failed to recover a stale proxy after a restart failure")
 
     def clear_data(self) -> dict[str, Any]:
         self.store.clear_all()
@@ -260,6 +338,9 @@ class EgressApp:
     def install_proxy_guard(self) -> dict:
         return system.install_proxy_guard(self.paths)
 
+    def proxy_guard_remove(self) -> dict:
+        return system.uninstall_proxy_guard(self.paths)
+
     def recover_stale_proxy(self, grace_seconds: float = 0) -> dict:
         return system.recover_stale_proxy(self.paths, grace_seconds=grace_seconds)
 
@@ -307,6 +388,8 @@ class EgressApp:
             "system_proxy": state,
             "proxy_backup": bool(backup),
             "proxy_guard": system.proxy_guard_status(self.paths),
+            "autostart": system.autostart_status(self.paths),
+            "config_reload": self.config_reload,
             "fileguard": self.fileguard.status(),
             "chain": self.chain_status(),
             "blocked_count": self._blocked_count,
@@ -357,7 +440,9 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--restore-proxy", action="store_true", help="restore the Windows system proxy saved by EgressScope, then exit")
     parser.add_argument("--recover-proxy", action="store_true", help="restore a stale EgressScope system proxy if its port is not listening, then exit")
     parser.add_argument("--recover-grace", type=float, default=0.0, help="seconds to wait for the local proxy before restoring (--recover-proxy)")
-    parser.add_argument("--autostart", action="store_true", help="start minimized (used by the logon task)")
+    parser.add_argument("--autostart", action="store_true", help="start minimized (used by the logon Run key)")
+    parser.add_argument("--enable-autostart", action="store_true", help="register the per-user logon Run key, then exit")
+    parser.add_argument("--disable-autostart", action="store_true", help="remove the per-user logon Run key, then exit")
     parser.add_argument("--log-level", default="INFO", choices=["DEBUG", "INFO", "WARNING", "ERROR"])
     parser.add_argument("--version", action="version", version=f"EgressScope {__version__}")
     return parser.parse_args(argv)
@@ -440,6 +525,16 @@ def main(argv: list[str] | None = None) -> int:
         app.settings.upstream_proxy = args.upstream_proxy
     if args.no_inherit_upstream:
         app.settings.inherit_system_proxy = False
+    if args.enable_autostart or args.disable_autostart:
+        app.settings.autostart_enabled = bool(args.enable_autostart)
+        app.config.save()
+        try:
+            result = system.enable_autostart(paths) if args.enable_autostart else system.disable_autostart(paths)
+        except Exception as exc:
+            print(f"autostart update failed: {exc}", file=sys.stderr)
+            return 1
+        print(json.dumps(result, ensure_ascii=False, default=str))
+        return 0
     app.settings.normalized()
     app.start()
     if args.open:

@@ -44,7 +44,7 @@
       "applicationCategory": "SecurityApplication",
       "applicationSubCategory": "Data Loss Prevention",
       "operatingSystem": "Windows 10, Windows 11, macOS, Linux",
-      "softwareVersion": "0.2.0",
+      "softwareVersion": "0.3.0",
       "softwareRequirements": "Python 3.12+（源码运行）或平台对应的原生构建",
       "description": "EgressScope 是本地优先的 AI Agent 与桌面应用数据外发审计工具。通过本地 HTTP/HTTPS 代理、本地 CA、进程归因与内容策略，查看外发去了哪里、由哪个进程发起、带走了什么，并保留可验证的本地证据链。",
       "url": "https://1wu-davy-2.github.io/EgressScope/",
@@ -52,14 +52,15 @@
       "codeRepository": "https://github.com/1wu-davy-2/EgressScope",
       "isAccessibleForFree": true,
       "inLanguage": ["zh-CN", "en"],
-      "keywords": "外发审计,AI审计,Agent审计,AI Agent 审计,智能体审计,数据外发审计,数据防泄漏,DLP,AI DLP,LLM 安全,大模型安全,AI Agent 安全,出站流量审计,HTTPS 审计,进程归因,本地优先,影子 AI,AI 使用审计,数据外泄检测,AI audit,agent audit,AI agent audit,AI egress audit,data exfiltration,data exfiltration detection,DLP for AI agents,LLM security,AI agent security,shadow AI,AI usage audit,process attribution",
+      "keywords": "外发审计,AI审计,Agent审计,AI Agent 审计,智能体审计,数据外发审计,数据防泄漏,DLP,AI DLP,LLM 安全,大模型安全,AI Agent 安全,出站流量审计,HTTPS 审计,进程归因,本地优先,影子 AI,AI 使用审计,数据外泄检测,断网保护,系统代理恢复,优雅退出,关机恢复,开机自启,配置热更新,AI audit,agent audit,AI agent audit,AI egress audit,data exfiltration,data exfiltration detection,DLP for AI agents,LLM security,AI agent security,shadow AI,AI usage audit,process attribution,proxy fail-safe,system proxy recovery,graceful shutdown,hot config reload",
       "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
       "featureList": [
         "HTTPS egress visibility through a local proxy and local CA",
         "Process and parent-chain attribution",
         "AI endpoint classification and DLP risk signals",
         "Encrypted evidence with a verifiable SHA-256 hash chain",
-        "Crash-safe system proxy recovery with an optional per-user watchdog",
+        "Crash-safe system proxy recovery: graceful restore at shutdown and logoff, startup reconciliation and a per-user watchdog",
+        "Observation defaults on, live config hot reload without restart, revocable logon autostart",
         "Local-first operation with no cloud sync",
         "Honest coverage boundaries for pinning, mTLS, QUIC and E2EE"
       ]
@@ -72,7 +73,7 @@
         {
           "@type": "Question",
           "name": "电脑突然关机或程序崩溃后，系统代理会不会让本机断网？",
-          "acceptedAnswer": { "@type": "Answer", "text": "这是真实存在的失败模式：系统代理仍指向 127.0.0.1 上已停止的监听端口时，浏览器与多数应用会连接失败。v0.2.0 提供三层处理：启动时校正过期设置、可选的每用户计划任务看门狗在登录后自动恢复原代理，以及 EgressScope.exe --restore-proxy 手动恢复。断电瞬间无法执行任何代码，恢复发生在下一次登录后。" }
+          "acceptedAnswer": { "@type": "Answer", "text": "这是真实存在的失败模式：系统代理仍指向 127.0.0.1 上已停止的监听端口时，浏览器与多数应用会连接失败。v0.3.0 提供四层处理：关机、重启或注销时收到 Windows 会话结束通知后立刻恢复原始代理；启动时校正过期设置；启用系统代理时默认勾选的每用户计划任务看门狗在登录后自动恢复；以及 EgressScope.exe --restore-proxy 手动恢复。直接拔电源、内核崩溃或强制结束进程时收不到会话结束通知，恢复发生在下一次登录后。" }
         },
         {
           "@type": "Question",
@@ -88,6 +89,11 @@
           "@type": "Question",
           "name": "可以用它审计别人的设备吗？",
           "acceptedAnswer": { "@type": "Answer", "text": "只应用于你拥有或已获得明确书面授权的设备。未经授权拦截他人流量可能违法。也不要在存有真实凭据的日常主机上分析疑似恶意软件，请在隔离虚拟机或快照中进行。" }
+        },
+        {
+          "@type": "Question",
+          "name": "修改设置需要重启程序吗？开机自启能关吗？",
+          "acceptedAnswer": { "@type": "Answer", "text": "采集开关、阻断阈值、保留期、文件句柄抽样、上游代理与开机自启都是热更新，改完立即生效；直接编辑 config.json 也会在 2 秒内被运行中的进程采纳，接口返回 config_reload 说明哪些键已生效。只有监听端口、Web 端口与证书目录这类需要重建进程的字段要重启一次。开机自启默认开启，写入当前用户 Run 键，可一键关闭或运行 --disable-autostart。" }
         }
       ]
     }
@@ -643,8 +649,8 @@ table{border-collapse:collapse;width:100%}
 <div class="announce">
   <div class="wrap announce-inner">
     <span class="dot" aria-hidden="true"></span>
-    <span><b>v0.2.0 已发布</b>：新增断网保护，异常关机或进程退出后自动恢复系统代理。</span>
-    <a href="#safety">查看断网保护<svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+    <span><b>v0.3.0 已发布</b>：关机 / 注销时优雅恢复系统代理，默认开机自启，配置热更新无需重启。</span>
+    <a href="#safety">查看四层断网保护<svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg></a>
   </div>
 </div>
 
@@ -662,6 +668,7 @@ table{border-collapse:collapse;width:100%}
       <a href="#how">工作原理</a>
       <a href="#coverage">覆盖边界</a>
       <a href="#safety">断网保护</a>
+      <a href="#defaults">默认行为</a>
       <a href="#download">下载</a>
       <a href="#faq">常见问题</a>
     </div>
@@ -675,7 +682,7 @@ table{border-collapse:collapse;width:100%}
         <svg class="ic icon-sun" aria-hidden="true"><use href="#i-sun"/></svg>
       </button>
       <a class="btn btn-primary btn-sm" data-release href="__REPO_URL__/releases/latest">
-        <span class="cta-label">下载 v0.2.0</span>
+        <span class="cta-label">下载 v0.3.0</span>
       </a>
     </div>
   </div>
@@ -685,12 +692,12 @@ table{border-collapse:collapse;width:100%}
   <section class="hero" id="top">
     <div class="wrap hero-grid">
       <div class="hero-copy">
-        <div class="hero-badge"><i aria-hidden="true"></i>v0.2.0 · 六平台原生构建 · 本地优先</div>
+        <div class="hero-badge"><i aria-hidden="true"></i>v0.3.0 · 六平台原生构建 · 本地优先</div>
         <h1>看清本机 AI Agent 的<br>每一次数据外发</h1>
         <p class="hero-sub">EgressScope 在本机运行一个只绑定 127.0.0.1 的审计代理：还原 HTTPS 外发内容、定位发起进程、识别密钥与敏感数据，并把结果写入可验证的本地证据链。</p>
         <div class="hero-actions">
           <a class="btn btn-primary btn-lg" data-release href="__REPO_URL__/releases/latest">
-            <span class="cta-label">下载 v0.2.0</span>
+            <span class="cta-label">下载 v0.3.0</span>
             <svg class="ic" aria-hidden="true"><use href="#i-download"/></svg>
           </a>
           <a class="btn btn-ghost btn-lg" data-repo-path="/blob/main/README.md" href="__REPO_URL__/blob/main/README.md" target="_blank" rel="noopener">
@@ -699,9 +706,9 @@ table{border-collapse:collapse;width:100%}
           </a>
         </div>
         <ul class="hero-points">
-          <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>默认只观察、不阻断；阻断需要显式开启</li>
+          <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>观察能力默认开启；阻断与 Canary 诱饵需要显式开启</li>
           <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>证据留在本机，正文以 AES-256-GCM 加密保存</li>
-          <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>根证书与系统代理都可以一键撤销</li>
+          <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>关机优雅恢复、开机自启、根证书与系统代理都可一键撤销</li>
         </ul>
       </div>
 
@@ -949,27 +956,35 @@ table{border-collapse:collapse;width:100%}
           <div class="section-head left">
             <span class="eyebrow">断网保护</span>
             <h2>接管系统代理之后，本机不能失联</h2>
-            <p>这是一个真实存在的失败模式：如果电脑突然断电、程序崩溃或被强制结束，Windows 的系统代理仍会指向 127.0.0.1 上已经停止的端口，浏览器与多数应用会连接失败——和某些 VPN 客户端退出后留下的问题一样。v0.2.0 用三层机制处理它。</p>
+            <p>这是一个真实存在的失败模式：如果电脑突然断电、程序崩溃或被强制结束，Windows 的系统代理仍会指向 127.0.0.1 上已经停止的端口，浏览器与多数应用会连接失败——和某些 VPN 客户端退出后留下的问题一样。v0.3.0 用四层机制处理它，其中三层不需要你做任何配置。</p>
           </div>
           <div class="layers">
             <div class="layer">
               <div class="layer-num">1</div>
               <div>
-                <h4>启动时校正</h4>
-                <p>程序启动会检查系统代理是否仍指向本工具：端口变了就重新指向新的监听端口；本地代理没能启动，就立刻恢复原始设置，不把机器留在断网状态。</p>
-                <span class="tag">AUTOMATIC · 无需配置</span>
+                <h4>关机 / 注销时优雅恢复</h4>
+                <p>程序注册了 Windows 会话结束通知（消息窗口的 WM_QUERYENDSESSION / WM_ENDSESSION，控制台构建同时挂 SetConsoleCtrlHandler）。你点关机、重启或注销时，系统会先通知我们；程序在会话真正结束前把系统代理还原为启用前的备份值并刷新 WinINET，因此下一次开机不会继承一个指向已停止端口的代理。</p>
+                <span class="tag">AUTOMATIC · v0.3.0 · 无需配置</span>
               </div>
             </div>
             <div class="layer">
               <div class="layer-num">2</div>
               <div>
-                <h4>独立看门狗任务</h4>
-                <p>启用系统代理时可以选择注册一个仅当前用户的计划任务：登录时以及每 2 分钟检查一次，如果系统代理仍指向已停止的回环端口，等待 30 秒宽限后恢复备份的原始值、刷新 WinINET 设置，然后自动停用任务，避免无意义的重复运行。</p>
-                <span class="tag">OPT-IN · 每用户 · 不需要管理员</span>
+                <h4>启动时校正</h4>
+                <p>程序启动会检查系统代理是否仍指向本工具：端口变了就重新指向新的监听端口；本地代理没能启动，就立刻恢复原始设置，不把机器留在断网状态。配合默认开启的开机自启，登录后这条链路会重新建立。</p>
+                <span class="tag">AUTOMATIC · 无需配置</span>
               </div>
             </div>
             <div class="layer">
               <div class="layer-num">3</div>
+              <div>
+                <h4>独立看门狗任务</h4>
+                <p>启用系统代理时的确认对话框默认勾选这一项，一键注册一个仅当前用户的计划任务：登录时以及每 2 分钟检查一次，如果系统代理仍指向已停止的回环端口，等待 30 秒宽限后恢复备份的原始值、刷新 WinINET 设置，然后自动停用任务，避免无意义的重复运行。</p>
+                <span class="tag">默认勾选 · 每用户 · 不需要管理员</span>
+              </div>
+            </div>
+            <div class="layer">
+              <div class="layer-num">4</div>
               <div>
                 <h4>手动恢复</h4>
                 <p>桌面控制台提供“恢复系统代理”，也可以直接运行命令行恢复；极端情况下还能在 Windows 设置的网络代理页手动关闭。备份文件被保留，直到恢复成功。</p>
@@ -981,24 +996,60 @@ table{border-collapse:collapse;width:100%}
 
         <div class="reveal">
           <div class="code">
-            <div class="code-bar"><b>PowerShell</b><span class="tagline">手动恢复</span></div>
+            <div class="code-bar"><b>PowerShell</b><span class="tagline">手动恢复与自启</span></div>
             <pre><span class="c"># 恢复启用系统代理前的原始设置</span>
 EgressScope.exe <span class="k">--restore-proxy</span>
 
 <span class="c"># 仅当系统代理指向本工具且端口已停止时恢复</span>
 EgressScope.exe <span class="k">--recover-proxy</span> <span class="k">--recover-grace</span> 30
 
+<span class="c"># 开机自启（当前用户 Run 键，默认开启，可随时撤销）</span>
+EgressScope.exe <span class="k">--enable-autostart</span>
+EgressScope.exe <span class="k">--disable-autostart</span>
+
 <span class="c"># 看门狗脚本与日志位置（当前用户）</span>
 %LOCALAPPDATA%\EgressScope\proxy-guard.ps1
 %LOCALAPPDATA%\EgressScope\logs\proxy-recovery.log
 
-<span class="c"># 任务计划程序中的每用户任务</span>
-EgressScope Proxy Recovery  <span class="c"># 登录时 + 每 2 分钟</span>
-EgressScope Audit           <span class="c"># 登录时启动审计</span></pre>
+<span class="c"># 系统留下的痕迹，全部可逐项撤销</span>
+HKCU\...\Internet Settings      <span class="c"># 系统代理（含备份）</span>
+HKCU\...\CurrentVersion\Run     <span class="c"># EgressScope 开机自启</span>
+EgressScope Proxy Recovery      <span class="c"># 每用户计划任务</span></pre>
           </div>
-          <div class="notice notice--info" style="margin-top:16px"><svg class="ic" aria-hidden="true"><use href="#i-info"/></svg><span><b>诚实的限制：</b>断电瞬间无法执行任何代码，恢复发生在下一次登录后；看门狗依赖 Windows 任务计划程序且只覆盖当前登录用户；只要备份文件存在，指向已停止回环端口的系统代理会被视为本工具的设置。Linux 与 macOS 版本不修改系统代理，不受此问题影响。如果不能接受任何全局代理风险，请只用 Agent 环境变量接入。</span></div>
+          <div class="notice notice--info" style="margin-top:16px"><svg class="ic" aria-hidden="true"><use href="#i-info"/></svg><span><b>诚实的限制：</b>优雅恢复依赖系统把会话结束消息投递给我们——直接拔电源、内核崩溃或强制结束进程时收不到，此时恢复发生在下一次登录后（启动校正 + 看门狗）。看门狗与开机自启都只覆盖当前登录用户；只要备份文件存在，指向已停止回环端口的系统代理会被视为本工具的设置。Linux 与 macOS 版本不修改系统代理，也不写 Run 键，不受此问题影响。如果不能接受任何全局代理风险，请只用 Agent 环境变量接入。</span></div>
         </div>
       </div>
+    </div>
+  </section>
+
+  <section class="section" id="defaults">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">默认行为</span>
+        <h2>安装即观察，改动即时生效</h2>
+        <p>v0.3.0 把“需要逐项勾选才能开始审计”改成了默认就位：观察能力开箱开启，配置改动不需要重启进程，登录自启与关机恢复形成闭环。会中断请求或写入文件的两项能力仍然保留显式确认。</p>
+      </div>
+      <div class="card-grid">
+        <article class="card reveal">
+          <div class="card-icon"><svg class="ic" aria-hidden="true"><use href="#i-eye"/></svg></div>
+          <h3>默认开启的观察能力</h3>
+          <p>流量采集、AI 端点识别、敏感数据规则与文件句柄抽样默认全部开启，装完就能看到完整证据链，不必先研究一遍开关。两项例外仍需你显式打开：风险阻断会直接返回 403 中断请求，Canary 诱饵会往 Documents 写入含虚构凭据的文件。</p>
+          <div class="spec-line">capture · ai endpoints · dlp rules · file sampling = on</div>
+        </article>
+        <article class="card reveal">
+          <div class="card-icon"><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg></div>
+          <h3>配置热更新，无需重启</h3>
+          <p>控制台开关、Web 审计台开关，或直接编辑 <code>%LOCALAPPDATA%\EgressScope\config.json</code>，都会在 2 秒内被运行中的进程采纳。上游代理变更会自动重连并重新校正系统代理，抽样间隔、保留期与自启开关即时生效，不需要等待重启窗口。</p>
+          <div class="spec-line">config.json → mtime poll (2s) → live settings</div>
+        </article>
+        <article class="card reveal">
+          <div class="card-icon"><svg class="ic" aria-hidden="true"><use href="#i-power"/></svg></div>
+          <h3>默认开机自启，可随时撤销</h3>
+          <p>启用系统代理后写入当前用户的 Run 键，登录时最小化启动，与关机 / 注销优雅恢复配合形成闭环，不会出现“开机后代理没人接管”的空档。控制台一键关闭，或运行 <code>--disable-autostart</code>；撤销时只删除我们自己写入的值，不动其他程序的自启项。</p>
+          <div class="spec-line">HKCU\...\CurrentVersion\Run\EgressScope</div>
+        </article>
+      </div>
+      <div class="notice notice--info reveal"><svg class="ic" aria-hidden="true"><use href="#i-info"/></svg><span><b>你可以确认热更新已经完成：</b>接口与控制台会返回 <code>config_reload</code>（完成时间与本次生效的键名），不需要靠猜。监听端口、Web 端口与证书目录这类需要重建进程的字段不在热更新范围内，改完需要重启一次，控制台会明确提示。</span></div>
     </div>
   </section>
 
@@ -1019,7 +1070,7 @@ EgressScope Audit           <span class="c"># 登录时启动审计</span></pre>
                 <td class="mono">EgressScope-&lt;tag&gt;-windows-x64.exe</td>
                 <td class="yes">支持</td>
                 <td class="yes">支持</td>
-                <td>单文件 EXE，含系统代理备份恢复、当前用户 CA 安装、断网保护与进程归因。</td>
+                <td>单文件 EXE，含系统代理备份恢复、当前用户 CA 安装、四层断网保护、关机优雅恢复、开机自启与进程归因。</td>
               </tr>
               <tr>
                 <td><b>Windows on ARM</b> <span class="pill ok">原生 ARM64</span></td>
@@ -1061,6 +1112,7 @@ EgressScope Audit           <span class="c"># 登录时启动审计</span></pre>
         </div>
         <div class="table-foot">
           <span>每个产物附带 <span class="mono">.sha256</span>，发布页同时提供 <span class="mono">SHA256SUMS.txt</span>；建议先校验再运行。</span>
+          <span>每个 tag 的发布页都附带该版本的更新说明，内容与仓库 CHANGELOG.md 保持一致。</span>
           <span>构建未做代码签名，SmartScreen 与 Gatekeeper 可能提示未知发布者。</span>
         </div>
       </div>
@@ -1084,14 +1136,14 @@ EgressScope Audit           <span class="c"># 登录时启动审计</span></pre>
           <div class="section-head left">
             <span class="eyebrow">快速开始</span>
             <h2>三步接入，不自动接管系统</h2>
-            <p>桌面控制台与本机审计台会同时启动。根证书、系统代理与阻断策略都需要显式确认，你可以随时暂停采集或恢复原始代理设置。</p>
+            <p>桌面控制台与本机审计台会同时启动，采集、AI 端点识别、敏感数据规则与文件句柄抽样默认开启。真正改动系统的三件事——根证书、系统代理与风险阻断——仍然需要你显式确认；所有设置改动即时生效，不需要重启进程。</p>
           </div>
           <div class="steps">
             <div class="step">
               <div class="step-num">1</div>
               <div>
                 <h4>启动 EgressScope</h4>
-                <p>双击可执行文件，或用 <code>EgressScope.exe --headless</code> 运行无窗口模式。代理默认监听 <code>127.0.0.1:8899</code>，审计台绑定回环地址并带随机访问令牌。</p>
+                <p>双击可执行文件，或用 <code>EgressScope.exe --headless</code> 运行无窗口模式。代理默认监听 <code>127.0.0.1:8899</code>，审计台绑定回环地址并带随机访问令牌。首次启动会写入当前用户 Run 键实现登录自启，可在控制台一键关闭。</p>
               </div>
             </div>
             <div class="step">
@@ -1105,7 +1157,7 @@ EgressScope Audit           <span class="c"># 登录时启动审计</span></pre>
               <div class="step-num">3</div>
               <div>
                 <h4>选择流量入口</h4>
-                <p>开启系统代理（可勾选断网保护），或只给目标 Agent 注入环境变量。若本机原本通过 Clash 等回环代理上网，程序会在启动时自动串联，避免接管后断网。</p>
+                <p>开启系统代理（确认对话框默认勾选断网保护看门狗），或只给目标 Agent 注入环境变量。若本机原本通过 Clash 等回环代理上网，程序会在启动或热更新时自动串联，避免接管后断网。</p>
               </div>
             </div>
           </div>
@@ -1124,7 +1176,7 @@ EgressScope Audit           <span class="c"># 登录时启动审计</span></pre>
 <span class="c">:: 验证链路是否被审计</span>
 curl https://api.openai.com/v1/models</pre>
           </div>
-          <div class="control" style="margin-top:16px" role="img" aria-label="EgressScope 桌面控制台示意：本地代理运行中，根证书等待信任，系统代理未启用">
+          <div class="control" style="margin-top:16px" role="img" aria-label="EgressScope 桌面控制台示意：本地代理运行中，审计默认采集，根证书等待信任，系统代理未启用，开机自启已注册">
             <div class="window-bar">
               <span class="win-dot"></span><span class="win-dot"></span><span class="win-dot"></span>
               <span class="window-title">EgressScope · 控制窗口</span>
@@ -1132,16 +1184,18 @@ curl https://api.openai.com/v1/models</pre>
             <div class="control-body">
               <div class="control-head">
                 <div class="control-logo"><svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg></div>
-                <div><h4>本机数据外发审计</h4><span>EgressScope v0.2.0 · Windows</span></div>
+                <div><h4>本机数据外发审计</h4><span>EgressScope v0.3.0 · Windows</span></div>
                 <span class="control-state"><i></i>运行中</span>
               </div>
               <div class="control-cards">
                 <div class="control-card"><div class="label">本地代理 <svg class="ic" aria-hidden="true"><use href="#i-server"/></svg></div><div class="value"><i></i>127.0.0.1:8899</div></div>
+                <div class="control-card"><div class="label">审计状态 <svg class="ic" aria-hidden="true"><use href="#i-eye"/></svg></div><div class="value"><i></i>采集中</div></div>
                 <div class="control-card"><div class="label">本地 CA <svg class="ic" aria-hidden="true"><use href="#i-key"/></svg></div><div class="value warn"><i></i>等待信任</div></div>
                 <div class="control-card"><div class="label">系统代理 <svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg></div><div class="value warn"><i></i>未启用</div></div>
-                <div class="control-card"><div class="label">断网保护 <svg class="ic" aria-hidden="true"><use href="#i-shield"/></svg></div><div class="value warn"><i></i>未注册</div></div>
+                <div class="control-card"><div class="label">开机自启 <svg class="ic" aria-hidden="true"><use href="#i-power"/></svg></div><div class="value"><i></i>已注册</div></div>
+                <div class="control-card"><div class="label">配置热更新 <svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg></div><div class="value"><i></i>无需重启</div></div>
               </div>
-              <div class="control-banner"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>本机审计已就绪。下一步：安装 CA，再启用系统代理或使用 Agent 环境变量。</div>
+              <div class="control-banner"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>观察能力已默认开启。下一步：安装 CA，再启用系统代理（断网保护默认勾选）或使用 Agent 环境变量。</div>
               <div class="control-actions">
                 <div class="mock-btn primary"><svg class="ic" aria-hidden="true"><use href="#i-shield"/></svg>安装根证书</div>
                 <div class="mock-btn">启用系统代理</div>
@@ -1206,7 +1260,7 @@ curl https://api.openai.com/v1/models</pre>
       <div class="faq reveal">
         <details open>
           <summary><span class="q">01</span>电脑突然关机或程序崩溃后，本机还能上网吗？<svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
-          <div class="a">系统代理仍指向已停止的回环端口时，浏览器与多数应用会连接失败——这是真实存在的失败模式。v0.2.0 提供三层处理：启动时校正过期设置、可选的每用户计划任务看门狗在登录后自动恢复原始代理，以及 <code>EgressScope.exe --restore-proxy</code> 手动恢复。断电瞬间无法执行任何代码，恢复发生在下一次登录后。</div>
+          <div class="a">系统代理仍指向已停止的回环端口时，浏览器与多数应用会连接失败——这是真实存在的失败模式。v0.3.0 提供四层处理：关机、重启或注销时收到 Windows 会话结束通知后立刻恢复原始代理；启动时校正过期设置；启用系统代理时默认勾选的每用户计划任务看门狗在登录后自动恢复；以及 <code>EgressScope.exe --restore-proxy</code> 手动恢复。直接拔电源、内核崩溃或强制结束进程时收不到会话结束通知，此时恢复发生在下一次登录后。</div>
         </details>
         <details>
           <summary><span class="q">02</span>它是杀毒软件或 EDR 吗？<svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
@@ -1226,7 +1280,7 @@ curl https://api.openai.com/v1/models</pre>
         </details>
         <details>
           <summary><span class="q">06</span>需要管理员权限吗？<svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
-          <div class="a">不需要。CA 只安装到当前用户信任根，系统代理是每用户设置，断网保护用的是每用户计划任务。这也是它的边界：Windows 服务与 SYSTEM 会话的完整归因不在当前版本范围内。</div>
+          <div class="a">不需要。CA 只安装到当前用户信任根，系统代理是每用户设置，断网保护看门狗与开机自启也都写在当前用户下（每用户计划任务 + Run 键），可随时逐项撤销。这也是它的边界：Windows 服务与 SYSTEM 会话的完整归因不在当前版本范围内。</div>
         </details>
         <details>
           <summary><span class="q">07</span>已经在用 Clash 或其他本地代理怎么办？<svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
@@ -1248,6 +1302,10 @@ curl https://api.openai.com/v1/models</pre>
           <summary><span class="q">11</span>项目是开源的吗？许可是什么？<svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
           <div class="a">源码与构建流水线公开在 GitHub，可自行审计与复现构建。仓库当前未附带标准开源许可证，使用即表示你理解并接受 README 中的授权、安全与覆盖边界声明。</div>
         </details>
+        <details>
+          <summary><span class="q">12</span>修改设置需要重启程序吗？开机自启能关吗？<svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
+          <div class="a">采集开关、阻断阈值、保留期、文件句柄抽样、上游代理与开机自启都是热更新：控制台改完立即生效，直接编辑 <code>config.json</code> 也会在 2 秒内被运行中的进程采纳，接口会返回 <code>config_reload</code> 告诉你哪些键已生效；上游代理变更会自动重连并重新校正系统代理。只有监听端口、Web 端口与证书目录这类需要重建进程的字段要重启一次。开机自启默认开启，写入当前用户 Run 键，可在控制台一键关闭或运行 <code>--disable-autostart</code>。</div>
+        </details>
       </div>
     </div>
   </section>
@@ -1264,7 +1322,7 @@ curl https://api.openai.com/v1/models</pre>
           <div class="road-tag"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>DELIVERED · P0</div>
           <h3>可交付的本机闭环</h3>
           <p>嵌入式代理、本地 CA、TLS 解密、PID 归因、AI 与敏感数据规则、风险评分与阻断、加密证据、哈希链、桌面控制台与本机 Web 审计台。</p>
-          <ul><li>Windows 当前用户路径</li><li>系统代理备份 / 恢复 / 断网保护</li><li>Agent 环境变量接入</li><li>回环上游代理自动串联</li><li>文件句柄抽样 Beta</li></ul>
+          <ul><li>Windows 当前用户路径</li><li>系统代理备份 / 恢复 / 四层断网保护</li><li>关机注销优雅恢复 + 开机自启</li><li>配置热更新，无需重启</li><li>Agent 环境变量接入</li><li>回环上游代理自动串联</li><li>文件句柄抽样 Beta</li></ul>
         </article>
         <article class="road reveal">
           <div class="road-tag">NEXT · P1</div>
@@ -1292,13 +1350,13 @@ curl https://api.openai.com/v1/models</pre>
         </div>
         <div class="final-actions">
           <a class="btn btn-invert btn-lg" data-release href="__REPO_URL__/releases/latest">
-            <span class="cta-label">下载 v0.2.0</span>
+            <span class="cta-label">下载 v0.3.0</span>
             <svg class="ic" aria-hidden="true"><use href="#i-download"/></svg>
           </a>
           <a class="btn btn-quiet btn-lg" href="#coverage">再次查看边界</a>
         </div>
       </div>
-      <div class="final-note">v0.2.0 · WINDOWS / MACOS / LINUX · 仅用于拥有或明确获授权的设备</div>
+      <div class="final-note">v0.3.0 · WINDOWS / MACOS / LINUX · 仅用于拥有或明确获授权的设备</div>
     </div>
   </section>
 </main>
@@ -1324,6 +1382,7 @@ curl https://api.openai.com/v1/models</pre>
           <a href="#how">工作原理</a>
           <a href="#coverage">覆盖边界</a>
           <a href="#safety">断网保护</a>
+          <a href="#defaults">默认行为与热更新</a>
           <a href="#privacy">隐私与安全</a>
         </div>
       </div>
@@ -1352,7 +1411,7 @@ curl https://api.openai.com/v1/models</pre>
           <span>仅限拥有或明确获授权的设备</span>
           <span>不要在日常主机分析未知样本</span>
           <span>不承诺攻破证书固定 / mTLS / E2EE</span>
-          <span>CA 与系统代理均可撤销</span>
+          <span>CA、系统代理与开机自启均可撤销</span>
         </div>
       </div>
     </div>
@@ -1364,14 +1423,16 @@ curl https://api.openai.com/v1/models</pre>
         <span>智能体审计</span><span>数据外发审计</span><span>数据防泄漏</span><span>DLP</span><span>AI DLP</span>
         <span>LLM 安全</span><span>大模型安全</span><span>AI Agent 安全</span><span>出站流量审计</span><span>HTTPS 审计</span>
         <span>进程归因</span><span>本地优先</span><span>影子 AI</span><span>AI 使用审计</span><span>数据外泄检测</span>
+        <span>断网保护</span><span>系统代理恢复</span><span>优雅退出</span><span>关机恢复</span><span>开机自启</span><span>配置热更新</span>
         <span>AI audit</span><span>agent audit</span><span>AI agent audit</span><span>egress audit</span><span>AI egress audit</span>
         <span>data exfiltration</span><span>data exfiltration detection</span><span>DLP for AI agents</span><span>AI agent security</span>
         <span>shadow AI</span><span>AI usage audit</span><span>process attribution</span>
+        <span>proxy fail-safe</span><span>system proxy recovery</span><span>graceful shutdown</span><span>hot config reload</span>
       </div>
     </div>
 
     <div class="footer-bottom">
-      <span>© 2026 EgressScope · v0.2.0</span>
+      <span>© 2026 EgressScope · v0.3.0</span>
       <span class="sep" aria-hidden="true"></span>
       <span>WINDOWS-FIRST · LOCAL-FIRST · NO CLOUD</span>
       <div class="footer-lang" data-no-i18n aria-label="Language">
@@ -1386,9 +1447,9 @@ curl https://api.openai.com/v1/models</pre>
 <script type="application/json" id="i18n-en">
 {
  "跳到主要内容": "Skip to main content",
- "v0.2.0 已发布": "v0.2.0 released",
- "：新增断网保护，异常关机或进程退出后自动恢复系统代理。": ": a network fail-safe restores the system proxy after a crash or power loss.",
- "查看断网保护": "Read about the fail-safe",
+ "v0.3.0 已发布": "v0.3.0 released",
+ "：关机 / 注销时优雅恢复系统代理，默认开机自启，配置热更新无需重启。": ": the system proxy is now restored gracefully at shutdown and logoff, logon autostart is on by default, and settings hot-reload without a restart.",
+ "查看四层断网保护": "Read about the four-layer fail-safe",
  "本机数据外发审计": "Local egress audit",
  "能力": "Capabilities",
  "工作原理": "How it works",
@@ -1396,15 +1457,15 @@ curl https://api.openai.com/v1/models</pre>
  "断网保护": "Network fail-safe",
  "下载": "Download",
  "常见问题": "FAQ",
- "下载 v0.2.0": "Download v0.2.0",
- "v0.2.0 · 六平台原生构建 · 本地优先": "v0.2.0 · six native builds · local-first",
+ "下载 v0.3.0": "Download v0.3.0",
+ "v0.3.0 · 六平台原生构建 · 本地优先": "v0.3.0 · six native builds · local-first",
  "看清本机 AI Agent 的": "See every egress request",
  "每一次数据外发": "your local AI agents make",
  "EgressScope 在本机运行一个只绑定 127.0.0.1 的审计代理：还原 HTTPS 外发内容、定位发起进程、识别密钥与敏感数据，并把结果写入可验证的本地证据链。": "EgressScope runs an audit proxy bound to 127.0.0.1 only: it reconstructs HTTPS egress, identifies the originating process, detects secrets and sensitive data, and writes the results into a verifiable local evidence chain.",
  "阅读技术文档": "Read the docs",
- "默认只观察、不阻断；阻断需要显式开启": "Observes by default; blocking must be enabled explicitly",
+ "观察能力默认开启；阻断与 Canary 诱饵需要显式开启": "Observation is on by default; blocking and Canary decoys need an explicit opt-in",
  "证据留在本机，正文以 AES-256-GCM 加密保存": "Evidence stays on this device, bodies encrypted with AES-256-GCM",
- "根证书与系统代理都可以一键撤销": "Root CA and system proxy are both one click to revoke",
+ "关机优雅恢复、开机自启、根证书与系统代理都可一键撤销": "Graceful shutdown restore, logon autostart, the root CA and the system proxy are all revocable in one click",
  "EgressScope · 本机审计台": "EgressScope · local console",
  "实时": "Live",
  "审计": "Audit",
@@ -1542,24 +1603,30 @@ curl https://api.openai.com/v1/models</pre>
  "重要安全边界：": "Important safety boundary: ",
  "不要在日常使用、存有真实凭据的设备上分析疑似恶意软件。受信 CA 会扩大本机可被中间人解密的范围。请在隔离虚拟机 / 快照中处理未知样本，分析结束后移除 CA 并恢复系统代理。": "Do not analyse suspected malware on a daily-use device that holds real credentials. A trusted CA widens what can be decrypted by a man in the middle on this machine. Work in an isolated VM or snapshot, then remove the CA and restore the system proxy.",
  "接管系统代理之后，本机不能失联": "After taking over the system proxy, this machine must stay online",
- "这是一个真实存在的失败模式：如果电脑突然断电、程序崩溃或被强制结束，Windows 的系统代理仍会指向 127.0.0.1 上已经停止的端口，浏览器与多数应用会连接失败——和某些 VPN 客户端退出后留下的问题一样。v0.2.0 用三层机制处理它。": "This is a real failure mode: after a power loss, crash or forced kill, the Windows system proxy can still point at a 127.0.0.1 port that is no longer listening, so browsers and most apps fail to connect — the same problem some VPN clients leave behind. v0.2.0 handles it with three layers.",
+ "这是一个真实存在的失败模式：如果电脑突然断电、程序崩溃或被强制结束，Windows 的系统代理仍会指向 127.0.0.1 上已经停止的端口，浏览器与多数应用会连接失败——和某些 VPN 客户端退出后留下的问题一样。v0.3.0 用四层机制处理它，其中三层不需要你做任何配置。": "This is a real failure mode: after a power loss, a crash or a forced kill, the Windows system proxy can still point at a 127.0.0.1 port that is no longer listening, so browsers and most apps fail to connect — the same problem some VPN clients leave behind. v0.3.0 handles it with four layers, and three of them need no configuration from you.",
+ "关机 / 注销时优雅恢复": "Graceful restore at shutdown and logoff",
+ "程序注册了 Windows 会话结束通知（消息窗口的 WM_QUERYENDSESSION / WM_ENDSESSION，控制台构建同时挂 SetConsoleCtrlHandler）。你点关机、重启或注销时，系统会先通知我们；程序在会话真正结束前把系统代理还原为启用前的备份值并刷新 WinINET，因此下一次开机不会继承一个指向已停止端口的代理。": "The program registers for the Windows session-end notification (WM_QUERYENDSESSION / WM_ENDSESSION on a message-only window, plus SetConsoleCtrlHandler in console builds). When you shut down, restart or sign out, Windows tells us first; before the session actually ends the program puts the system proxy back to the backup values captured before takeover and refreshes WinINET, so the next boot never inherits a proxy pointing at a dead port.",
+ "AUTOMATIC · v0.3.0 · 无需配置": "AUTOMATIC · v0.3.0 · NO SETUP",
  "启动时校正": "Startup reconciliation",
- "程序启动会检查系统代理是否仍指向本工具：端口变了就重新指向新的监听端口；本地代理没能启动，就立刻恢复原始设置，不把机器留在断网状态。": "On startup the app checks whether the system proxy still points at it: if the port changed it is repointed to the live listener, and if the local proxy failed to start the original settings are restored immediately instead of leaving the machine offline.",
+ "程序启动会检查系统代理是否仍指向本工具：端口变了就重新指向新的监听端口；本地代理没能启动，就立刻恢复原始设置，不把机器留在断网状态。配合默认开启的开机自启，登录后这条链路会重新建立。": "At startup the program checks whether the system proxy still points at this tool: if the port changed it is repointed to the new listening port, and if the local proxy failed to start the original settings are restored right away instead of leaving the machine offline. With logon autostart on by default, that chain is rebuilt after you sign in.",
  "AUTOMATIC · 无需配置": "AUTOMATIC · no setup",
  "独立看门狗任务": "Independent watchdog task",
- "启用系统代理时可以选择注册一个仅当前用户的计划任务：登录时以及每 2 分钟检查一次，如果系统代理仍指向已停止的回环端口，等待 30 秒宽限后恢复备份的原始值、刷新 WinINET 设置，然后自动停用任务，避免无意义的重复运行。": "When you enable the system proxy you can register a per-user scheduled task: it checks at logon and every 2 minutes, and if the system proxy still points at a stopped loopback port it waits a 30-second grace period, restores the backed-up values, refreshes WinINET, then disables itself to avoid pointless repeats.",
- "OPT-IN · 每用户 · 不需要管理员": "OPT-IN · per user · no admin",
+ "启用系统代理时的确认对话框默认勾选这一项，一键注册一个仅当前用户的计划任务：登录时以及每 2 分钟检查一次，如果系统代理仍指向已停止的回环端口，等待 30 秒宽限后恢复备份的原始值、刷新 WinINET 设置，然后自动停用任务，避免无意义的重复运行。": "The confirmation dialog shown when you enable the system proxy has this checked by default, so one click registers a per-user scheduled task: at logon and every 2 minutes it checks whether the system proxy still points at a stopped loopback port, waits a 30-second grace period, restores the backed-up original values, refreshes WinINET, then disables itself to avoid pointless repeated runs.",
+ "默认勾选 · 每用户 · 不需要管理员": "CHECKED BY DEFAULT · PER-USER · NO ADMIN",
  "手动恢复": "Manual recovery",
  "桌面控制台提供“恢复系统代理”，也可以直接运行命令行恢复；极端情况下还能在 Windows 设置的网络代理页手动关闭。备份文件被保留，直到恢复成功。": "The desktop console offers “restore system proxy”, and the same can be done from the command line; in the worst case you can turn the proxy off in the Windows proxy settings page. The backup file is kept until a restore succeeds.",
  "MANUAL · 始终可用": "MANUAL · always available",
  "# 恢复启用系统代理前的原始设置": "# Restore the settings captured before the proxy was enabled",
  "# 仅当系统代理指向本工具且端口已停止时恢复": "# Restore only if the proxy points at us and the port is dead",
  "# 看门狗脚本与日志位置（当前用户）": "# Watchdog script and log location (current user)",
- "# 任务计划程序中的每用户任务": "# Per-user tasks in Task Scheduler",
- "# 登录时 + 每 2 分钟": "# at logon + every 2 minutes",
- "# 登录时启动审计": "# start auditing at logon",
+ "手动恢复与自启": "Restore & autostart",
+ "# 开机自启（当前用户 Run 键，默认开启，可随时撤销）": "# Logon autostart (current-user Run key, on by default, revocable any time)",
+ "# 系统留下的痕迹，全部可逐项撤销": "# Every trace it leaves on the system, each one revocable",
+ "# 系统代理（含备份）": "# system proxy (with backup)",
+ "# EgressScope 开机自启": "# EgressScope logon autostart",
+ "# 每用户计划任务": "# per-user scheduled task",
  "诚实的限制：": "Honest limits: ",
- "断电瞬间无法执行任何代码，恢复发生在下一次登录后；看门狗依赖 Windows 任务计划程序且只覆盖当前登录用户；只要备份文件存在，指向已停止回环端口的系统代理会被视为本工具的设置。Linux 与 macOS 版本不修改系统代理，不受此问题影响。如果不能接受任何全局代理风险，请只用 Agent 环境变量接入。": "No code can run during a power cut, so recovery happens after the next logon; the watchdog depends on Windows Task Scheduler and covers only the signed-in user; while a backup file exists, a system proxy pointing at a stopped loopback port is treated as ours. Linux and macOS builds never change the system proxy and are unaffected. If you cannot accept any global-proxy risk, onboard agents with environment variables only.",
+ "优雅恢复依赖系统把会话结束消息投递给我们——直接拔电源、内核崩溃或强制结束进程时收不到，此时恢复发生在下一次登录后（启动校正 + 看门狗）。看门狗与开机自启都只覆盖当前登录用户；只要备份文件存在，指向已停止回环端口的系统代理会被视为本工具的设置。Linux 与 macOS 版本不修改系统代理，也不写 Run 键，不受此问题影响。如果不能接受任何全局代理风险，请只用 Agent 环境变量接入。": "Graceful restore depends on the system actually delivering the session-end message — a pulled power cord, a kernel crash or a forced kill never receives it, so recovery then happens after the next logon (startup reconciliation plus the watchdog). The watchdog and logon autostart both cover only the currently signed-in user; as long as the backup file exists, a system proxy pointing at a stopped loopback port is treated as ours. The Linux and macOS builds neither change the system proxy nor write a Run key, so they are unaffected. If you cannot accept any global-proxy risk, connect with agent environment variables only.",
  "六个原生构建，全部由 GitHub Actions 编译": "Six native builds, all compiled on GitHub Actions",
  "每次发布同时提供六个平台目标与 SHA-256 校验文件。Windows x64 与 ARM64 都是完整桌面版；Linux 与 macOS 提供审计引擎与本机 Web 审计台，系统代理与根证书需要手动配置。": "Every release ships six platform targets with SHA-256 checksums. Windows x64 and ARM64 are full desktop builds; Linux and macOS provide the audit engine and local web console, with the system proxy and root CA configured manually.",
  "平台": "Platform",
@@ -1569,7 +1636,7 @@ curl https://api.openai.com/v1/models</pre>
  "说明": "Notes",
  "主要支持": "Primary",
  "支持": "Included",
- "单文件 EXE，含系统代理备份恢复、当前用户 CA 安装、断网保护与进程归因。": "Single-file EXE with system proxy backup and restore, current-user CA install, network fail-safe and process attribution.",
+ "单文件 EXE，含系统代理备份恢复、当前用户 CA 安装、四层断网保护、关机优雅恢复、开机自启与进程归因。": "Single-file EXE with system proxy backup and restore, current-user CA install, the four-layer network fail-safe, graceful shutdown restore, logon autostart and process attribution.",
  "原生 ARM64": "Native ARM64",
  "在 ARM runner 上编译 OpenSSL 与 Rust 依赖，非 x64 模拟；Tk 界面尚未做实机 UI 验收。": "OpenSSL and Rust dependencies compiled on an ARM runner, not x64 emulation; the Tk UI has not been verified on real ARM64 hardware.",
  "命令行 / Web": "CLI / web",
@@ -1586,15 +1653,15 @@ curl https://api.openai.com/v1/models</pre>
  "查看构建流水线": "View build pipelines",
  "快速开始": "Quick start",
  "三步接入，不自动接管系统": "Three steps, no automatic takeover",
- "桌面控制台与本机审计台会同时启动。根证书、系统代理与阻断策略都需要显式确认，你可以随时暂停采集或恢复原始代理设置。": "The desktop console and the local web console start together. The root CA, the system proxy and blocking all need explicit confirmation, and you can pause capture or restore the original proxy settings at any time.",
+ "桌面控制台与本机审计台会同时启动，采集、AI 端点识别、敏感数据规则与文件句柄抽样默认开启。真正改动系统的三件事——根证书、系统代理与风险阻断——仍然需要你显式确认；所有设置改动即时生效，不需要重启进程。": "The desktop console and the local web console start together, and capture, AI endpoint detection, sensitive-data rules and file-handle sampling are all on by default. The three things that actually change your system — the root CA, the system proxy and risk blocking — still need your explicit confirmation, and every settings change takes effect immediately without restarting the process.",
  "启动 EgressScope": "Start EgressScope",
  "双击可执行文件，或用": "Double-click the executable, or run",
  "运行无窗口模式。代理默认监听": "for headless mode. The proxy listens on",
- "，审计台绑定回环地址并带随机访问令牌。": "by default; the console binds to loopback with a random access token.",
+ "，审计台绑定回环地址并带随机访问令牌。首次启动会写入当前用户 Run 键实现登录自启，可在控制台一键关闭。": ", and the web console binds to the loopback address with a random access token. The first launch writes the current user's Run key so it starts at logon; you can turn that off in the console with one click.",
  "确认根证书": "Confirm the root certificate",
  "在控制台点击“安装根证书”，把公开 CA 加入当前用户信任根。私钥始终留在本机数据目录，不会分发；安装后可随时移除。": "Click “install root certificate” in the console to add the public CA to the current user's trust store. The private key never leaves the local data directory and the CA can be removed again at any time.",
  "选择流量入口": "Choose the traffic entry point",
- "开启系统代理（可勾选断网保护），或只给目标 Agent 注入环境变量。若本机原本通过 Clash 等回环代理上网，程序会在启动时自动串联，避免接管后断网。": "Enable the system proxy (optionally with the network fail-safe), or inject environment variables into the target agent only. If this machine already reaches the internet through a loopback proxy such as Clash, it is chained automatically at startup so you are not cut off.",
+ "开启系统代理（确认对话框默认勾选断网保护看门狗），或只给目标 Agent 注入环境变量。若本机原本通过 Clash 等回环代理上网，程序会在启动或热更新时自动串联，避免接管后断网。": "Enable the system proxy (the confirmation dialog has the fail-safe watchdog checked by default), or inject environment variables into the target agent only. If this machine already reaches the internet through a loopback proxy such as Clash, it is chained automatically at startup or on hot reload so you are not cut off.",
  "只影响当前终端": "Affects this terminal only",
  ":: 只给一个终端注入代理与 CA，不改动系统设置": ":: Inject the proxy and CA into one terminal without touching system settings",
  ":: 验证链路是否被审计": ":: Verify the path is being audited",
@@ -1605,8 +1672,13 @@ curl https://api.openai.com/v1/models</pre>
  "等待信任": "Awaiting trust",
  "系统代理": "System proxy",
  "未启用": "Off",
- "未注册": "Not registered",
- "本机审计已就绪。下一步：安装 CA，再启用系统代理或使用 Agent 环境变量。": "Local auditing is ready. Next: install the CA, then enable the system proxy or use agent environment variables.",
+ "审计状态": "Audit status",
+ "采集中": "Capturing",
+ "开机自启": "Logon autostart",
+ "已注册": "Registered",
+ "配置热更新": "Config hot reload",
+ "无需重启": "No restart needed",
+ "观察能力已默认开启。下一步：安装 CA，再启用系统代理（断网保护默认勾选）或使用 Agent 环境变量。": "Observation is already on by default. Next: install the CA, then enable the system proxy (the fail-safe is checked by default) or use the agent environment variables.",
  "安装根证书": "Install root CA",
  "启用系统代理": "Enable system proxy",
  "复制环境变量": "Copy env variables",
@@ -1642,8 +1714,8 @@ curl https://api.openai.com/v1/models</pre>
  "下面这些问题决定了它是否适合你的场景。答案与本产品的实际实现一致，不做超出能力的承诺。": "These questions decide whether it fits your scenario. The answers match the implementation and make no claim beyond what the product can do.",
  "提交问题或反馈": "Open an issue",
  "电脑突然关机或程序崩溃后，本机还能上网吗？": "After a sudden shutdown or crash, can this machine still reach the internet?",
- "系统代理仍指向已停止的回环端口时，浏览器与多数应用会连接失败——这是真实存在的失败模式。v0.2.0 提供三层处理：启动时校正过期设置、可选的每用户计划任务看门狗在登录后自动恢复原始代理，以及": "While the system proxy still points at a stopped loopback port, browsers and most apps fail to connect — a real failure mode. v0.2.0 handles it in three layers: startup reconciliation of stale settings, an optional per-user scheduled-task watchdog that restores the original proxy after logon, and",
- "手动恢复。断电瞬间无法执行任何代码，恢复发生在下一次登录后。": "manual recovery. No code runs during a power cut, so recovery happens after the next logon.",
+ "系统代理仍指向已停止的回环端口时，浏览器与多数应用会连接失败——这是真实存在的失败模式。v0.3.0 提供四层处理：关机、重启或注销时收到 Windows 会话结束通知后立刻恢复原始代理；启动时校正过期设置；启用系统代理时默认勾选的每用户计划任务看门狗在登录后自动恢复；以及": "While the system proxy still points at a stopped loopback port, browsers and most apps fail to connect — a real failure mode. v0.3.0 handles it in four layers: the original proxy is restored as soon as the Windows session-end notification arrives at shutdown, restart or sign-out; stale settings are reconciled at startup; the per-user scheduled-task watchdog, checked by default when you enable the system proxy, restores it after logon; and",
+ "手动恢复。直接拔电源、内核崩溃或强制结束进程时收不到会话结束通知，此时恢复发生在下一次登录后。": " manual restore. A pulled power cord, a kernel crash or a forced kill never receives the session-end notification, so recovery then happens after the next logon.",
  "它是杀毒软件或 EDR 吗？": "Is it antivirus or an EDR?",
  "不是。EgressScope 只做外发流量的可见性、归因、策略判定与证据留存，不做恶意代码检测，也不提供阻断未知威胁的能力。风险分是启发式信号，用于辅助人工判断，不能直接当作处置结论。": "No. EgressScope provides egress visibility, attribution, policy decisions and evidence retention. It does not detect malicious code and cannot block unknown threats. Risk scores are heuristic signals that support human judgement, not verdicts.",
  "它会读取我的聊天记录吗？": "Does it read my chat history?",
@@ -1654,7 +1726,7 @@ curl https://api.openai.com/v1/models</pre>
  "审计数据会上传到云端吗？": "Is audit data uploaded to the cloud?",
  "不会。证据保存在本机 SQLite，正文用 AES-256-GCM 加密，主密钥由当前用户的 DPAPI 保护。Web 审计台只绑定回环地址，使用每次启动随机生成的令牌，页面不含外部字体、脚本或统计代码。": "No. Evidence is stored in a local SQLite database, bodies are encrypted with AES-256-GCM and the master key is protected by the current user's DPAPI. The web console binds to loopback with a token generated at each start, and the page contains no external fonts, scripts or analytics.",
  "需要管理员权限吗？": "Does it need administrator rights?",
- "不需要。CA 只安装到当前用户信任根，系统代理是每用户设置，断网保护用的是每用户计划任务。这也是它的边界：Windows 服务与 SYSTEM 会话的完整归因不在当前版本范围内。": "No. The CA is installed into the current user's trust store, the system proxy is a per-user setting and the fail-safe uses per-user scheduled tasks. That is also the boundary: full attribution for Windows services and SYSTEM sessions is out of scope for this release.",
+ "不需要。CA 只安装到当前用户信任根，系统代理是每用户设置，断网保护看门狗与开机自启也都写在当前用户下（每用户计划任务 + Run 键），可随时逐项撤销。这也是它的边界：Windows 服务与 SYSTEM 会话的完整归因不在当前版本范围内。": "No. The CA goes into the current user's trust store, the system proxy is a per-user setting, and both the fail-safe watchdog and logon autostart live under the current user (a per-user scheduled task plus the Run key), so each one can be revoked individually. That is also the boundary: full attribution for Windows services and SYSTEM sessions is out of scope for this release.",
  "已经在用 Clash 或其他本地代理怎么办？": "What if I already run Clash or another local proxy?",
  "启动时会自动继承本机回环 HTTP 代理（例如": "At startup the existing loopback HTTP proxy (for example",
  "）并串联转发，避免接管后断网。上游只看到重新加密后的 TLS 字节。带用户名密码的上游、PAC 脚本与 SOCKS 目前不支持，这些场景请改用单 Agent 环境变量接入。": ") is inherited and chained so you are not cut off. Upstream only sees re-encrypted TLS bytes. Authenticated upstreams, PAC scripts and SOCKS are not supported yet — use per-agent environment variables in those cases.",
@@ -1672,7 +1744,9 @@ curl https://api.openai.com/v1/models</pre>
  "可交付的本机闭环": "A shippable local loop",
  "嵌入式代理、本地 CA、TLS 解密、PID 归因、AI 与敏感数据规则、风险评分与阻断、加密证据、哈希链、桌面控制台与本机 Web 审计台。": "Embedded proxy, local CA, TLS reconstruction, PID attribution, AI and sensitive-data rules, risk scoring and blocking, encrypted evidence, hash chain, desktop console and local web console.",
  "Windows 当前用户路径": "Current-user path on Windows",
- "系统代理备份 / 恢复 / 断网保护": "System proxy backup / restore / fail-safe",
+ "系统代理备份 / 恢复 / 四层断网保护": "System proxy backup / restore / four-layer fail-safe",
+ "关机注销优雅恢复 + 开机自启": "Graceful shutdown and logoff restore + logon autostart",
+ "配置热更新，无需重启": "Hot config reload, no restart",
  "Agent 环境变量接入": "Agent environment variable onboarding",
  "回环上游代理自动串联": "Automatic loopback upstream chaining",
  "文件句柄抽样 Beta": "File handle sampling (beta)",
@@ -1691,7 +1765,7 @@ curl https://api.openai.com/v1/models</pre>
  "从第一条可解释的外发记录开始": "Start with your first explainable egress record",
  "下载后打开本机审计台，查看代理、CA、断网保护与证据链状态。仅在你拥有或明确获授权的设备上使用。": "After installing, open the local console to check proxy, CA, fail-safe and evidence-chain status. Use it only on devices you own or are explicitly authorised to audit.",
  "再次查看边界": "Review the boundaries again",
- "v0.2.0 · WINDOWS / MACOS / LINUX · 仅用于拥有或明确获授权的设备": "v0.2.0 · WINDOWS / MACOS / LINUX · authorized devices only",
+ "v0.3.0 · WINDOWS / MACOS / LINUX · 仅用于拥有或明确获授权的设备": "v0.3.0 · WINDOWS / MACOS / LINUX · authorized devices only",
  "本机数据外发审计工具。Windows 版本提供完整桌面控制与系统代理接入；Linux 与 macOS 版本提供审计引擎与本机 Web 审计台。界面与数据都在这台设备上运行。": "Local data egress audit. The Windows build provides the full desktop console and system proxy onboarding; Linux and macOS provide the audit engine and local web console. UI and data both run on this device.",
  "LOCAL-FIRST · 无云同步": "LOCAL-FIRST · no cloud sync",
  "产品": "Product",
@@ -1708,7 +1782,26 @@ curl https://api.openai.com/v1/models</pre>
  "仅限拥有或明确获授权的设备": "Only devices you own or are authorized to audit",
  "不要在日常主机分析未知样本": "Never analyse unknown samples on a daily-use host",
  "不承诺攻破证书固定 / mTLS / E2EE": "No claims against pinning / mTLS / E2EE",
- "CA 与系统代理均可撤销": "CA and system proxy are both revocable"
+ "CA、系统代理与开机自启均可撤销": "The CA, the system proxy and logon autostart can all be revoked",
+ "默认行为": "Defaults",
+ "安装即观察，改动即时生效": "Observing as soon as it is installed, changes apply instantly",
+ "v0.3.0 把“需要逐项勾选才能开始审计”改成了默认就位：观察能力开箱开启，配置改动不需要重启进程，登录自启与关机恢复形成闭环。会中断请求或写入文件的两项能力仍然保留显式确认。": "v0.3.0 replaces “tick every box before auditing starts” with defaults already in place: observation is on out of the box, configuration changes do not need a process restart, and logon autostart plus shutdown restore close the loop. The two capabilities that interrupt requests or write files still require explicit confirmation.",
+ "默认开启的观察能力": "Observation capabilities on by default",
+ "流量采集、AI 端点识别、敏感数据规则与文件句柄抽样默认全部开启，装完就能看到完整证据链，不必先研究一遍开关。两项例外仍需你显式打开：风险阻断会直接返回 403 中断请求，Canary 诱饵会往 Documents 写入含虚构凭据的文件。": "Traffic capture, AI endpoint detection, sensitive-data rules and file-handle sampling are all enabled by default, so the full evidence chain is there right after install — you do not have to study the switches first. Two exceptions still need an explicit opt-in: risk blocking returns 403 and interrupts the request, and Canary decoys write files containing fictitious credentials into Documents.",
+ "控制台开关、Web 审计台开关，或直接编辑": "Console toggles, web console toggles, or direct edits to",
+ "，都会在 2 秒内被运行中的进程采纳。上游代理变更会自动重连并重新校正系统代理，抽样间隔、保留期与自启开关即时生效，不需要等待重启窗口。": " are adopted by the running process within two seconds. An upstream proxy change reconnects automatically and re-reconciles the system proxy; the sampling interval, the retention period and the autostart switch apply immediately, with no restart window to wait for.",
+ "默认开机自启，可随时撤销": "Logon autostart by default, revocable any time",
+ "启用系统代理后写入当前用户的 Run 键，登录时最小化启动，与关机 / 注销优雅恢复配合形成闭环，不会出现“开机后代理没人接管”的空档。控制台一键关闭，或运行": "It writes the current user's Run key and starts minimized at logon, closing the loop with the graceful shutdown and logoff restore so there is no gap where nobody owns the proxy after boot. Turn it off in the console with one click, or run",
+ "；撤销时只删除我们自己写入的值，不动其他程序的自启项。": "; when revoking, only the value we wrote is removed — other programs' autostart entries are left alone.",
+ "你可以确认热更新已经完成：": "You can confirm that the hot reload finished: ",
+ "接口与控制台会返回": "The API and the console return",
+ "（完成时间与本次生效的键名），不需要靠猜。监听端口、Web 端口与证书目录这类需要重建进程的字段不在热更新范围内，改完需要重启一次，控制台会明确提示。": " (the completion time and the key names that took effect), so you never have to guess. Fields that need a new process — the listen port, the web port and the certificate directory — are not hot-reloaded; restart once after changing them and the console says so explicitly.",
+ "每个 tag 的发布页都附带该版本的更新说明，内容与仓库 CHANGELOG.md 保持一致。": "Every tag's release page carries the update notes for that version, matching CHANGELOG.md in the repository.",
+ "修改设置需要重启程序吗？开机自启能关吗？": "Do I need to restart to change settings? Can logon autostart be turned off?",
+ "采集开关、阻断阈值、保留期、文件句柄抽样、上游代理与开机自启都是热更新：控制台改完立即生效，直接编辑": "Capture, the block threshold, retention, file-handle sampling, the upstream proxy and logon autostart are all hot-reloaded: console changes apply immediately, and direct edits to",
+ "也会在 2 秒内被运行中的进程采纳，接口会返回": " are adopted by the running process within two seconds; the API returns",
+ "告诉你哪些键已生效；上游代理变更会自动重连并重新校正系统代理。只有监听端口、Web 端口与证书目录这类需要重建进程的字段要重启一次。开机自启默认开启，写入当前用户 Run 键，可在控制台一键关闭或运行": " to tell you which keys took effect, and an upstream proxy change reconnects and re-reconciles the system proxy automatically. Only fields that need a new process — the listen port, the web port and the certificate directory — require one restart. Logon autostart is on by default, written to the current user's Run key, and can be turned off in the console with one click or with",
+ "默认行为与热更新": "Defaults & hot reload"
 }
 </script>
 <script>
@@ -1762,7 +1855,7 @@ const ARIA_EN = {
   "关键参数": "Key parameters",
   "审计流程": "Audit pipeline",
   "EgressScope 本机审计台界面示意：展示今日请求、AI 外发、高风险流量与进程归因列表": "EgressScope local console preview: requests today, AI egress, high-risk traffic and process attribution",
-  "EgressScope 桌面控制台示意：本地代理运行中，根证书等待信任，系统代理未启用": "EgressScope desktop console preview: local proxy running, root CA awaiting trust, system proxy off",
+  "EgressScope 桌面控制台示意：本地代理运行中，审计默认采集，根证书等待信任，系统代理未启用，开机自启已注册": "EgressScope desktop console preview: local proxy running, capture on by default, root CA awaiting trust, system proxy off, logon autostart registered",
   "切换到英文": "Switch to English",
   "切换深色模式": "Switch to dark mode",
   "切换浅色模式": "Switch to light mode"

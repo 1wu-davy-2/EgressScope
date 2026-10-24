@@ -199,6 +199,25 @@ def sensitive_payload(second: bool = False) -> dict:
     }
 
 
+def run_key_artifact(home: str) -> str:
+    """Return the Run-key value if this test run leaked one into the real registry."""
+    if sys.platform != "win32":
+        return ""
+    import winreg
+
+    try:
+        with winreg.OpenKey(
+            winreg.HKEY_CURRENT_USER,
+            r"Software\Microsoft\Windows\CurrentVersion\Run",
+            0,
+            winreg.KEY_READ,
+        ) as key:
+            value = str(winreg.QueryValueEx(key, "EgressScope")[0])
+    except OSError:
+        return ""
+    return value if home in value else ""
+
+
 def run() -> None:
     print("\nEgressScope smoke test")
     print("======================")
@@ -222,9 +241,12 @@ def run() -> None:
                 app.settings.retention_days = 3
                 app.settings.inherit_system_proxy = False
                 app.settings.upstream_proxy = ""
+                app.settings.autostart_enabled = False
                 app.start()
 
                 check("app starts without startup error", not app.startup_error, app.startup_error)
+                leaked = run_key_artifact(str(home))
+                check("test run leaves the real Run key alone", not leaked, leaked)
                 check("proxy webserver exposes a token", bool(app.web.token))
                 check("CA files generated", paths.ca_cert_pem.exists() and paths.ca_pem.exists())
                 ca_info = app.ca_status(force=True)

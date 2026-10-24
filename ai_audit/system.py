@@ -8,6 +8,7 @@ import shlex
 import socket
 import subprocess
 import sys
+import threading
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -21,6 +22,8 @@ from .paths import AppPaths
 
 CREATE_NO_WINDOW = 0x08000000 if sys.platform == "win32" else 0
 INTERNET_SETTINGS = r"Software\Microsoft\Windows\CurrentVersion\Internet Settings"
+RUN_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
+RUN_VALUE = "EgressScope"
 CA_CN = "EgressScope Local Audit CA"
 GUARD_TASK = "EgressScope Proxy Recovery"
 AUDIT_TASK = "EgressScope Audit"
@@ -600,6 +603,7 @@ def proxy_guard_status(paths: AppPaths) -> dict[str, Any]:
         "recovery_task": GUARD_TASK,
         "audit_task": AUDIT_TASK,
         "interval_minutes": 2,
+        "autostart": autostart_status(paths),
     }
 
 
@@ -689,6 +693,66 @@ def _launch_command(paths: AppPaths) -> tuple[str, str]:
     return exe, subprocess.list2cmdline(arguments)
 
 
+def autostart_command(paths: AppPaths) -> str:
+    exe, arguments = _launch_command(paths)
+    return subprocess.list2cmdline([exe]) + " " + arguments
+
+
+def _run_key_read() -> str:
+    import winreg
+
+    try:
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, RUN_KEY, 0, winreg.KEY_READ) as key:
+            return str(winreg.QueryValueEx(key, RUN_VALUE)[0])
+    except FileNotFoundError:
+        return ""
+    except OSError:
+        return ""
+
+
+def autostart_status(paths: AppPaths) -> dict[str, Any]:
+    if sys.platform != "win32":
+        return {"supported": False, "enabled": False, "command": "", "value": ""}
+    value = _run_key_read()
+    expected = autostart_command(paths)
+    return {
+        "supported": True,
+        "enabled": bool(value),
+        "ours": bool(value) and value == expected,
+        "command": expected,
+        "value": value,
+    }
+
+
+def enable_autostart(paths: AppPaths) -> dict[str, Any]:
+    if sys.platform != "win32":
+        raise SystemControlError("开机自启只支持 Windows")
+    import winreg
+
+    command = autostart_command(paths)
+    with winreg.CreateKey(winreg.HKEY_CURRENT_USER, RUN_KEY) as key:
+        winreg.SetValueEx(key, RUN_VALUE, 0, winreg.REG_SZ, command)
+    return {"ok": True, "enabled": True, "command": command}
+
+
+def disable_autostart(paths: AppPaths) -> dict[str, Any]:
+    if sys.platform != "win32":
+        return {"ok": True, "supported": False, "enabled": False}
+    import winreg
+
+    value = _run_key_read()
+    if not value:
+        return {"ok": True, "enabled": False, "removed": False}
+    if value != autostart_command(paths):
+        return {"ok": True, "enabled": True, "removed": False, "reason": "not-ours"}
+    try:
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, RUN_KEY, 0, winreg.KEY_SET_VALUE) as key:
+            winreg.DeleteValue(key, RUN_VALUE)
+    except FileNotFoundError:
+        pass
+    return {"ok": True, "enabled": False, "removed": True}
+
+
 def install_proxy_guard(paths: AppPaths) -> dict[str, Any]:
     if sys.platform != "win32":
         raise SystemControlError("断网保护只支持 Windows")
@@ -720,11 +784,8 @@ def install_proxy_guard(paths: AppPaths) -> dict[str, Any]:
     ])
     recovery_result = _register_scheduled_task(GUARD_TASK, powershell_cmd, guard_args, repeat_minutes=2, limit_minutes=5)
 
-    audit_exe, audit_args = _launch_command(paths)
-    audit_result = _register_scheduled_task(AUDIT_TASK, audit_exe, audit_args, repeat_minutes=0, limit_minutes=0) if recovery_result.get("ok") else {
-        "ok": False,
-        "message": "skipped because the recovery task could not be registered",
-    }
+    # Logon start is handled by the per-user Run key (autostart), not by a task.
+    audit_result = {"ok": True, "skipped": True, "reason": "logon start uses the Run key autostart"}
 
     if recovery_result.get("ok"):
         guard = {
@@ -759,6 +820,10 @@ def uninstall_proxy_guard(paths: AppPaths, disable_only: bool = False) -> dict[s
             (paths.data / GUARD_SCRIPT).unlink(missing_ok=True)
         except OSError:
             pass
+        backup = load_proxy_backup(paths)
+        if backup and backup.get("guard"):
+            backup.pop("guard", None)
+            _save_proxy_backup(paths, backup)
     return {
         "ok": all(item.get("ok") for item in results.values()),
         "disabled": disable_only,
@@ -829,3 +894,120 @@ def write_agent_env(paths: AppPaths, port: int) -> Path:
         except OSError:
             pass
     return path
+
+
+# ---------- graceful shutdown / logoff hook ----------
+WM_QUERYENDSESSION = 0x0018
+WM_ENDSESSION = 0x0016
+CTRL_LOGOFF_EVENT = 5
+CTRL_SHUTDOWN_EVENT = 6
+HWND_MESSAGE = -3
+
+_shutdown_hook_installed = False
+
+
+def install_shutdown_hook(on_shutdown) -> dict[str, Any]:
+    """Run ``on_shutdown`` when Windows shuts down or the user logs off.
+
+    Two best-effort channels: a message-only window (GUI subsystem builds) and
+    a console control handler (console builds). Both must return quickly, so
+    the callback is expected to only touch the registry and WinINET.
+    """
+    global _shutdown_hook_installed
+    if sys.platform != "win32" or _shutdown_hook_installed:
+        return {"supported": sys.platform == "win32", "window": False, "console": False}
+    _shutdown_hook_installed = True
+    window_ok = _install_message_hook(on_shutdown)
+    console_ok = _install_console_hook(on_shutdown)
+    return {"supported": True, "window": window_ok, "console": console_ok}
+
+
+def _install_message_hook(on_shutdown) -> bool:
+    try:
+        import ctypes
+        from ctypes import wintypes
+
+        user32 = ctypes.windll.user32
+        kernel32 = ctypes.windll.kernel32
+
+        WNDPROC = ctypes.WINFUNCTYPE(ctypes.c_longlong, wintypes.HWND, wintypes.UINT, wintypes.WPARAM, wintypes.LPARAM)
+
+        def wndproc(hwnd, msg, wparam, lparam):
+            if msg == WM_QUERYENDSESSION:
+                _run_shutdown_callback(on_shutdown, "queryendsession")
+                return 1
+            if msg == WM_ENDSESSION:
+                if wparam:
+                    _run_shutdown_callback(on_shutdown, "endsession")
+                return 0
+            return user32.DefWindowProcW(hwnd, msg, wparam, lparam)
+
+        callback = WNDPROC(wndproc)
+        ctypes.windll.user32._egress_wndproc = callback  # keep the thunk alive
+
+        class WNDCLASSW(ctypes.Structure):
+            _fields_ = [
+                ("style", wintypes.UINT),
+                ("lpfnWndProc", WNDPROC),
+                ("cbClsExtra", ctypes.c_int),
+                ("cbWndExtra", ctypes.c_int),
+                ("hInstance", wintypes.HINSTANCE),
+                ("hIcon", wintypes.HICON),
+                ("hCursor", wintypes.HCURSOR),
+                ("hbrBackground", wintypes.HBRUSH),
+                ("lpszMenuName", wintypes.LPCWSTR),
+                ("lpszClassName", wintypes.LPCWSTR),
+            ]
+
+        wc = WNDCLASSW()
+        wc.lpfnWndProc = callback
+        wc.hInstance = kernel32.GetModuleHandleW(None)
+        wc.lpszClassName = "EgressScopeShutdownHook"
+        if not user32.RegisterClassW(ctypes.byref(wc)):
+            return False
+        hwnd = user32.CreateWindowExW(
+            0, wc.lpszClassName, "EgressScope", 0, 0, 0, 0, 0, wintypes.HWND(HWND_MESSAGE), None, wc.hInstance, None
+        )
+        if not hwnd:
+            return False
+
+        def pump() -> None:
+            msg = wintypes.MSG()
+            while user32.GetMessageW(ctypes.byref(msg), None, 0, 0) > 0:
+                user32.TranslateMessage(ctypes.byref(msg))
+                user32.DispatchMessageW(ctypes.byref(msg))
+
+        thread = threading.Thread(target=pump, name="egressscope-shutdown", daemon=True)
+        thread.start()
+        return True
+    except Exception:
+        return False
+
+
+def _install_console_hook(on_shutdown) -> bool:
+    try:
+        import ctypes
+
+        kernel32 = ctypes.windll.kernel32
+        if not kernel32.GetConsoleWindow():
+            return False
+        HANDLER = ctypes.WINFUNCTYPE(ctypes.c_int, wintypes.DWORD)
+
+        def handler(event):
+            if event in (CTRL_LOGOFF_EVENT, CTRL_SHUTDOWN_EVENT):
+                _run_shutdown_callback(on_shutdown, "console")
+                return 1
+            return 0
+
+        callback = HANDLER(handler)
+        kernel32._egress_ctrl_handler = callback
+        return bool(kernel32.SetConsoleCtrlHandler(callback, True))
+    except Exception:
+        return False
+
+
+def _run_shutdown_callback(on_shutdown, source: str) -> None:
+    try:
+        on_shutdown(source)
+    except Exception:
+        pass

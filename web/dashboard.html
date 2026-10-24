@@ -997,7 +997,7 @@ pre.body.empty-body{color:#52667c;font-style:normal}
         <div class="page-head">
           <div>
             <h1 class="page-title">策略与设置</h1>
-            <p class="page-desc">所有策略即时生效并写入本地配置。涉及系统代理和根证书的变更只从桌面控制台发起，Web 审计台不代你做出系统级授权。</p>
+            <p class="page-desc">所有策略都会热更新并写入本地配置，无需重启代理或程序；直接编辑配置文件也会在 2 秒内被采纳。涉及系统代理和根证书的变更只从桌面控制台发起，Web 审计台不代你做出系统级授权。</p>
           </div>
         </div>
         <div class="settings-grid">
@@ -1046,9 +1046,9 @@ pre.body.empty-body{color:#52667c;font-style:normal}
               </div>
             </div>
             <div class="panel">
-              <div class="panel-head"><h3 class="panel-title">上行链路</h3><span class="panel-hint">重启后生效</span></div>
+              <div class="panel-head"><h3 class="panel-title">上行链路</h3><span class="panel-hint">热更新 · 代理自动重连</span></div>
               <div class="set-row">
-                <div class="set-copy"><div class="set-name">继承系统原代理</div><div class="set-desc">启动时若系统代理指向本机回环 HTTP 代理（例如 Clash 的 127.0.0.1:7890），自动串联它，避免接管后断网。PAC 与非回环代理不会被继承。</div></div>
+                <div class="set-copy"><div class="set-name">继承系统原代理</div><div class="set-desc">启动或热更新时若系统代理指向本机回环 HTTP 代理（例如 Clash 的 127.0.0.1:7890），自动串联它，避免接管后断网。PAC 与非回环代理不会被继承。</div></div>
                 <div class="set-control"><label class="switch"><input type="checkbox" data-setting="inherit_system_proxy"><span></span></label></div>
               </div>
               <div class="set-row">
@@ -1067,6 +1067,8 @@ pre.body.empty-body{color:#52667c;font-style:normal}
                 <div class="meta-row"><span>证书到期</span><b id="cfg-ca-exp">—</b></div>
                 <div class="meta-row"><span>审计数据目录</span><b id="cfg-data">—</b></div>
                 <div class="meta-row"><span>证据链</span><b id="cfg-chain">—</b></div>
+                <div class="meta-row"><span>开机自启</span><b id="cfg-autostart">—</b></div>
+                <div class="meta-row"><span>配置热更新</span><b id="cfg-reload">—</b></div>
                 <div class="meta-row"><span>服务版本</span><b id="cfg-version">—</b></div>
               </div>
               <div class="action-stack">
@@ -1693,6 +1695,15 @@ function renderSettingsMeta() {
   setText("#cfg-data", s.data_dir || "—");
   setText("#cfg-chain", chain.entries ? (chain.valid ? "校验通过 · " + chain.entries + " 条" : "校验失败 · 第 " + (chain.broken_at || "?") + " 条断裂") : "暂无证据", chain.valid === false && chain.entries ? "bad" : "ok");
   setText("#cfg-version", "v" + (s.version || (BOOT && BOOT.version) || "—"));
+  const autostart = s.autostart || {};
+  setText("#cfg-autostart", autostart.supported === false ? "仅 Windows 支持" : autostart.enabled ? "已注册 · 登录时启动" : "未注册", autostart.enabled ? "ok" : "");
+  const reload = s.config_reload || {};
+  if (reload.at) {
+    const when = new Date(reload.at * 1000).toLocaleTimeString("zh-CN", {hour12: false});
+    setText("#cfg-reload", when + " · " + (reload.source === "file" ? "配置文件" : "控制台") + " · " + ((reload.keys || []).length) + " 项已生效", "ok");
+  } else {
+    setText("#cfg-reload", "无需重启 · 等待配置变更");
+  }
 }
 
 function syncSettings() {

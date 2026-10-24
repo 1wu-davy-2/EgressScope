@@ -42,6 +42,7 @@ class Settings:
     upstream_ca: str = ""
     upstream_proxy: str = ""
     inherit_system_proxy: bool = True
+    autostart_enabled: bool = True
     onboarded: bool = False
 
     def normalized(self) -> "Settings":
@@ -104,6 +105,7 @@ EDITABLE_KEYS = {
     "file_guard_interval",
     "upstream_proxy",
     "inherit_system_proxy",
+    "autostart_enabled",
     "onboarded",
 }
 
@@ -113,6 +115,13 @@ class ConfigStore:
         self.path = path
         self._lock = threading.RLock()
         self.settings = self._load()
+        self._mtime = self._current_mtime()
+
+    def _current_mtime(self) -> float:
+        try:
+            return self.path.stat().st_mtime
+        except OSError:
+            return 0.0
 
     def _load(self) -> Settings:
         if not self.path.exists():
@@ -131,6 +140,25 @@ class ConfigStore:
             tmp = self.path.with_suffix(".tmp")
             tmp.write_text(json.dumps(self.settings.public_dict(), indent=2, ensure_ascii=False), encoding="utf-8")
             os.replace(tmp, self.path)
+            self._mtime = self._current_mtime()
+
+    def reload_if_changed(self) -> list[str]:
+        """Adopt edits made to the config file outside the running process."""
+        with self._lock:
+            mtime = self._current_mtime()
+            if mtime == self._mtime:
+                return []
+            fresh = self._load()
+            self._mtime = mtime
+            changed = [
+                key
+                for key in Settings.__dataclass_fields__
+                if key in EDITABLE_KEYS and getattr(fresh, key) != getattr(self.settings, key)
+            ]
+            for key in changed:
+                setattr(self.settings, key, getattr(fresh, key))
+            self.settings.normalized()
+            return changed
 
     def update(self, patch: dict[str, Any]) -> dict[str, Any]:
         with self._lock:

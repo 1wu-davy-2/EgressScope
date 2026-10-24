@@ -60,12 +60,13 @@ EgressScope 是一个以 Windows 为主的本机审计工具。它在用户明�
 | 桌面控制窗口 | 可执行文件启动后的主窗口 | 安装/移除 CA、启用/恢复系统代理、暂停采集、导出证据 |
 | 构建校验清单 | `dist\SHA256SUMS.txt` | 可执行文件的 SHA-256，用于确认文件完整性 |
 | GitHub Actions | `.github/workflows/` | CI 冒烟、六平台发布构建、介绍页 Pages 部署 |
-| GitHub Release | [releases/latest](https://github.com/1wu-davy-2/EgressScope/releases/latest) | Windows x64 / arm64、Linux x64 / arm64、macOS x64 / arm64；每个产物附带 `.sha256` 与汇总 `SHA256SUMS.txt` |
+| GitHub Release | [releases/latest](https://github.com/1wu-davy-2/EgressScope/releases/latest) | Windows x64 / arm64、Linux x64 / arm64、macOS x64 / arm64；每个产物附带 `.sha256` 与汇总 `SHA256SUMS.txt`，每个 tag 的发布说明取自 `CHANGELOG.md` 对应小节 |
+| 版本更新说明 | `CHANGELOG.md` | 按版本记录变更；打包 tag 时由发布工作流自动截取对应小节写入 Release 正文 |
 | 研究/执行计划 | `PLAN.md` | 本项目的技术与产品调研底稿 |
 
 审计台固定访问 `http://127.0.0.1:8898/`（端口可在设置中修改）。`18898` 只是自动化测试临时使用的端口，不是产品默认端口；临时测试进程关闭后访问会被拒绝。
 
-首次启动会在 `%LOCALAPPDATA%\EgressScope` 下生成数据目录、数据库和审计 CA。**不会自动安装根证书，也不会自动修改系统代理**；两者都需要在桌面控制窗口中显式确认。
+首次启动会在 `%LOCALAPPDATA%\EgressScope` 下生成数据目录、数据库和审计 CA。**不会自动安装根证书，也不会自动修改系统代理**；两者都需要在桌面控制窗口中显式确认。采集、AI 端点识别、敏感数据规则与文件句柄抽样默认开启；风险阻断与 Canary 诱饵默认关闭。首次启动会写入当前用户的开机自启（`HKCU\...\CurrentVersion\Run` 的 `EgressScope` 值），可在控制台、审计台设置或 `--disable-autostart` 撤销。
 
 > 当前构建未做 Authenticode 代码签名，Windows SmartScreen 可能显示“未知发布者”。请先核对 `dist\SHA256SUMS.txt` 中的哈希，再决定是否运行；不要从来源不明的渠道获取本程序。
 
@@ -75,15 +76,15 @@ EgressScope 是一个以 Windows 为主的本机审计工具。它在用户明�
 
 ### 方式一：直接运行可执行文件
 
-1. 双击 `dist\EgressScope.exe`。
+1. 双击 `dist\EgressScope.exe`。首次启动即默认开启采集、AI 端点识别、敏感数据规则与文件句柄抽样，并写入当前用户的开机自启（Run 键，可在控制台关闭）。
 2. 在控制窗口中点击 **打开审计控制台**，先熟悉界面与当前覆盖状态。
 3. 如需审计 HTTPS 正文，点击 **安装本地 CA（当前用户）**，确认 Windows 安全警告中的证书名为 `EgressScope Local Audit CA`。
 4. 二选一接入流量：
-   - **系统代理**：点击 **启用系统代理**。只影响遵循 WinINet / 系统代理设置的应用；正常退出时会恢复原设置。建议同时启用 **断网保护**，详见[系统代理的失败模式与断网保护](#系统代理的失败模式与断网保护)。
+   - **系统代理**：点击 **启用系统代理**。只影响遵循 WinINet / 系统代理设置的应用；正常退出、关机与注销时都会恢复原设置。确认对话框默认勾选 **注册断网保护看门狗（推荐）**，详见[系统代理的失败模式与断网保护](#系统代理的失败模式与断网保护)。
    - **单 Agent 环境变量**：点击 **复制 Agent 环境变量**，在启动目标 Agent 的终端先运行生成的脚本。影响范围更小，适合先验证一个 Agent 或 IDE 插件。
-5. 如果本机原本通过 Clash、v2rayN 等本地 HTTP 代理上网，EgressScope 启动时会自动识别 **当前生效的回环系统代理** 并串联它，避免接管后断网；也可以在“策略与设置 → 上行链路”手动指定。该设置需重启程序生效。
-6. 回到审计控制台，查看流量、风险和发现。
-7. 结束审计时关闭控制窗口：程序会停止代理、恢复系统代理并移除断网保护任务；仍不再需要 HTTPS 解密时，点击 **移除本地 CA**。如果程序崩溃、被强制结束或直接断电，下次登录时由独立的断网保护任务恢复网络，见下一节。
+5. 如果本机原本通过 Clash、v2rayN 等本地 HTTP 代理上网，EgressScope 启动时会自动识别 **当前生效的回环系统代理** 并串联它，避免接管后断网；也可以在“策略与设置 → 上行链路”手动指定。上游变更属于热更新范围：保存后代理会自动重连并重新校准系统代理，不需要重启程序。
+6. 回到审计控制台，查看流量、风险和发现。所有开关与阈值都是热更新，详见[配置热更新](#配置热更新)。
+7. 结束审计时关闭控制窗口：程序会停止代理、恢复系统代理并移除断网保护任务（开机自启保持不变，可用 **关闭开机自启** 单独撤销）；仍不再需要 HTTPS 解密时，点击 **移除本地 CA**。如果程序崩溃、被强制结束或直接断电，下次登录时由启动校准与独立的断网保护任务恢复网络，见下一节。
 
 ### 方式二：从源码运行
 
@@ -117,7 +118,9 @@ python -m venv .venv
 --restore-proxy      恢复 EgressScope 启用前的系统代理后退出（无需启动审计）
 --recover-proxy      仅在本地代理端口已停止监听时恢复系统代理后退出
 --recover-grace SEC  配合 --recover-proxy，等待本地代理启动的秒数
---autostart          最小化启动（供断网保护的登录自启任务使用）
+--enable-autostart   写入当前用户 Run 键的开机自启后退出（默认已开启）
+--disable-autostart  移除本程序写入的开机自启后退出，不影响其他程序的自启项
+--autostart          最小化启动（供 Run 键开机自启使用）
 --log-level LEVEL    DEBUG / INFO / WARNING / ERROR
 ```
 
@@ -145,35 +148,61 @@ set "SSL_CERT_FILE=%LOCALAPPDATA%\EgressScope\data\certs\mitmproxy-ca-cert.pem"
 
 ### 系统代理的失败模式与断网保护
 
-Windows 会把“当前用户的手动代理”持久保存在 WinINet 注册表设置中。EgressScope 在**正常退出**时会恢复原值，但以下情况不会触发正常退出：
+Windows 会把“当前用户的手动代理”持久保存在 WinINet 注册表设置中。EgressScope 在**正常退出、关机与注销**时都会恢复原值，但以下情况不会触发任何恢复代码：
 
-- 直接关机、断电、蓝屏或强制重启；
+- 直接断电、蓝屏或强制重启；
 - 在任务管理器中结束进程；
 - 程序崩溃、更新覆盖或被安全软件终止。
 
 此时注册表仍指向已停止的 `127.0.0.1:8899`，浏览器和部分桌面应用会表现为“没有网络”，和某些 VPN 异常退出后的现象一致。
 
-EgressScope 提供三层处理：
+EgressScope 提供四层处理，其中前三层不需要你手动执行任何命令：
 
-1. **启动校准**：代理成功启动后读取代理备份。如果系统代理仍指向上一实例的端口，自动改指当前监听端口；如果新代理启动失败，立即恢复原始系统代理，避免把机器留在断网状态。
-2. **独立断网保护（推荐，启用系统代理后可选择）**：注册两个仅作用于当前用户的计划任务，不需要管理员权限：
-   - `EgressScope Audit`：登录时自动启动 EgressScope；
+1. **关机 / 注销时优雅恢复**：程序通过消息窗口注册 `WM_QUERYENDSESSION` / `WM_ENDSESSION`（控制台构建同时注册 `SetConsoleCtrlHandler` 处理 `CTRL_LOGOFF_EVENT` / `CTRL_SHUTDOWN_EVENT`）。你点击关机、重启或注销时，Windows 会先投递会话结束消息，程序在会话真正结束前把系统代理写回启用前的备份值并刷新 WinINet，因此下一次开机不会继承一个指向已停止端口的代理。
+2. **启动校准**：代理成功启动后读取代理备份。如果系统代理仍指向上一实例的端口，自动改指当前监听端口；如果新代理启动失败，立即恢复原始系统代理，避免把机器留在断网状态。配合默认开启的开机自启，登录后这条链路会重新建立。
+3. **独立断网保护看门狗（默认勾选）**：启用系统代理时的确认对话框默认勾选“注册断网保护看门狗（推荐）”，注册一个仅作用于当前用户的计划任务，不需要管理员权限：
    - `EgressScope Proxy Recovery`：登录时以及每 2 分钟检查一次。发现系统代理指向的回环端口已停止监听时，最多等待 30 秒；仍未恢复就写回启用前的 `ProxyEnable` / `ProxyServer` / `ProxyOverride` / `AutoConfigURL`，刷新 WinINet，删除备份并停用自身。
 
-   守护逻辑位于 `%LOCALAPPDATA%\EgressScope\data\proxy-guard.ps1`，日志位于 `data\logs\proxy-recovery.log`。它只读取注册表代理值与 `proxy-backup.json`，不读取流量内容。
-3. **手动恢复**：
-   - 控制窗口的 **恢复原始系统代理**（同时移除断网保护任务）；
+   守护逻辑位于 `%LOCALAPPDATA%\EgressScope\data\proxy-guard.ps1`，日志位于 `data\logs\proxy-recovery.log`。它只读取注册表代理值与 `proxy-backup.json`，不读取流量内容。登录自启不再使用 `EgressScope Audit` 计划任务，改为写入当前用户 Run 键；旧任务在升级后由守护脚本自动停用。
+4. **手动恢复**：
+   - 控制窗口的 **恢复原始系统代理**（同时移除断网保护任务，开机自启保持不变）；
    - `EgressScope.exe --restore-proxy`；即使不启动审计台也能执行；
    - Windows **设置 → 网络和 Internet → 代理**，关闭“使用代理服务器”；
    - 自动化场景可用 `EgressScope.exe --recover-proxy`，只在代理端口已停止监听时恢复。
 
+**开机自启：** 默认开启，写入 `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` 的 `EgressScope` 值，登录时以 `--autostart` 最小化启动。可在控制窗口点击 **关闭开机自启**、在审计台“策略与设置”关闭，或运行 `EgressScope.exe --disable-autostart`。撤销时只删除命令与本程序完全一致的值，不会动其他程序的自启项。Linux / macOS 不写任何自启项。
+
 **边界与注意事项：**
 
-- 守护任务只在用户登录后运行；如果 Task Scheduler 被策略禁用、任务被删除、数据目录被手动清理，保护会失效，此时使用手动恢复。
+- 优雅恢复依赖系统把会话结束消息投递到本进程；直接断电、内核崩溃或强制结束进程时收不到，此时恢复发生在下一次登录后（启动校准 + 看门狗）。
+- 守护任务与开机自启只在用户登录后运行、只覆盖当前登录用户；如果 Task Scheduler 被策略禁用、任务被删除、数据目录被手动清理，保护会失效，此时使用手动恢复。
 - 在备份文件存在期间，守护任务会把“已启用但已停止监听的回环系统代理”视为 EgressScope 的代理。如果你在启用期间改用另一个本地代理，并在备份仍存在时让它异常退出，守护任务可能恢复为 EgressScope 启用前的设置。
 - 系统代理只影响遵循 WinINet / 系统代理的应用；服务、SYSTEM 会话、证书固定应用与忽略系统代理的程序本来就不在覆盖范围内。
 - Linux / macOS 不提供系统代理接管，因此也不存在这类“全局断网”失败模式；Agent 环境变量方式同样把影响范围限制在单个终端或进程，是更保守的接入方式。
 - 如果无法接受任何全局代理风险，请优先使用 **Agent 环境变量**，不要启用系统代理。
+
+### 配置热更新
+
+除端口与证书目录外，设置改动都不需要重启进程：
+
+- **来源一：控制台与审计台**。桌面控制台按钮、审计台“策略与设置”的开关与滑块写入配置后立即作用于运行中的组件。
+- **来源二：直接编辑配置文件**。`%LOCALAPPDATA%\EgressScope\data\config.json` 被外部修改后，运行中的进程在 2 秒内检测到 mtime 变化并采纳；只有 `EDITABLE_KEYS` 中的键会被热更新，端口等字段被忽略（重启后生效）。
+- **生效方式**：采集开关、阻断开关与阈值、正文保存、保留期（立即执行一次清理）、文件句柄守护启停与抽样间隔、Canary 诱饵创建 / 删除、上游代理与自动继承（自动重连代理并重新校准系统代理）、开机自启（写入或移除 Run 键）。
+- **确认结果**：`GET /api/status` 与控制台状态卡返回 `config_reload`，包含完成时间、来源（`api` 或 `file`）与本次生效的键名，不需要靠猜。
+- **需要重启的字段**：`listen_port`、`web_port`、证书目录、`insecure_upstream`、`upstream_ca`。
+
+### 默认开启与需要显式确认的能力
+
+| 能力 | 默认 | 说明 |
+| --- | --- | --- |
+| 流量采集、AI 端点识别、敏感数据规则 | 开启 | 装完即产生证据链记录 |
+| 文件句柄抽样（Beta） | 开启 | 只记录路径与时间等元数据，不读取文件内容；可用 `--no-fileguard` 或设置关闭 |
+| 开机自启（当前用户 Run 键） | 开启 | 控制台、设置或 `--disable-autostart` 可撤销 |
+| 断网保护看门狗 | 启用系统代理时默认勾选 | 可在确认对话框取消勾选 |
+| 关机 / 注销优雅恢复、启动校准 | 始终启用 | 无开关 |
+| 风险阻断（返回 403） | 关闭 | 会中断请求，需显式开启 |
+| Canary 诱饵文件 | 关闭 | 会在 Documents 下写入含虚构凭据的文件，需显式开启 |
+| 安装本地 CA、启用系统代理 | 关闭 | 改动系统信任与网络设置，需显式确认 |
 
 ---
 
@@ -205,8 +234,8 @@ source ~/.egressscope/data/agent-env.sh
 
 | 文件 | 触发 | 内容 |
 | --- | --- | --- |
-| `.github/workflows/ci.yml` | push / PR / 手动 | Windows、Linux、macOS 上运行源码冒烟与上游链路测试 |
-| `.github/workflows/release.yml` | `v*` tag / 手动 | 六平台构建（Windows ARM64 在原生 runner 上运行冒烟与打包验收）；tag 时由一个 publish job 汇总所有产物、生成 `SHA256SUMS.txt` 并创建 GitHub Release |
+| `.github/workflows/ci.yml` | push / PR / 手动 | Windows x64、Linux x64、macOS arm64 上运行冒烟、断网保护 / 自启 / 热更新、上游链路与官网页面门禁四套测试 |
+| `.github/workflows/release.yml` | `v*` tag / 手动 | 六平台构建（Windows ARM64 在原生 runner 上运行冒烟与打包验收）；tag 时由一个 publish job 汇总所有产物、生成 `SHA256SUMS.txt`、从 `CHANGELOG.md` 截取对应版本小节作为发布说明并创建 GitHub Release |
 | `.github/workflows/pages.yml` | push main（介绍页变更）/ 手动 | 把 `web/intro.html` 发布到 GitHub Pages |
 
 ### 首次推送到 GitHub
@@ -218,9 +247,14 @@ git push -u origin main
 
 发布一个版本：
 
+1. 更新 `ai_audit/__init__.py` 的 `__version__`；
+2. 在 `CHANGELOG.md` 顶部新增 `## v<版本>` 小节，写清这一版改了什么（发布工作流会把该小节原文写入 Release 正文；缺失时正文回退为指向 `CHANGELOG.md` 的一行提示）；
+3. 同步更新 `tests/site_check.py` 的版本断言与官网版本文案；
+4. 打 tag 并推送：
+
 ```bash
-git tag v0.1.1
-git push origin v0.1.1
+git tag v0.3.0
+git push origin v0.3.0
 ```
 
 ### GitHub Pages 官网
@@ -397,7 +431,7 @@ AI Agent / 编辑器 / SDK / 普通桌面应用
 - **本地 Web 安全**：Web 审计台只监听 `127.0.0.1`，每次启动生成随机令牌，校验 Host，使用 CSP、`no-store`，并拒绝非回环 Host。
 - **显式系统变更**：CA 安装、系统代理启用、文件诱饵创建都只在桌面控制窗口中发生，且都有确认步骤；Web 审计台没有系统级授权接口。
 - **上游只接手重新加密的流量**：自动继承或手动指定的上游代理不会收到审计器已解密的正文，只会收到目标主机与重新加密的 TLS 字节。
-- **可撤销**：支持移除 CA、恢复原始系统代理、暂停采集、清空本地数据和导出脱敏证据。
+- **可撤销**：支持移除 CA、恢复原始系统代理、关闭开机自启、移除断网保护任务、暂停采集、清空本地数据和导出脱敏证据。
 
 ### 数据位置
 
@@ -407,6 +441,7 @@ AI Agent / 编辑器 / SDK / 普通桌面应用
 data\
   egress.db           SQLite 流量、发现、文件事件、审计链
   secret.bin          DPAPI 保护的数据加密主密钥
+  config.json         设置文件（外部编辑后 2 秒内被运行中的进程热更新）
   certs\              审计 CA（公开证书可下载，私钥仅本地）
   exports\            JSONL 脱敏证据导出
   logs\               运行日志
@@ -416,6 +451,8 @@ data\
   proxy-guard.ps1     独立断网保护脚本（启用保护时生成）
 canaries\             可选诱饵文件目录（如启用）
 ```
+
+注册表与计划任务侧只留下三处、且都可逐项撤销：`HKCU\...\Internet Settings`（系统代理，含备份）、`HKCU\...\CurrentVersion\Run` 的 `EgressScope` 值（开机自启）、当前用户计划任务 `EgressScope Proxy Recovery`（看门狗）。
 
 可通过 `--home` 或环境变量 `EGRESSSCOPE_HOME` 覆盖根目录。
 
@@ -439,8 +476,9 @@ ai-agent-audit/
 │  ├─ paths.py             数据目录、冻结/源码资源路径
 │  ├─ policy.py            AI 识别、DLP 规则、风险评分
 │  ├─ proxy.py             嵌入式代理与显式关闭监听
+│  ├─ release_notes.py     从 CHANGELOG 截取指定版本的发布说明
 │  ├─ store.py             SQLite、加密证据、哈希链、导出
-│  ├─ system.py            CA、系统代理、Windows 控制
+│  ├─ system.py            CA、系统代理、开机自启、关机钩子、Windows 控制
 │  ├─ ui.py                Tkinter 桌面控制窗口
 │  └─ web.py               本地审计台 HTTP 服务与 API
 ├─ web/
@@ -448,7 +486,7 @@ ai-agent-audit/
 │  └─ intro.html           产品介绍官网页面
 ├─ tests/
 │  ├─ smoke_test.py        端到端冒烟测试（不修改系统设置）
-│  ├─ recovery_test.py     断网保护、端口校准与恢复逻辑测试
+│  ├─ recovery_test.py     断网保护、端口校准、开机自启、配置热更新与发布说明测试
 │  ├─ upstream_test.py     上游代理串联与自动继承识别测试
 │  ├─ packaged_test.py     打包后可执行文件的端到端验证
 │  └─ site_check.py        官网页面静态门禁（i18n 覆盖、ARIA、JSON-LD、无外部依赖）
@@ -456,6 +494,7 @@ ai-agent-audit/
 ├─ .gitattributes          跨平台换行与二进制标记
 ├─ build.spec              PyInstaller 单文件构建配置（Windows GUI，其他平台 console）
 ├─ build.bat               Windows 一键构建脚本
+├─ CHANGELOG.md            版本更新说明，发布 tag 时写入 Release 正文
 ├─ requirements.txt        运行时依赖
 ├─ requirements-dev.txt    构建与测试依赖
 └─ PLAN.md                 调研与执行计划
@@ -489,9 +528,9 @@ ai-agent-audit/
 - 在临时数据目录启动应用与本地代理；
 - 启动一个自签名 HTTPS Mock 服务；
 - 使用真实本地 CA 完成一次 HTTPS 请求并校验流量落库、PID 归因、AI 分类、DLP、加密解密、阻断、哈希链、导出脱敏与 Web 鉴权；
-- **不会**安装根证书、修改系统代理或触碰真实业务数据。
+- **不会**安装根证书、修改系统代理、写开机自启或触碰真实业务数据。
 
-当前基线：53 项检查全部通过。测试使用 `--insecure-upstream` 仅针对 Mock 服务端，生产运行不要开启；同时显式关闭系统代理继承，避免连接本机日常使用的代理。CI 会在 Windows、Linux、macOS 三平台运行同一套源码测试；Windows 的本地验证同时覆盖打包 EXE。
+当前基线：54 项检查全部通过。测试使用 `--insecure-upstream` 仅针对 Mock 服务端，生产运行不要开启；同时显式关闭系统代理继承与开机自启，避免连接本机日常使用的代理或改动真实 Run 键（其中一项检查会读取 Run 键，确认测试没有留下自启项）。CI 会在 Windows、Linux、macOS 三平台运行同一套源码测试；Windows 的本地验证同时覆盖打包 EXE。
 
 断网保护与恢复逻辑测试：
 
@@ -499,7 +538,7 @@ ai-agent-audit/
 .venv\Scripts\python.exe tests\recovery_test.py
 ```
 
-覆盖代理端口精确匹配、外部代理不被覆盖、端口变化后的自动改指、失效代理的恢复、守护脚本语法与备份恢复路径、计划任务注册权限，以及“守护脚本缺失”降级状态。当前基线：26 项检查全部通过。测试**不读写**真实代理注册表；Windows 上会创建一个指向 `cmd.exe /c exit 0` 的临时计划任务并在测试结束时删除，用于验证当前用户的 Task Scheduler 权限和触发器结构。
+覆盖代理端口精确匹配、外部代理不被覆盖、端口变化后的自动改指、失效代理的恢复、守护脚本语法与备份恢复路径、计划任务注册权限、“守护脚本缺失”降级状态、开机自启 Run 键的写入/查询/撤销（且不删除其他程序的自启项）、配置文件外部编辑后的热更新（非白名单键被忽略），以及从 `CHANGELOG.md` 截取当前版本发布说明。当前基线：40 项检查全部通过。测试**不读写**真实代理注册表与真实 Run 键（winreg 被替换为内存假实现）；Windows 上会创建一个指向 `cmd.exe /c exit 0` 的临时计划任务并在测试结束时删除，用于验证当前用户的 Task Scheduler 权限和触发器结构。
 
 上游链路测试：
 
@@ -524,7 +563,7 @@ ai-agent-audit/
 - 脱敏导出、本地阻断与审计哈希链；
 - 退出后代理与 Web 端口释放。
 
-当前基线：46 项检查全部通过。测试以 `--no-inherit-upstream` 启动，验证直连模式；结束时只会结束自己启动的进程树，不修改系统代理或根证书。首次运行单文件 EXE 有解压开销，健康检查最多等待 120 秒。
+当前基线：46 项检查全部通过。测试以 `--no-inherit-upstream` 启动，验证直连模式，并在临时数据目录预置 `config.json` 关闭开机自启，避免打包 EXE 往真实 Run 键写入指向临时目录的自启项；结束时只会结束自己启动的进程树，不修改系统代理或根证书。首次运行单文件 EXE 有解压开销，健康检查最多等待 120 秒。
 
 ### 构建可执行文件
 
@@ -557,8 +596,10 @@ certutil -hashfile dist\EgressScope.exe SHA256
 3. 在审计台看到流量后，确认进程名、TLS、风险与覆盖方式。
 4. 发送一段包含测试密钥（如 `sk-proj-` 前缀的假值）的请求，验证风险发现、预览脱敏与显式解密。
 5. 开启阻断，重复请求，确认返回 `403` 且证据库标记为已阻断。
-6. 勾选断网保护后启用系统代理，打开「任务计划程序」确认存在 `EgressScope Proxy Recovery` 与 `EgressScope Audit`；手动结束程序进程，2 分钟内观察 `%LOCALAPPDATA%\EgressScope\logs\proxy-recovery.log` 中系统代理被恢复、任务被自动停用。
-7. 结束后移除 CA、恢复系统代理并清空测试数据。
+6. 勾选断网保护后启用系统代理，打开「任务计划程序」确认存在 `EgressScope Proxy Recovery`，并在「注册表编辑器」中确认 `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` 下有 `EgressScope` 值；手动结束程序进程，2 分钟内观察 `%LOCALAPPDATA%\EgressScope\logs\proxy-recovery.log` 中系统代理被恢复、任务被自动停用。
+7. 保持系统代理启用，执行一次 Windows 注销或重启，重新登录后确认系统代理已被还原为启用前的值（优雅恢复），且程序已随登录最小化启动。
+8. 程序运行时直接编辑 `%LOCALAPPDATA%\EgressScope\data\config.json`（例如把 `retention_days` 改成 30），2 秒后在审计台“策略与设置 → 接入与代理”确认 `config_reload` 显示了本次生效的键名。
+9. 结束后移除 CA、恢复系统代理、关闭开机自启并清空测试数据。
 
 ---
 
@@ -603,9 +644,10 @@ certutil -hashfile dist\EgressScope.exe SHA256
 - 服务 / SYSTEM 进程覆盖不完整。
 - 文件触达不读取文件内容，只记录元数据。
 - 流式响应正文不保存，仅保留元数据。
-- 上游链路修改需重启生效；不支持代理认证、PAC 自动发现、SOCKS 上游。
-- Linux / macOS 构建不提供一键安装 CA 或接管系统代理；需手动信任公开证书并注入环境变量。
-- 断网保护依赖 Windows 任务计划程序，且只在本用户登录后运行。若策略禁止创建计划任务、任务被删除或数据目录被清理，异常退出后需要手动恢复代理（`--restore-proxy` 或 Windows 设置）。
+- 上游链路可热更新（保存后自动重连并重新校准系统代理），但不支持代理认证、PAC 自动发现、SOCKS 上游；监听端口、Web 端口与证书目录改动仍需重启。
+- Linux / macOS 构建不提供一键安装 CA 或接管系统代理，也不写开机自启项；需手动信任公开证书并注入环境变量。
+- 关机 / 注销优雅恢复依赖系统把会话结束消息投递给本进程；直接断电、内核崩溃或强制结束进程时收不到，恢复退化为下一次登录后的启动校准与看门狗。
+- 断网保护看门狗与开机自启都只覆盖当前登录用户，且依赖 Windows 任务计划程序与 Run 键。若策略禁止创建计划任务、任务被删除、自启被组策略清理或数据目录被清空，异常退出后需要手动恢复代理（`--restore-proxy` 或 Windows 设置）。
 - Linux 进程归因依赖 `/proc/net/tcp`；macOS 非 root 无法读取系统 TCP 归属表，PID 归因会降级；Windows 为完整归因路径。
 - Linux / macOS 与 Windows ARM64 产物未在开发机上逐一执行；Windows ARM64 的源码冒烟与打包验收在 GitHub 的 `windows-11-arm` runner 上完成，桌面 Tk 控制台未做 ARM64 实机 UI 验收。
 - mac 与 Linux 二进制未签名；macOS Gatekeeper 与 Windows SmartScreen 都可能要求手动放行。

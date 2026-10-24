@@ -195,6 +195,87 @@ def test_guard_status() -> None:
         check("guard reports installed when backup and script exist", status.get("installed") is True)
 
 
+class _KeyContext:
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+
+def fake_winreg_module(store: dict) -> mock.MagicMock:
+    mod = mock.MagicMock()
+    mod.HKEY_CURRENT_USER = "HKCU"
+    mod.KEY_READ = 1
+    mod.KEY_SET_VALUE = 2
+    mod.REG_SZ = 3
+    mod.OpenKey = mock.MagicMock(side_effect=lambda *a, **k: _KeyContext())
+    mod.CreateKey = mock.MagicMock(side_effect=lambda *a, **k: _KeyContext())
+
+    def query(_key, name):
+        if name not in store:
+            raise FileNotFoundError(name)
+        return (store[name], mod.REG_SZ)
+
+    mod.QueryValueEx = mock.MagicMock(side_effect=query)
+    mod.SetValueEx = mock.MagicMock(side_effect=lambda key, name, _reserved, _type, value: store.__setitem__(name, value))
+    mod.DeleteValue = mock.MagicMock(side_effect=lambda key, name: store.pop(name, None))
+    return mod
+
+
+def test_autostart() -> None:
+    with tempfile.TemporaryDirectory(prefix="egressscope-autostart-") as temp:
+        paths = AppPaths(Path(temp) / "home")
+        paths.ensure()
+        command = system.autostart_command(paths)
+        check("autostart command starts the app minimized", "--autostart" in command and str(paths.home) in command, command)
+
+        store: dict[str, str] = {}
+        with mock.patch.object(sys, "platform", "win32", create=True), mock.patch.dict(sys.modules, {"winreg": fake_winreg_module(store)}):
+            status = system.autostart_status(paths)
+            check("autostart starts unregistered", status.get("enabled") is False, str(status))
+            result = system.enable_autostart(paths)
+            check("enable_autostart writes the run key", result.get("ok") is True and store.get(system.RUN_VALUE) == command, str(store))
+            status = system.autostart_status(paths)
+            check("autostart reports enabled and ours", status.get("enabled") is True and status.get("ours") is True, str(status))
+            result = system.disable_autostart(paths)
+            check("disable_autostart removes our value", result.get("removed") is True and not store, str(store))
+
+            store[system.RUN_VALUE] = "C:\\other\\app.exe"
+            result = system.disable_autostart(paths)
+            check("foreign run key value is preserved", result.get("removed") is False and store.get(system.RUN_VALUE) == "C:\\other\\app.exe", str(result))
+
+
+def test_config_hot_reload() -> None:
+    from ai_audit.config import ConfigStore
+
+    with tempfile.TemporaryDirectory(prefix="egressscope-config-") as temp:
+        path = Path(temp) / "config.json"
+        store = ConfigStore(path)
+        store.update({"blocking_enabled": True})
+        check("update persists editable keys", json.loads(path.read_text(encoding="utf-8")).get("blocking_enabled") is True)
+        check("unchanged file reports no reload", store.reload_if_changed() == [])
+
+        raw = json.loads(path.read_text(encoding="utf-8"))
+        raw["retention_days"] = 30
+        raw["listen_port"] = 1234
+        path.write_text(json.dumps(raw), encoding="utf-8")
+        changed = store.reload_if_changed()
+        check("external edit is adopted without restart", "retention_days" in changed and store.settings.retention_days == 30, str(changed))
+        check("non-editable keys are ignored on reload", "listen_port" not in changed and store.settings.listen_port == 8899, str(changed))
+        check("second poll reports no further change", store.reload_if_changed() == [])
+
+
+def test_release_notes() -> None:
+    from ai_audit.release_notes import notes_for_version
+
+    text = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    notes = notes_for_version(text, "0.3.0")
+    check("changelog provides notes for the current version", bool(notes) and "断网保护" in notes, notes[:120])
+    check("notes stop before the next version heading", "## v0.2.0" not in notes)
+    check("unknown version yields empty notes", notes_for_version(text, "9.9.9") == "")
+
+
 def run() -> None:
     print("\nEgressScope proxy recovery test")
     print("==============================")
@@ -204,6 +285,9 @@ def run() -> None:
     test_guard_script()
     test_windows_task_registration()
     test_guard_status()
+    test_autostart()
+    test_config_hot_reload()
+    test_release_notes()
     print("\n==============================")
     print(f"{len(PASSED)} passed, {len(FAILED)} failed")
     if FAILED:

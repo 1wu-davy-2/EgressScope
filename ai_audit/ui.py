@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import os
 import sys
+import time
 import webbrowser
 from pathlib import Path
 from tkinter import BOTH, END, LEFT, RIGHT, TOP, X, filedialog, messagebox
@@ -39,8 +40,8 @@ class ControlWindow:
         self.root = tk.Tk()
         self.root.title("EgressScope · 本机数据外发审计")
         self.root.configure(bg=BG)
-        self.root.geometry("810x840")
-        self.root.minsize(760, 700)
+        self.root.geometry("810x930")
+        self.root.minsize(760, 800)
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
         self._closing = False
         self._values: dict[str, tk.Label] = {}
@@ -99,6 +100,8 @@ class ControlWindow:
         self._card(status_grid, 1, 1, "sysproxy", "Windows 系统代理", "—")
         self._card(status_grid, 2, 0, "fileguard", "文件句柄守护 · Beta", "—")
         self._card(status_grid, 2, 1, "chain", "证据链状态", "—", padx_left=0)
+        self._card(status_grid, 3, 0, "autostart", "开机自启（当前用户）", "—")
+        self._card(status_grid, 3, 1, "reload", "配置热更新", "—", padx_left=0)
 
         controls = tk.Frame(outer, bg=BG)
         controls.pack(fill=BOTH, expand=True, pady=(22, 0))
@@ -117,6 +120,8 @@ class ControlWindow:
         self._action(grid, 3, 1, "export", "导出审计证据（JSONL）", self._export)
         self._action(grid, 4, 0, "capture", "暂停审计", self._toggle_capture)
         self._action(grid, 4, 1, "data", "打开数据目录", self._open_data)
+        self._action(grid, 5, 0, "autostart", "关闭开机自启", self._toggle_autostart)
+        self._action(grid, 5, 1, "guard", "注册断网保护", self._toggle_guard)
 
         note = tk.Frame(outer, bg=PANEL, highlightthickness=1, highlightbackground=BORDER)
         note.pack(fill=X, pady=(20, 10))
@@ -236,6 +241,21 @@ class ControlWindow:
             self._values["chain"].configure(text="校验失败 · 数据可能被修改", fg=DANGER)
         else:
             self._values["chain"].configure(text="暂无审计记录", fg=MUTED)
+        autostart = status.get("autostart") or {}
+        if not autostart.get("supported", True):
+            self._values["autostart"].configure(text="仅 Windows 支持", fg=MUTED)
+        elif autostart.get("enabled"):
+            self._values["autostart"].configure(text="已注册 · 登录时自动启动", fg=GREEN)
+        else:
+            self._values["autostart"].configure(text="未注册", fg=MUTED)
+        reload_info = status.get("config_reload") or {}
+        if reload_info.get("at"):
+            stamp = time.strftime("%H:%M:%S", time.localtime(reload_info.get("at")))
+            source = "配置文件" if reload_info.get("source") == "file" else "控制台"
+            keys = len(reload_info.get("keys") or [])
+            self._values["reload"].configure(text=f"{stamp} · {source} · {keys} 项已生效", fg=GREEN)
+        else:
+            self._values["reload"].configure(text="无需重启 · 等待配置变更", fg=MUTED)
 
         self._buttons["capture"].configure(text="暂停审计" if capture else "继续审计")
         self._buttons["enable_proxy"].configure(state="normal" if proxy_ok else "disabled")
@@ -244,11 +264,19 @@ class ControlWindow:
         self._buttons["remove_ca"].configure(state="normal" if ca else "disabled")
         self._buttons["dashboard"].configure(state="normal" if status.get("web_url") else "disabled")
         self._buttons["intro"].configure(state="normal" if status.get("web_url") else "disabled")
+        self._buttons["autostart"].configure(
+            text="关闭开机自启" if autostart.get("enabled") else "开启开机自启",
+            state="normal" if autostart.get("supported", True) else "disabled",
+        )
+        self._buttons["guard"].configure(
+            text="移除断网保护" if guard_ok else "注册断网保护",
+            state="normal" if status.get("proxy_backup") else "disabled",
+        )
 
         guard_note = ""
         if state.get("ours"):
             guard_note = (
-                "\n断网保护已启用：崩溃、强制结束或重启后会自动恢复原始代理。"
+                "\n断网保护已启用：崩溃、强制结束、断电或关机注销后都会自动恢复原始代理。"
                 if guard_ok
                 else "\n注意：断网保护未启用；异常退出或断电后 Windows 可能无法上网，需手动恢复代理。"
             )
@@ -276,7 +304,7 @@ class ControlWindow:
             "仅覆盖使用 WinINet/WinHTTP/系统代理的应用（多数浏览器与部分桌面应用），"
             "不覆盖服务、SYSTEM 进程和忽略系统代理的程序。\n\n"
             "HTTPS 正文审计还需要安装本地 CA。Windows 会把系统代理设置持久保存；"
-            "正常退出 EgressScope 时会恢复原设置，但崩溃或断电不会触发恢复。\n\n继续？",
+            "正常退出、关机或注销时会自动恢复原设置，崩溃或断电则由断网保护恢复。\n\n继续？",
             icon="warning",
         ):
             return
@@ -289,17 +317,16 @@ class ControlWindow:
 
         guard_ok = False
         guard_error = ""
-        if messagebox.askyesno(
-            "启用断网保护（推荐）",
-            "是否注册断网保护？\n\n"
-            "只会为当前用户创建两个计划任务，不需要管理员权限：\n"
-            "• 登录时自动启动 EgressScope；\n"
-            "• 每 2 分钟检查一次本机代理，若代理已停止（崩溃、强制结束或断电重启），"
-            "自动恢复启用前的系统代理。\n\n"
-            "如果不启用，异常退出后 Windows 可能仍指向已停止的本地代理，导致无法上网。\n\n"
-            "正常恢复系统代理时，这两个任务会自动移除。继续？",
-            icon="question",
-        ):
+        confirmed, want_guard = self._ask_with_check(
+            "启用断网保护（推荐，默认开启）",
+            "是否为当前用户注册断网保护看门狗？\n\n"
+            "只创建一个不需要管理员权限的计划任务：登录时以及每 2 分钟检查一次本机代理，"
+            "若代理已停止（崩溃、强制结束或断电重启），自动恢复启用前的系统代理。\n\n"
+            "如果不启用，异常退出后 Windows 可能仍指向已停止的本地代理，导致无法上网。",
+            "注册断网保护看门狗（推荐）",
+            True,
+        )
+        if confirmed and want_guard:
             try:
                 guard = self.app.install_proxy_guard()
                 guard_ok = bool(guard.get("ok"))
@@ -311,11 +338,16 @@ class ControlWindow:
                     guard_error = "\n".join(e for e in errors if e)[:800]
             except Exception as exc:
                 guard_error = str(exc)
+        elif not confirmed:
+            self._refresh_once()
+            return
 
+        autostart = (self.app.status_snapshot().get("autostart") or {})
         base = (
             f"代理地址：127.0.0.1:{result.get('port')}\n"
             f"通知 WinINet：{'成功' if result.get('notified') else '未确认'}\n"
-            f"断网保护：{'已启用（登录自启 + 每 2 分钟守护）' if guard_ok else '未启用'}\n\n"
+            f"断网保护：{'已启用（每 2 分钟守护）' if guard_ok else '未启用'}\n"
+            f"开机自启：{'已注册（登录时启动）' if autostart.get('enabled') else '未注册'}\n\n"
             "如果浏览器未生效，请重新打开浏览器，或使用 Agent 环境变量方式。"
         )
         if guard_ok:
@@ -338,7 +370,7 @@ class ControlWindow:
         if not messagebox.askyesno(
             "恢复系统代理",
             "将把 Windows 当前用户代理恢复为 EgressScope 启用前的状态。\n"
-            "断网保护的登录自启与守护任务也会一并移除。\n\n继续？",
+            "断网保护看门狗任务也会一并移除；开机自启保持不变，可随时单独关闭。\n\n继续？",
         ):
             return
         try:
@@ -436,6 +468,100 @@ class ControlWindow:
         except Exception as exc:
             messagebox.showerror("操作失败", str(exc))
         self._refresh_once()
+
+    def _toggle_autostart(self) -> None:
+        next_value = not self.app.settings.autostart_enabled
+        if not next_value and not messagebox.askyesno(
+            "关闭开机自启",
+            "将移除当前用户的登录自启注册表项。\n\n"
+            "关闭后，重启电脑不会自动启动 EgressScope；若此时系统代理仍指向本工具，"
+            "断网保护看门狗会在登录后恢复原始代理。",
+        ):
+            return
+        try:
+            self.app.update_settings({"autostart_enabled": next_value})
+        except Exception as exc:
+            messagebox.showerror("操作失败", str(exc))
+        self._refresh_once()
+
+    def _toggle_guard(self) -> None:
+        guard = (self.app.status_snapshot().get("proxy_guard") or {})
+        if guard.get("installed"):
+            if not messagebox.askyesno("移除断网保护", "将删除当前用户的看门狗计划任务。\n\n崩溃或断电后，系统代理将不再自动恢复。继续？"):
+                return
+            try:
+                result = self.app.proxy_guard_remove()
+            except Exception as exc:
+                messagebox.showerror("操作失败", str(exc))
+                self._refresh_once()
+                return
+            if not result.get("ok"):
+                messagebox.showwarning("移除未完成", "可在任务计划程序中手动删除 EgressScope Proxy Recovery。")
+        else:
+            if not messagebox.askyesno(
+                "注册断网保护",
+                "为当前用户创建看门狗计划任务（不需要管理员权限）：\n"
+                "登录时以及每 2 分钟检查本机代理，代理已停止时自动恢复原始系统代理。",
+            ):
+                return
+            try:
+                result = self.app.install_proxy_guard()
+            except Exception as exc:
+                messagebox.showerror("操作失败", str(exc))
+                self._refresh_once()
+                return
+            if not result.get("ok"):
+                messagebox.showwarning("注册失败", str((result.get("recovery_task") or {}).get("message") or "")[:600])
+        self._refresh_once()
+
+    def _ask_with_check(self, title: str, message: str, check_text: str, checked: bool = True) -> tuple[bool, bool]:
+        dialog = tk.Toplevel(self.root)
+        dialog.title(title)
+        dialog.configure(bg=BG)
+        dialog.transient(self.root)
+        dialog.grab_set()
+        dialog.resizable(False, False)
+        box = tk.Frame(dialog, bg=BG)
+        box.pack(fill=BOTH, expand=True, padx=22, pady=18)
+        tk.Label(box, text=title, bg=BG, fg=TEXT, font=(FONT, 12, "bold")).pack(anchor="w")
+        tk.Label(box, text=message, bg=BG, fg=MUTED, font=(FONT, 10), justify="left", wraplength=520).pack(
+            anchor="w", pady=(10, 12)
+        )
+        var = tk.BooleanVar(value=checked)
+        check = tk.Checkbutton(
+            box,
+            text=check_text,
+            variable=var,
+            bg=BG,
+            fg=TEXT,
+            selectcolor=PANEL_2,
+            activebackground=BG,
+            activeforeground=TEXT,
+            highlightthickness=0,
+            font=(FONT, 10),
+        )
+        check.pack(anchor="w")
+        result = {"ok": False}
+
+        def finish(ok: bool) -> None:
+            result["ok"] = ok
+            dialog.destroy()
+
+        buttons = tk.Frame(box, bg=BG)
+        buttons.pack(fill=X, pady=(16, 0))
+        tk.Button(
+            buttons, text="确定", command=lambda: finish(True), bg=ACCENT, fg=ACCENT_DARK,
+            relief="flat", bd=0, font=(FONT, 10), padx=18, pady=8, cursor="hand2",
+        ).pack(side=LEFT)
+        tk.Button(
+            buttons, text="取消", command=lambda: finish(False), bg=PANEL_2, fg=TEXT,
+            relief="flat", bd=0, font=(FONT, 10), padx=18, pady=8, cursor="hand2",
+        ).pack(side=LEFT, padx=(8, 0))
+        dialog.protocol("WM_DELETE_WINDOW", lambda: finish(False))
+        dialog.update_idletasks()
+        dialog.geometry(f"+{self.root.winfo_x() + 90}+{self.root.winfo_y() + 140}")
+        self.root.wait_window(dialog)
+        return result["ok"], bool(var.get())
 
     def _open_data(self) -> None:
         try:

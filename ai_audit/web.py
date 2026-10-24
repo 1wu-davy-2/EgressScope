@@ -20,6 +20,15 @@ from .system import env_snippet, proxy_state
 
 log = logging.getLogger(__name__)
 
+
+def _autostart_status(app) -> dict:
+    try:
+        from .system import autostart_status
+
+        return autostart_status(app.paths)
+    except Exception:
+        return {}
+
 ALLOWED_SETTINGS = {
     "capture_enabled",
     "blocking_enabled",
@@ -31,6 +40,7 @@ ALLOWED_SETTINGS = {
     "file_guard_interval",
     "upstream_proxy",
     "inherit_system_proxy",
+    "autostart_enabled",
     "onboarded",
 }
 
@@ -338,10 +348,13 @@ class WebHandler(BaseHTTPRequestHandler):
                 "canary_enabled": settings.canary_enabled,
                 "upstream_proxy": settings.upstream_proxy,
                 "inherit_system_proxy": settings.inherit_system_proxy,
+                "autostart_enabled": settings.autostart_enabled,
                 "onboarded": settings.onboarded,
             },
             "ca": {**ca, "installed": installed},
             "system_proxy": state,
+            "autostart": _autostart_status(self.app),
+            "config_reload": self.app.config_reload,
             "fileguard": fileguard,
             "chain": self.web.chain_status(),
             "data_dir": str(self.app.paths.data),

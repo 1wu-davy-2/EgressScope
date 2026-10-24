@@ -172,8 +172,28 @@ jobs:
           done > SHA256SUMS.txt
           cat SHA256SUMS.txt
 
+      - name: Extract release notes
+        if: github.ref_type == 'tag'
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import os, sys
+          sys.path.insert(0, ".")
+          from ai_audit.release_notes import notes_for_version
+          tag = os.environ["TAG"]
+          text = open("CHANGELOG.md", encoding="utf-8").read()
+          notes = notes_for_version(text, tag)
+          if not notes:
+              notes = f"See CHANGELOG.md for the {tag} notes."
+          with open("release-notes.md", "w", encoding="utf-8") as fh:
+              fh.write(notes + "\n")
+          print(notes[:500])
+          PY
+
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
           files: release/*
-          generate_release_notes: true
+          body_path: release-notes.md
