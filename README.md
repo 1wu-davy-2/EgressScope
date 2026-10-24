@@ -1,8 +1,24 @@
-# EgressScope
+<p align="center">
+  <img src="web/assets/icon-192.png" width="88" height="88" alt="EgressScope project icon">
+</p>
 
-**本机数据外发审计 · Local Egress Audit for AI Agents & Desktop Apps**
+<h1 align="center">EgressScope</h1>
 
-项目名：**EgressScope**（中文：本机数据外发审计；仓库：[1wu-davy-2/EgressScope](https://github.com/1wu-davy-2/EgressScope)）。
+<p align="center">
+  <strong>本机数据外发审计</strong> · Local Egress Audit for AI Agents &amp; Desktop Apps
+</p>
+
+<p align="center">
+  AI 审计 · Agent 审计 · AI Agent 审计 · 智能体审计 · 数据外发审计 · 数据防泄漏（DLP）· AI DLP · LLM / 大模型安全 · 出站流量审计 · HTTPS 审计 · 进程归因 · 影子 AI
+</p>
+
+<p align="center">
+  <a href="https://1wu-davy-2.github.io/EgressScope/">官网 / Product site</a> ·
+  <a href="https://github.com/1wu-davy-2/EgressScope/releases/latest">Releases</a> ·
+  <a href="https://github.com/1wu-davy-2/EgressScope">GitHub</a>
+</p>
+
+项目名：**EgressScope**（中文：**本机数据外发审计**；仓库：[1wu-davy-2/EgressScope](https://github.com/1wu-davy-2/EgressScope)）。英文检索词：`AI agent egress audit`、`agent audit`、`AI DLP`、`data exfiltration`、`DLP for AI agents`、`shadow AI`、`LLM security`、`process attribution`。
 
 - 官网 / 产品介绍页：<https://1wu-davy-2.github.io/EgressScope/>
 - 发布版本与 SHA-256 校验：<https://github.com/1wu-davy-2/EgressScope/releases/latest>

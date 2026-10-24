@@ -4,51 +4,114 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#efeae1">
-<meta name="description" content="EgressScope 是本地优先的数据外发审计工具。看清 AI Agent 与桌面应用的外发流量：去了哪里、由哪个进程发起、带走了什么。">
-<title>EgressScope · 让每一次 AI 外发都有迹可循</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23d45d35'/%3E%3Ccircle cx='16' cy='16' r='8' fill='none' stroke='%23fffdf9' stroke-width='2.4'/%3E%3Cpath d='M16 9v14M9 16h14' stroke='%23fffdf9' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
+<meta name="theme-color" content="#fbfbf9">
+<meta name="description" content="EgressScope（本机数据外发审计）是本地优先的 AI Agent 审计工具：看清 AI 与桌面应用的 HTTPS 外发流量，定位发起进程，识别密钥与敏感数据，保留可验证的本地证据链。支持 Windows / macOS / Linux。">
+<meta name="keywords" content="EgressScope,外发审计,本机数据外发审计,AI审计,AI 审计,Agent审计,Agent 审计,AI Agent 审计,智能体审计,数据外发审计,数据防泄漏,DLP,AI DLP,大模型安全,LLM 安全,AI Agent 安全,出站流量审计,HTTPS 审计,进程归因,本地审计,本地优先,影子 AI,AI 使用审计,数据外泄检测,AI audit,agent audit,AI agent audit,egress audit,AI egress audit,data exfiltration,data exfiltration detection,DLP for AI agents,LLM security,AI agent security,shadow AI,AI usage audit,process attribution,local-first">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<title>EgressScope 外发审计｜AI Agent 数据外发审计与进程归因</title>
+<link rel="canonical" href="https://1wu-davy-2.github.io/EgressScope/">
+<link rel="alternate" hreflang="zh-CN" href="https://1wu-davy-2.github.io/EgressScope/">
+<link rel="alternate" hreflang="en" href="https://1wu-davy-2.github.io/EgressScope/?lang=en">
+<link rel="alternate" hreflang="x-default" href="https://1wu-davy-2.github.io/EgressScope/">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='128' fill='%23d45d35'/%3E%3Ccircle cx='256' cy='256' r='150' fill='none' stroke='%23fff' stroke-opacity='.48' stroke-width='18'/%3E%3Ccircle cx='256' cy='256' r='88' fill='none' stroke='%23fff' stroke-opacity='.82' stroke-width='16' stroke-dasharray='30 38'/%3E%3Ccircle cx='256' cy='256' r='30' fill='%23fff'/%3E%3Cpath d='M279 233 392 120M330 120h62v62' fill='none' stroke='%23fff' stroke-width='22' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="icon" href="./assets/favicon.ico" sizes="48x48">
+<link rel="icon" type="image/png" href="./assets/favicon.png" sizes="32x32">
+<link rel="apple-touch-icon" href="./assets/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="EgressScope 外发审计">
+<meta property="og:title" content="EgressScope 外发审计｜AI Agent 数据外发审计与进程归因">
+<meta property="og:description" content="本地优先的 AI Agent 外发审计工具：看清 HTTPS 外发流量、定位发起进程、识别密钥与敏感数据，并保留可验证的本地证据链。">
+<meta property="og:url" content="https://1wu-davy-2.github.io/EgressScope/">
+<meta property="og:image" content="https://1wu-davy-2.github.io/EgressScope/assets/og-cover.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="EgressScope 本机数据外发审计：让每一次 AI 外发都有迹可循">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:locale:alternate" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="EgressScope 外发审计｜AI Agent 数据外发审计与进程归因">
+<meta name="twitter:description" content="本地优先的 AI Agent 外发审计工具：看清 HTTPS 外发流量、定位发起进程、识别密钥与敏感数据，并保留可验证的本地证据链。">
+<meta name="twitter:image" content="https://1wu-davy-2.github.io/EgressScope/assets/og-cover.png">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "EgressScope",
+  "alternateName": ["外发审计", "本机数据外发审计", "EgressScope 外发审计"],
+  "applicationCategory": "SecurityApplication",
+  "applicationSubCategory": "Data Loss Prevention",
+  "operatingSystem": "Windows 10, Windows 11, macOS, Linux",
+  "softwareVersion": "0.1.1",
+  "description": "EgressScope 是本地优先的 AI Agent 与桌面应用数据外发审计工具。通过本地 HTTP/HTTPS 代理、本地 CA、进程归因与内容策略，查看外发去了哪里、由哪个进程发起、带走了什么，并保留可验证的本地证据链。",
+  "url": "https://1wu-davy-2.github.io/EgressScope/",
+  "downloadUrl": "https://github.com/1wu-davy-2/EgressScope/releases/latest",
+  "codeRepository": "https://github.com/1wu-davy-2/EgressScope",
+  "isAccessibleForFree": true,
+  "inLanguage": ["zh-CN", "en"],
+  "keywords": "外发审计,AI审计,Agent审计,AI Agent 审计,智能体审计,数据外发审计,数据防泄漏,DLP,AI DLP,LLM 安全,大模型安全,AI Agent 安全,出站流量审计,HTTPS 审计,进程归因,本地优先,影子 AI,AI 使用审计,数据外泄检测,AI audit,agent audit,AI agent audit,AI egress audit,data exfiltration,data exfiltration detection,DLP for AI agents,LLM security,AI agent security,shadow AI,AI usage audit,process attribution",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "featureList": [
+    "HTTPS egress visibility through a local proxy and local CA",
+    "Process and parent-chain attribution",
+    "AI endpoint classification and DLP risk signals",
+    "Encrypted evidence with a verifiable SHA-256 hash chain",
+    "Local-first operation with no cloud sync",
+    "Honest coverage boundaries for pinning, mTLS, QUIC and E2EE"
+  ]
+}
+</script>
 <script>
 (function () {
   try {
     var saved = localStorage.getItem("egressscope-theme");
     if (saved === "dark" || saved === "light") document.documentElement.dataset.theme = saved;
+    var queryLang = new URLSearchParams(location.search).get("lang");
+    var savedLang = localStorage.getItem("egressscope-lang");
+    var lang = queryLang === "en" || queryLang === "zh" ? queryLang : savedLang;
+    if (lang === "en") {
+      document.documentElement.lang = "en";
+      document.documentElement.dataset.lang = "en";
+    }
   } catch (error) {}
   document.documentElement.classList.add("js");
 })();
 </script>
 <style>
 :root{
-  --bg:#efeae1;
-  --tint:#e8e2d6;
-  --surface:#fffdf9;
-  --surface-2:#f7f2ea;
-  --ink:#2c2621;
-  --muted:#6d6155;
-  --dim:#9a8d7e;
-  --line:#ddd5c8;
-  --line-strong:#cec3b3;
+  --bg:#fbfbf9;
+  --tint:#f4f3ef;
+  --surface:#ffffff;
+  --surface-2:#f8f7f4;
+  --ink:#211e1a;
+  --muted:#68625b;
+  --dim:#988f84;
+  --line:#e7e3db;
+  --line-strong:#d6d0c6;
   --accent:#d45d35;
   --accent-btn:#c3522b;
   --accent-btn-hover:#ad4522;
   --accent-ink:#963c1c;
-  --accent-soft:#f7e3d8;
-  --accent-wash:rgba(212,93,53,.055);
-  --accent-line:rgba(212,93,53,.25);
+  --accent-soft:#f8e6dc;
+  --accent-wash:rgba(212,93,53,.05);
+  --accent-line:rgba(212,93,53,.24);
   --green:#4d7a5c;
-  --green-soft:#e9f0e7;
+  --green-soft:#eaf1e8;
   --green-line:rgba(77,122,92,.24);
   --amber:#9c681d;
-  --amber-soft:#f6ead6;
+  --amber-soft:#f7ecd9;
   --amber-line:rgba(156,104,29,.24);
   --red:#ad4638;
-  --red-soft:#f8e5e0;
+  --red-soft:#f9e8e4;
   --red-line:rgba(173,70,56,.22);
   --cta-bg:#c4522c;
-  --nav-bg:rgba(239,234,225,.84);
-  --shadow-sm:0 1px 2px rgba(60,44,30,.05);
-  --shadow-md:0 18px 40px -22px rgba(60,44,30,.3);
-  --shadow-lg:0 42px 90px -38px rgba(60,44,30,.42);
+  --nav-bg:rgba(251,251,249,.86);
+  --shadow-sm:0 1px 2px rgba(46,36,27,.05);
+  --shadow-md:0 18px 40px -22px rgba(46,36,27,.26);
+  --shadow-lg:0 42px 90px -38px rgba(46,36,27,.36);
   --font:"Inter","SF Pro Display",-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei UI","Microsoft YaHei",sans-serif;
   --mono:"SFMono-Regular","Cascadia Code","JetBrains Mono",Consolas,"Liberation Mono",monospace;
   --max:1200px;
@@ -118,7 +181,7 @@ svg.ic.fill{fill:currentColor;stroke:none}
 .nav.scrolled{border-bottom-color:var(--line);box-shadow:0 12px 30px -26px rgba(60,44,30,.55)}
 .nav-inner{height:76px;display:flex;align-items:center;gap:30px}
 .brand{display:flex;align-items:center;gap:10px;flex:none;font-weight:700;font-size:17px;letter-spacing:-.25px}
-.brand-tag{font-family:var(--mono);font-size:9.5px;font-weight:500;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:3px 8px;letter-spacing:.02em;background:var(--surface)}
+.brand-tag{font-size:10.5px;font-weight:600;color:var(--accent-ink);border:1px solid var(--accent-line);border-radius:999px;padding:3px 9px;letter-spacing:.02em;background:var(--accent-wash)}
 .nav-links{display:flex;gap:26px;margin-left:auto}
 .nav-links a{position:relative;font-size:14px;color:var(--muted);transition:color .18s;padding:4px 0}
 .nav-links a::after{content:"";position:absolute;left:0;right:0;bottom:-2px;height:1.5px;background:var(--accent);transform:scaleX(0);transform-origin:left;transition:transform .2s}
@@ -128,6 +191,7 @@ svg.ic.fill{fill:currentColor;stroke:none}
 .icon-btn{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;color:var(--muted);border:1px solid transparent;transition:background .18s,color .18s,border-color .18s}
 .icon-btn:hover{background:var(--surface);border-color:var(--line);color:var(--ink)}
 .icon-btn .ic{width:17px;height:17px}
+.lang-toggle{width:auto;min-width:38px;padding:0 9px;font-family:var(--mono);font-size:11.5px;font-weight:600;letter-spacing:.04em}
 .icon-sun{display:none}
 [data-theme="dark"] .icon-sun{display:block}
 [data-theme="dark"] .icon-moon{display:none}
@@ -474,6 +538,16 @@ table.compare{border-collapse:collapse;width:100%;min-width:820px}
 .footer-col a,.footer-col span{font-size:12px;color:var(--muted);line-height:1.5}
 .footer-col a:hover{color:var(--accent-ink)}
 .footer-bottom{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:38px;padding-top:18px;border-top:1px solid var(--line);font-family:var(--mono);font-size:9.5px;color:var(--dim)}
+.search-terms{display:flex;align-items:flex-start;gap:18px;flex-wrap:wrap;margin-top:32px;padding-top:22px;border-top:1px solid var(--line)}
+.st-title{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;color:var(--dim);white-space:nowrap;padding-top:5px}
+.st-list{display:flex;flex-wrap:wrap;gap:6px}
+.st-list span{font-size:11px;line-height:1.5;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px 9px}
+.footer-lang{display:flex;align-items:center;gap:7px;font-family:var(--font);font-size:11px;color:var(--dim)}
+.footer-lang button{font-size:11px;color:var(--dim);padding:2px 0}
+.footer-lang button:hover{color:var(--ink)}
+.footer-lang button.active{color:var(--accent-ink);font-weight:600}
+html[data-lang="en"] .section-head h2{letter-spacing:-1.2px}
+html[data-lang="en"] .hero h1{letter-spacing:-2.2px}
 
 .js .reveal{opacity:0;transform:translateY(16px);transition:opacity .6s ease,transform .6s ease}
 .js .reveal.in{opacity:1;transform:none}
@@ -562,6 +636,8 @@ table.compare{border-collapse:collapse;width:100%;min-width:820px}
   .footer-grid{grid-template-columns:1fr 1fr;gap:28px}
   .footer-grid .footer-brand{grid-column:1 / -1}
   .footer-bottom{flex-direction:column;align-items:flex-start}
+  .search-terms{flex-direction:column;gap:10px}
+  .st-title{padding-top:0}
   .boundary{padding:24px}
   .boundary-row{font-size:11px}
   .boundary-row b{font-size:9.5px}
@@ -601,8 +677,7 @@ table.compare{border-collapse:collapse;width:100%;min-width:820px}
     <circle cx="20" cy="20" r="11.2" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="1.3"/>
     <circle cx="20" cy="20" r="6.6" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="1.3" stroke-dasharray="2.4 3"/>
     <circle cx="20" cy="20" r="2.3" fill="#fff"/>
-    <path d="M21.7 18.3L29 11" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/>
-    <circle cx="30" cy="10" r="1.8" fill="#fff" opacity=".9"/>
+    <path d="M21.8 18.2L30 10M25 10h5v5" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
   </symbol>
   <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.5-3 7.7-7 9-4-1.3-7-4.5-7-9V6z"/><path d="M9.5 12l1.8 1.8 3.5-3.7"/></symbol>
   <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></symbol>
@@ -633,10 +708,10 @@ table.compare{border-collapse:collapse;width:100%;min-width:820px}
 
 <nav class="nav" aria-label="主导航">
   <div class="nav-inner wrap">
-    <a class="brand" href="#top" aria-label="EgressScope 首页">
+    <a class="brand" href="#top" aria-label="EgressScope 外发审计首页">
       <svg class="logo-mark" aria-hidden="true"><use href="#i-logo"/></svg>
       <span>EgressScope</span>
-      <span class="brand-tag">v0.1.1</span>
+      <span class="brand-tag">本机数据外发审计</span>
     </a>
     <div class="nav-links">
       <a href="#problem">问题</a>
@@ -650,6 +725,7 @@ table.compare{border-collapse:collapse;width:100%;min-width:820px}
       <a class="icon-btn repo-btn" data-repo href="__REPO_URL__" target="_blank" rel="noopener" aria-label="GitHub 仓库">
         <svg class="ic fill" aria-hidden="true"><use href="#i-github"/></svg>
       </a>
+      <button class="icon-btn lang-toggle" id="lang-toggle" type="button" aria-label="切换到英文" data-no-i18n>EN</button>
       <button class="icon-btn theme-toggle" id="theme-toggle" type="button" aria-label="切换深色模式">
         <svg class="ic icon-moon" aria-hidden="true"><use href="#i-moon"/></svg>
         <svg class="ic icon-sun" aria-hidden="true"><use href="#i-sun"/></svg>
@@ -1186,9 +1262,10 @@ table.compare{border-collapse:collapse;width:100%;min-width:820px}
   <div class="wrap">
     <div class="footer-grid">
       <div class="footer-brand">
-        <a class="brand" href="#top" aria-label="EgressScope 首页">
+        <a class="brand" href="#top" aria-label="EgressScope 外发审计首页">
           <svg class="logo-mark" aria-hidden="true"><use href="#i-logo"/></svg>
           <span>EgressScope</span>
+          <span class="brand-tag">本机数据外发审计</span>
         </a>
         <p class="footer-desc">本机数据外发审计。为授权的 Windows 设备提供完整的桌面控制与系统代理接入；Linux / macOS 版本提供审计引擎与本机 Web 审计台。界面与数据均在此设备上运行。</p>
         <span class="footer-badge"><i></i>LOCAL-FIRST · 无云同步</span>
@@ -1221,12 +1298,317 @@ table.compare{border-collapse:collapse;width:100%;min-width:820px}
         </div>
       </div>
     </div>
+    <div class="search-terms" data-no-i18n aria-label="Search keywords">
+      <span class="st-title">SEARCH TERMS / 常见搜索词</span>
+      <div class="st-list">
+        <span>外发审计</span><span>AI 审计</span><span>Agent 审计</span><span>AI Agent 审计</span>
+        <span>智能体审计</span><span>数据外发审计</span><span>数据防泄漏</span><span>DLP</span><span>AI DLP</span>
+        <span>LLM 安全</span><span>大模型安全</span><span>AI Agent 安全</span><span>出站流量审计</span><span>HTTPS 审计</span>
+        <span>进程归因</span><span>本地优先</span><span>影子 AI</span><span>AI 使用审计</span><span>数据外泄检测</span>
+        <span>AI audit</span><span>agent audit</span><span>AI agent audit</span><span>egress audit</span><span>AI egress audit</span>
+        <span>data exfiltration</span><span>data exfiltration detection</span><span>DLP for AI agents</span><span>AI agent security</span>
+        <span>shadow AI</span><span>AI usage audit</span><span>process attribution</span>
+      </div>
+    </div>
     <div class="footer-bottom">
       <span>© 2026 EgressScope · v0.1.1</span>
       <span>WINDOWS-FIRST · LOCAL-FIRST · NO CLOUD</span>
+      <div class="footer-lang" data-no-i18n aria-label="Language">
+        <button type="button" data-lang-set="zh" class="active">简体中文</button>
+        <span aria-hidden="true">/</span>
+        <button type="button" data-lang-set="en">English</button>
+      </div>
     </div>
   </div>
 </footer>
+
+<script type="application/json" id="i18n-en">
+{
+  "跳到主要内容": "Skip to main content",
+  "问题": "Problem",
+  "架构": "Architecture",
+  "覆盖边界": "Boundaries",
+  "下载": "Download",
+  "快速开始": "Quick start",
+  "隐私设计": "Privacy",
+  "免费下载": "Download",
+  "外发审计": "Egress Audit",
+  "v0.1.1 正式发布 · 六平台原生构建": "v0.1.1 released · six native builds",
+  "让每一次": "Every",
+  "AI 外发": "AI egress",
+  "都有迹可循。": "leaves a trace.",
+  "EgressScope 把本机 Agent 与桌面应用的出站流量，收拢成一条可见、可归因、可追溯的审计路径。它不读取聊天记录，而是观察操作系统里真实发生的数据外发。": "EgressScope turns outbound traffic from local AI agents and desktop apps into one visible, attributable and traceable audit trail. It does not read chat history; it observes data egress that actually happens in the operating system.",
+  "查看架构": "See architecture",
+  "本地运行 · 无需内核驱动": "Runs locally · no kernel driver",
+  "数据不离开设备": "Data never leaves this device",
+  "EgressScope · 本机审计台": "EgressScope · Local console",
+  "实时": "Live",
+  "工作台": "Workspace",
+  "态势总览": "Overview",
+  "流量记录": "Traffic",
+  "外发规则": "Rules",
+  "证据链": "Evidence",
+  "隐私设置": "Privacy",
+  "仅绑定 127.0.0.1": "Bound to 127.0.0.1 only",
+  "无云同步 · 无外部脚本": "No cloud sync · no external scripts",
+  "过去 24 小时": "Last 24 hours",
+  "今日请求": "Requests today",
+  "高风险": "High risk",
+  "时间": "Time",
+  "进程 / 端点": "Process / endpoint",
+  "风险": "Risk",
+  "动作": "Action",
+  "告警": "Alert",
+  "观察": "Observe",
+  "PID 归因完成": "PID attributed",
+  "证据已加密": "Evidence encrypted",
+  "* 产品界面示意，数据为样例": "* Product mockup · sample data",
+  "进程级可见性": "Process-level visibility",
+  "端口到 PID 的本地关联": "Local port-to-PID mapping",
+  "内容只在本地": "Content stays local",
+  "SQLite 存储 · 无云同步": "SQLite storage · no cloud sync",
+  "可验证证据链": "Verifiable evidence chain",
+  "SHA-256 逐条链接": "SHA-256 hash-linked entries",
+  "可撤销的系统变更": "Reversible system changes",
+  "代理备份 · CA 可移除": "Proxy backup · removable CA",
+  "01 / 盲区": "01 / BLIND SPOT",
+  "问题不在模型，": "The problem is not the model.",
+  "而在看不见的出站路径。": "It is the invisible egress path.",
+  "当 Agent 获得文件系统、终端和代码库的访问权，它同时获得了把这些上下文送出本机的能力。传统安全工具关心连接是否存在，却很少回答：是谁、在什么时候、把什么内容、送到了哪里。": "When an agent gains access to the filesystem, terminal and codebase, it also gains the ability to send that context off the machine. Traditional security tools ask whether a connection exists; they rarely answer who sent what, when and where.",
+  "Agent 自动装载上下文": "Agents load context automatically",
+  "工作区文件、终端输出、环境变量和密钥可能在一次会话里被装入提示词。会话日志能告诉你会话内容，却不能证明这些内容是否、何时、向何处发生了外发。": "Workspace files, terminal output, environment variables and secrets can all enter a prompt in one session. Session logs show what was discussed, but not whether, when or where that content left the device.",
+  "HTTPS 让异常失去内容": "HTTPS hides what is anomalous",
+  "流氓软件、被劫持的编辑器插件与合法 Agent 使用同一条加密通道。流量面板只显示字节数；没有应用配合与本地 TLS 终止，你无法判断上传的是遥测、代码，还是客户数据。": "Adware, hijacked editor extensions and legitimate agents use the same encrypted channel. Traffic panels show bytes, not intent. Without app cooperation and local TLS termination, you cannot tell whether an upload is telemetry, code or customer data.",
+  "连接不等于发起者": "A connection is not an actor",
+  "日志里的一条": "A single",
+  "没有意义，如果不知道它来自哪个进程、哪条父进程链。没有归因，风险告警只会变成噪声；有了归因，才能定位到具体工具与工作流。": "in the logs means nothing unless you know which process and parent chain it came from. Without attribution, risk alerts are just noise. With attribution, you can pinpoint the tool and workflow.",
+  "真正的空白不是“有没有网络监控”，而是": "The real gap is not “is there network monitoring”, but ",
+  "网络元数据与内容、进程、文件线索之间缺少一条连续的证据链": "the missing continuous evidence chain between network metadata, content, processes and file clues",
+  "。EgressScope 选择在这条链上做工程，而不是再做一个流量计数器。": ". EgressScope chose to engineer that chain, not build another traffic counter.",
+  "02 / 架构取舍": "02 / TRADE-OFFS",
+  "本地代理 + 本地 CA +": "Local proxy + local CA +",
+  "进程归因，是最可落地的组合。": "process attribution: the most practical combination.",
+  "我们比较了透明重定向、浏览器扩展、Agent 会话旁路和内核级采集。最终选择用户态本地代理作为第一版主干：它不要求驱动签名，不依赖某个 Agent 的私有格式，能在应用配合时还原内容，也允许用户清楚知道审计边界在哪里。": "We compared transparent redirection, browser extensions, agent session sidecars and kernel-level collection. We chose a user-mode local proxy for v1: no driver signing, no dependency on one agent's private format, content recovery when apps cooperate, and a boundary users can understand.",
+  "应用 / Agent": "App / Agent",
+  "Claude Code、Codex、编辑器、SDK 或普通桌面程序发起 HTTPS 请求。": "Claude Code, Codex, editors, SDKs or ordinary desktop apps send HTTPS requests.",
+  "本地转发代理": "Local forward proxy",
+  "仅监听 127.0.0.1。系统代理或进程环境变量把流量引到这里，不影响局域网。": "Listens on 127.0.0.1 only. System proxy or per-process environment variables route traffic here without touching the LAN.",
+  "TLS 终止": "TLS termination",
+  "使用当前用户信任的本地 CA，对应用配合的 TLS 1.2 / 1.3 连接还原 HTTP 语义。": "Uses a local CA trusted by the current user to restore HTTP semantics for cooperating TLS 1.2 / 1.3 connections.",
+  "进程归因": "Process attribution",
+  "客户端临时端口匹配本机 TCP 表，缓存 PID + 创建时间，避免 PID 复用误判。": "Maps client ephemeral ports through the local TCP table and caches PID + start time to avoid PID-reuse errors.",
+  "策略与证据": "Policy & evidence",
+  "端点分类、DLP 信号、风险分；正文加密、审计链、脱敏预览与策略处置。": "Endpoint classification, DLP signals and risk scores; encrypted bodies, audit chain, redacted previews and policy actions.",
+  "进程流量": "Process traffic",
+  "内容可读": "Content readable",
+  "是谁发起": "Who sent it",
+  "可验证证据": "Verifiable evidence",
+  "本机审计台": "Local console",
+  "失败模式清晰。": "Clear failure modes. ",
+  "应用不配合，就看不到；不会假装全量可见。系统代理修改前备份，退出时尝试恢复。已有 Clash 等回环代理时自动串联，避免接管后断网。": "If an app does not cooperate, you will not see it; we do not pretend to see everything. The system proxy is backed up before changes and restored on exit. Existing loopback proxies such as Clash are chained automatically to avoid dropping connectivity.",
+  "不重复造 TLS。": "We do not rebuild TLS. ",
+  "成熟的开源代理负责 HTTP/2、证书签发与流式转发，项目把精力放在归因、策略与证据链。": "A mature open-source proxy handles HTTP/2, certificate issuance and streaming. We focus on attribution, policy and evidence.",
+  "内容需要应用同意。": "Content needs app consent. ",
+  "CA 只安装到当前用户信任根，且不会自动安装；固定证书、mTLS、E2EE 不被攻破。": "The CA is installed in the current user's trust root only and never silently. Certificate pinning, mTLS and E2EE are not broken.",
+  "技术路径": "Approach",
+  "内容可见性": "Content visibility",
+  "部署与维护": "Deployment",
+  "覆盖面": "Coverage",
+  "用户可解释性": "Explainability",
+  "本地代理 + 本地 CA": "Local proxy + local CA",
+  "本版": "THIS BUILD",
+  "高：协议语义、正文、进程": "High: protocol semantics, bodies, processes",
+  "中低：用户态、无驱动签名": "Medium-low: user mode, no driver signing",
+  "中：需应用遵循代理 / 信任 CA": "Medium: app must honor proxy / trust CA",
+  "高：授权与边界可见": "High: consent and boundaries visible",
+  "WFP / WinDivert 透明重定向": "WFP / WinDivert transparent redirect",
+  "中：仍受 TLS 固定与信任限制": "Medium: still limited by pinning and trust",
+  "高：驱动、签名、兼容性": "High: drivers, signing, compatibility",
+  "较高：不依赖应用代理设置": "High-ish: independent of app proxy settings",
+  "中：用户不易感知": "Medium: less visible to users",
+  "Agent 会话 / MCP 旁路": "Agent session / MCP sidecar",
+  "高：可读会话内容": "High: session content readable",
+  "低：只需读本地数据": "Low: reads local data only",
+  "窄：只覆盖特定 Agent，不看真实外发": "Narrow: only specific agents, not real egress",
+  "中：依赖私有格式": "Medium: depends on private formats",
+  "浏览器扩展": "Browser extension",
+  "中：仅浏览器内页面与请求": "Medium: browser pages and requests only",
+  "低：无需系统权限": "Low: no system permissions",
+  "窄：桌面 Agent、CLI、后台服务不可见": "Narrow: invisible to desktop agents, CLIs and background services",
+  "高": "High",
+  "ETW / 内核文件审计": "ETW / kernel file audit",
+  "不提供内容": "No content",
+  "高：需要管理员与规则工程": "High: admin rights and rules engineering",
+  "广：网络 / 文件系统事件": "Broad: network / filesystem events",
+  "中：事件量大、噪声高": "Medium: high volume, noisy",
+  "选择标准：在可交付、可解释、可撤销的前提下，获得最高的单机内容可见性。": "Selection rule: maximize single-host content visibility while staying deliverable, explainable and reversible.",
+  "透明重定向与 ETW / SACL 已列入路线图。": "Transparent redirect and ETW / SACL are on the roadmap.",
+  "03 / 审计结果": "03 / RESULTS",
+  "从“有一条连接”，到": "From “a connection exists”",
+  "“这一次外发是什么”。": "to “what was actually sent.”",
+  "审计结果不是要制造恐慌，而是让安全判断建立在可复核的事实上：进程、端点、内容信号、处置动作和存储完整性。": "Audit results should not create panic. They should ground decisions in verifiable facts: process, endpoint, content signals, action taken and storage integrity.",
+  "精确到进程": "Exact process attribution",
+  "缓存进程创建时间，减少 PID 复用带来的错误归属；同时保留父进程链与脱敏命令行，帮助识别 Agent、编辑器子进程和脚本运行时。": "Caches process creation time to reduce misattribution from PID reuse, while retaining the parent chain and redacted command line to identify agents, editor children and script runtimes.",
+  "内容级风险信号": "Content-level risk signals",
+  "识别 AI 服务端点与常见 API 密钥、私钥、证件号、银行卡、手机号和代码块。风险分可解释，证据保留脱敏，避免审计本身成为密钥泄露源。": "Detects AI service endpoints plus common API keys, private keys, ID numbers, bank cards, phone numbers and code blocks. Scores are explainable and evidence stays redacted, so the audit itself does not become a secret leak.",
+  "可观察，也可阻断": "Observe, and block when asked",
+  "默认只观察。需要时对达到阈值的请求返回 403，让“是否放行”成为显式策略，而不是事后的猜测。阻断开关默认关闭，避免误伤。": "Observe by default. When needed, return 403 for requests above a threshold, making allow/deny an explicit policy rather than an afterthought. Blocking is off by default to avoid false positives.",
+  "脱敏在前，解密在后": "Redact first, decrypt later",
+  "列表与导出只展示脱敏预览。原始正文仅有选择地加密保存，在详情中再次确认后才于当前会话解密。导出的 JSONL 不包含正文。": "Lists and exports show redacted previews only. Raw bodies are selectively encrypted and decrypted only after a second confirmation in the current session. Exported JSONL never contains bodies.",
+  "证据链可验证": "Verifiable evidence chain",
+  "每条流量写库时，将关键摘要与上一条哈希链接。审计台可随时校验链条是否断裂，为事后取证提供一个廉价的完整性基线。": "Each flow's key summary is hash-linked to the previous entry on write. The console can verify chain integrity at any time, providing a cheap baseline for post-incident forensics.",
+  "网络 × 文件线索": "Network × file clues",
+  "Beta 版把近期外发进程与其打开的文件句柄做时间关联，并用虚构诱饵文件观察异常触达。只记录元数据，不读取用户文件内容。": "The beta correlates recent egress processes with open file handles and uses fictional canary files to observe unexpected access. It records metadata only and never reads user file content.",
+  "04 / 覆盖边界": "04 / BOUNDARIES",
+  "我们主动写清楚了": "We document",
+  "“看不到”的部分。": "what we cannot see.",
+  "没有一种用户态方案能看见所有加密流量。一个可信的审计产品，不应该把“代理已启动”宣传成“全部可见”。下面是第一版的真实边界。": "No user-mode approach can see all encrypted traffic. A trustworthy audit product should not market “the proxy is running” as “everything is visible”. These are v1's real boundaries.",
+  "在配合路径上可以看见": "Visible on cooperating paths",
+  "经过本地代理的 HTTP/HTTPS 请求与响应元数据；系统代理、环境变量代理和手动指定的代理都属于这个范围。": "HTTP/HTTPS request and response metadata that passes through the local proxy, including system proxy, environment-variable proxy and manually configured proxy paths.",
+  "启动时自动继承本机回环 HTTP 代理（如 Clash 的 127.0.0.1:7890）并串联转发；只转发重新加密后的 TLS 字节，上游看不到审计器已解密的正文。": "At startup, inherits and chains any loopback HTTP proxy such as Clash at 127.0.0.1:7890. Only re-encrypted TLS bytes are forwarded upstream; the upstream never sees the body decrypted by the auditor.",
+  "应用信任本地 CA 且未启用证书固定的 TLS 1.2 / 1.3 流量，可还原请求方法、路径、头、正文和响应。": "TLS 1.2 / 1.3 traffic from apps that trust the local CA and do not enforce pinning: request method, path, headers, bodies and responses can be recovered.",
+  "正文保存有体积上限；AI 请求或风险分 ≥ 25 的流量才加密保留原始正文，其他流量保留脱敏预览。": "Body retention has a size cap. Raw bodies are encrypted only for AI requests or flows with a risk score of 25 or higher; other flows keep redacted previews.",
+  "客户端进程 PID、父进程链、脱敏命令行与进程创建时间，用于区分真实发起者与 PID 复用。": "Client PID, parent chain, redacted command line and process creation time distinguish the real originator from PID reuse.",
+  "AI 服务分类、模型名、密钥 / PII / 代码 / 文件引用等规则信号，以及可配置的阻断动作。": "AI service classification, model names, rule signals for secrets / PII / code / file references, and configurable blocking actions.",
+  "不承诺、也看不到": "Not promised, not visible",
+  "未经过代理的直连流量。": "Direct traffic that bypasses the proxy. ",
+  "忽略系统代理的应用必须用环境变量或后续的透明重定向接入。": "Apps that ignore the system proxy must be onboarded with environment variables or future transparent redirection.",
+  "证书固定、mTLS、双向证书校验。": "Certificate pinning, mTLS and mutual certificate validation. ",
+  "这些是应用有意建立的安全边界，不被本项目攻破。": "These are intentional security boundaries and are not broken by this project.",
+  "QUIC / HTTP3 与非 HTTP 协议。": "QUIC / HTTP3 and non-HTTP protocols. ",
+  "第一版不解析，无法给出内容级结论。": "v1 does not parse them and cannot draw content-level conclusions.",
+  "应用层端到端加密。": "Application-layer end-to-end encryption. ",
+  "没有密钥时，即使流量经过代理也只能看到密文和元数据。": "Without keys, even proxied traffic reveals only ciphertext and metadata.",
+  "Windows 服务 / SYSTEM 会话的完整归因。": "Full attribution for Windows services / SYSTEM sessions. ",
+  "当前面向登录用户进程，服务账户路径在路线图中。": "Current builds target logged-in user processes; service-account paths are on the roadmap.",
+  "完整文件读取历史。": "Complete file-read history. ",
+  "打开句柄抽样无法证明文件已被读取，也不覆盖已经关闭的句柄。": "Open-handle sampling cannot prove a file was read and does not cover handles already closed.",
+  "重要安全边界：": "Important safety boundary: ",
+  "不要在日常使用、存有真实凭据的设备上分析疑似恶意软件。受信 CA 会扩大本机可被中间人解密的范围。请在隔离虚拟机 / 快照中处理未知样本，分析结束后移除 CA 并恢复系统代理。": "Do not analyze suspected malware on a daily-use device that holds real credentials. A trusted CA expands what can be decrypted on that host. Use an isolated VM or snapshot for unknown samples, then remove the CA and restore the system proxy.",
+  "05 / 下载": "05 / DOWNLOAD",
+  "六个原生构建，": "Six native builds,",
+  "选择你的系统。": "pick your platform.",
+  "每次发布同时提供六个原生构建与 SHA-256 校验。Windows x64 与 ARM64 都是完整桌面版；Linux / macOS 共享审计引擎与本机 Web 审计台，系统代理与 CA 需要手动配置。": "Every release ships six native builds with SHA-256 checks. Windows x64 and ARM64 are full desktop builds; Linux and macOS share the audit engine and local web console, with manual proxy and CA setup.",
+  "主要支持": "Primary",
+  "完整桌面控制台、系统代理备份与恢复、当前用户 CA 一键安装、进程归因。": "Full desktop console, system-proxy backup and restore, one-click current-user CA install and process attribution.",
+  "原生 ARM64": "Native ARM64",
+  "原生 Windows 11 ARM64 桌面版；在 GitHub 的 ARM runner 上编译依赖，并完成源码冒烟与打包验收。": "Native Windows 11 ARM64 desktop build; dependencies compile on GitHub's ARM runner, followed by source smoke tests and packaged acceptance.",
+  "单文件 EXE": "Single EXE",
+  "审计引擎与本机 Web 审计台。需手动信任 CA，并通过环境变量接入目标 Agent。": "Audit engine and local web console. Trust the CA manually and point the target agent at it through environment variables.",
+  "未签名": "Unsigned",
+  "面向 Intel Mac 的审计引擎与 Web 审计台，使用兼容的 cryptography 版本构建。": "Audit engine and web console for Intel Macs, built with a compatible cryptography release.",
+  "审计引擎与 Web 审计台；PID 归因依赖 /proc/net/tcp，手动配置代理与 CA。": "Audit engine and web console; PID attribution uses /proc/net/tcp, with manual proxy and CA setup.",
+  "面向 ARM64 Linux 服务器与开发机的审计引擎，能力与 Linux x64 一致。": "Audit engine for ARM64 Linux servers and workstations, with the same capabilities as Linux x64.",
+  "每个产物附带独立校验。": "Every artifact has an independent checksum. ",
+  "发布页提供": "The release page includes",
+  "与": "and",
+  "，下载后可先校验再运行。": ". Verify before running.",
+  "前往 GitHub Releases": "View GitHub Releases",
+  "查看平台边界": "Review platform boundaries",
+  "构建说明：": "Build notes: ",
+  "Windows ARM64 是原生构建，不是 x64 模拟运行；桌面 Tk 控制台尚未做 ARM64 实机 UI 验收。macOS 与 Linux 二进制未签名，Gatekeeper 与 SmartScreen 可能要求手动放行。": "Windows ARM64 is a native build, not x64 emulation; the desktop Tk console has not yet had full ARM64 UI acceptance. macOS and Linux binaries are unsigned, so Gatekeeper and SmartScreen may require manual approval.",
+  "06 / 快速开始": "06 / QUICK START",
+  "三步接入，": "Three steps,",
+  "不自动接管系统。": "no automatic takeover.",
+  "桌面控制台和本地审计台会同时启动。系统代理、根证书与阻断策略都需要显式确认；你可以随时暂停采集或恢复原代理设置。": "The desktop console and local web console start together. System proxy, root CA and blocking policy all require explicit confirmation; you can pause capture or restore the original proxy at any time.",
+  "启动 EgressScope": "Launch EgressScope",
+  "双击可执行文件，或使用": "Double-click the executable, or run",
+  "运行无窗口模式。代理默认监听": "for headless mode. The proxy listens on",
+  "，审计台绑定回环地址。": ", with the console bound to loopback.",
+  "确认根证书": "Confirm the root CA",
+  "在控制台点击“安装根证书”，将公开 CA 加入当前用户信任根。私钥始终留在本机数据目录，不会分发；安装后可随时移除。": "Click “Install root CA” in the console to add the public CA to the current user's trust root. The private key stays in the local data directory and is never distributed; the CA can be removed at any time.",
+  "选择流量入口": "Choose a traffic entry",
+  "开启系统代理，或只给目标 Agent 注入": "Enable the system proxy, or inject",
+  "等变量。若本机原本通过 Clash 等回环代理（如": "into the target agent. If the machine already uses a loopback proxy such as Clash (e.g.",
+  "）上网，程序会在启动时自动串联，避免接管后断网。": "), EgressScope chains to it at startup to avoid dropping connectivity.",
+  "EgressScope · 控制窗口": "EgressScope · Control",
+  "本机数据外发审计": "Local egress audit",
+  "运行中": "Running",
+  "本地代理": "Local proxy",
+  "本地 CA": "Local CA",
+  "等待信任": "Awaiting trust",
+  "系统代理": "System proxy",
+  "未启用": "Off",
+  "文件触达": "File access",
+  "Beta 抽样中": "Beta sampling",
+  "本机审计已就绪。下一步：安装 CA，再启用系统代理或使用 Agent 环境变量。": "Local audit is ready. Next: install the CA, then enable the system proxy or use agent env vars.",
+  "安装根证书": "Install root CA",
+  "启用系统代理": "Enable system proxy",
+  "复制环境变量": "Copy env vars",
+  "打开审计台": "Open console",
+  "仅限授权设备": "Authorized devices only",
+  "07 / 隐私设计": "07 / PRIVACY",
+  "审计工具本身，": "An audit tool itself",
+  "不应该成为新的泄露面。": "should not become a new leak surface.",
+  "数据边界不是靠一句“我们很重视隐私”。它需要落实在密钥位置、导出格式、默认设置和系统变更的撤销路径上。": "Data boundaries are not a promise about “taking privacy seriously”. They must be enforced through key location, export format, defaults and reversible system changes.",
+  "正文加密存储": "Encrypted body storage",
+  "AES-256-GCM 加密请求 / 响应正文；主密钥由当前 Windows 用户的 DPAPI 保护。更换用户或离线拷走数据库都无法直接解密。": "AES-256-GCM encrypts request and response bodies; the master key is protected by the current Windows user's DPAPI. Another user or an offline copy of the database cannot decrypt them directly.",
+  "脱敏是默认值": "Redacted by default",
+  "列表、搜索、预览和 JSONL 导出只包含脱敏后的内容与哈希。原始正文需要显式的二次确认才会解密显示，且不回写数据库。": "Lists, search, previews and JSONL exports contain only redacted content and hashes. Raw bodies require explicit second confirmation to decrypt and are never written back to the database.",
+  "最小化系统变更": "Minimal system changes",
+  "CA 只装当前用户，不自动安装；系统代理修改前备份，检测到 PAC 时拒绝接管；退出时仅在设置仍属于本工具时恢复。": "The CA is installed for the current user only and never silently. The system proxy is backed up before changes, PAC configurations are refused, and settings are restored on exit only if they still belong to this tool.",
+  "本地回环服务": "Local loopback service",
+  "Web 审计台只绑定 127.0.0.1，使用每次启动随机生成的会话令牌，校验 Host 并应用严格 CSP。没有云同步，没有外部字体或脚本。": "The web console binds to 127.0.0.1 only, uses a random session token per launch, validates Host and applies a strict CSP. No cloud sync, no external fonts or scripts.",
+  "你掌握密钥、": "You hold the keys,",
+  "保留期与删除权。": "retention and deletion.",
+  "数据库位置": "Database location",
+  "原始正文": "Raw bodies",
+  "主密钥保护": "Master key",
+  "内容上云": "Cloud upload",
+  "不启用": "Disabled",
+  "上游链路": "Upstream link",
+  "仅回环 · 可关闭": "Loopback only · optional",
+  "默认审计动作": "Default action",
+  "观察，不阻断": "Observe, do not block",
+  "证据保留": "Retention",
+  "默认 7 天 · 可配置": "7 days default · configurable",
+  "删除": "Delete",
+  "本地一键清空": "One-click local wipe",
+  "EgressScope 是审计工具，不是杀毒软件。它不保证发现所有恶意行为，也不对证书固定、端到端加密或未经过本地代理的流量提供内容可见性。": "EgressScope is an audit tool, not antivirus. It cannot detect every malicious action, and it offers no content visibility for certificate pinning, end-to-end encryption or traffic that bypasses the local proxy.",
+  "08 / 路线图": "08 / ROADMAP",
+  "第一版把闭环跑通，": "Ship the loop first,",
+  "再把覆盖面做深。": "then deepen coverage.",
+  "路线图按“可验证的收益 / 增加的信任成本”排序。不会承诺破解加密，也不以驱动或隐蔽手段扩张采集范围。": "The roadmap is ordered by verifiable benefit against added trust cost. We do not promise to break encryption or expand collection with drivers or covert methods.",
+  "可交付的本机闭环": "Deliverable local loop",
+  "嵌入式代理、本地 CA、TLS 解密、PID 归因、AI/敏感数据规则、风险评分与阻断、加密证据、哈希链、桌面控制台与本地 Web 审计台。": "Embedded proxy, local CA, TLS decryption, PID attribution, AI and sensitive-data rules, risk scoring and blocking, encrypted evidence, hash chain, desktop console and local web console.",
+  "Windows 当前用户路径": "Windows current-user path",
+  "系统代理备份 / 恢复": "System proxy backup / restore",
+  "Agent 环境变量接入": "Agent environment-variable onboarding",
+  "回环上游代理自动串联": "Automatic loopback upstream chaining",
+  "文件句柄抽样 Beta": "File-handle sampling beta",
+  "扩大流量入口": "Expand traffic entry points",
+  "以 WFP / WinDivert 做显式的透明重定向，支持不遵循系统代理的应用；补充 QUIC 元数据策略与代理链路健康诊断。": "Explicit transparent redirection with WFP / WinDivert for apps that ignore the system proxy, plus QUIC metadata policy and proxy-chain health diagnostics.",
+  "驱动签名与兼容性测试": "Driver signing and compatibility tests",
+  "按进程 / 端口重定向": "Per-process / per-port redirection",
+  "QUIC 无法解密时明确降级": "Explicit degradation when QUIC cannot be decrypted",
+  "接入安装器与服务账户入口": "Installer and service-account entry points",
+  "补齐系统与文件视角": "Add system and file views",
+  "通过 ETW / SACL / 文件系统微过滤完善读取事件，与网络外发时间线合并；加入策略包、告警导出与团队级只读审计视图。": "Use ETW / SACL / filesystem minifilters to complete read events and merge them with the egress timeline; add policy packs, alert export and team read-only audit views.",
+  "完整文件读取证据": "Complete file-read evidence",
+  "Windows 服务 / SYSTEM 进程": "Windows services / SYSTEM processes",
+  "可签名的策略与证据导出": "Signed policy and evidence export",
+  "企业部署与保留策略": "Enterprise deployment and retention policy",
+  "从第一条可解释的": "Start with the first explainable",
+  "外发记录开始。": "egress record.",
+  "打开本机审计台，查看代理、CA 与证据链状态。仅在你拥有或明确获授权的设备上使用。": "Open the local console to inspect proxy, CA and evidence-chain state. Use it only on devices you own or are explicitly authorized to audit.",
+  "再次查看边界": "Review boundaries again",
+  "v0.1.1 · WINDOWS / MACOS / LINUX · 仅用于拥有或明确获授权的设备": "v0.1.1 · WINDOWS / MACOS / LINUX · authorized devices only",
+  "本机数据外发审计。为授权的 Windows 设备提供完整的桌面控制与系统代理接入；Linux / macOS 版本提供审计引擎与本机 Web 审计台。界面与数据均在此设备上运行。": "Local egress audit. Windows builds include the full desktop console and system-proxy integration; Linux and macOS provide the audit engine and local web console. UI and data run on this device.",
+  "LOCAL-FIRST · 无云同步": "LOCAL-FIRST · no cloud sync",
+  "产品": "Product",
+  "为什么需要审计": "Why audit",
+  "架构与取舍": "Architecture & trade-offs",
+  "获取": "Get EgressScope",
+  "六平台构建": "Six platform builds",
+  "GitHub 仓库": "GitHub repository",
+  "使用前提": "Requirements",
+  "仅限拥有或明确获授权的设备": "Owned or explicitly authorized devices only",
+  "不要在日常主机分析未知样本": "Do not analyze unknown samples on a daily-use host",
+  "不承诺攻破证书固定 / mTLS / E2EE": "Does not break certificate pinning / mTLS / E2EE",
+  "CA 与系统代理均可撤销": "CA and system proxy are reversible",
+  "打开本机审计台": "Open local console"
+}
+</script>
 
 <script>
 const REPO_URL = "__REPO_URL__";
@@ -1242,31 +1624,202 @@ document.querySelectorAll("[data-repo]").forEach((link) => {
   }
 });
 
-document.querySelectorAll("[data-release]").forEach((link) => {
-  const label = link.querySelector(".cta-label");
+const releaseLinks = Array.from(document.querySelectorAll("[data-release]"));
+releaseLinks.forEach((link) => {
   if (hasRepo) {
     link.href = REPO_URL + "/releases/latest";
   } else if (isFile) {
     link.href = "http://127.0.0.1:8898/";
-    if (label) label.textContent = "打开本机审计台";
   } else if (isLocal) {
     link.href = "/";
-    if (label) label.textContent = "打开审计台";
   }
 });
 
 const root = document.documentElement;
 const themeToggle = document.getElementById("theme-toggle");
+const langToggle = document.getElementById("lang-toggle");
+const langButtons = Array.from(document.querySelectorAll("[data-lang-set]"));
 const themeMeta = document.querySelector('meta[name="theme-color"]');
+let currentLang = root.dataset.lang === "en" ? "en" : "zh";
+
+const I18N_EN = (() => {
+  try {
+    return JSON.parse(document.getElementById("i18n-en").textContent);
+  } catch (error) {
+    return {};
+  }
+})();
+
+const ARIA_EN = {
+  "主导航": "Main navigation",
+  "EgressScope 外发审计首页": "EgressScope egress audit home",
+  "GitHub 仓库": "GitHub repository",
+  "核心特性": "Core features",
+  "审计流程": "Audit pipeline",
+  "EgressScope 本机审计台界面示意：展示今日请求、AI 外发、高风险流量与进程归因列表": "EgressScope local console mockup: requests today, AI egress, high-risk traffic and process attribution",
+  "EgressScope 桌面控制台示意：本地代理运行中，根证书等待信任，系统代理未启用": "EgressScope desktop console mockup: local proxy running, root CA awaiting trust, system proxy off",
+  "切换到英文": "Switch to English",
+  "切换深色模式": "Switch to dark mode",
+  "切换浅色模式": "Switch to light mode"
+};
+
+const META = {
+  zh: {
+    title: "EgressScope 外发审计｜AI Agent 数据外发审计与进程归因",
+    description: "EgressScope（本机数据外发审计）是本地优先的 AI Agent 审计工具：看清 AI 与桌面应用的 HTTPS 外发流量，定位发起进程，识别密钥与敏感数据，保留可验证的本地证据链。支持 Windows / macOS / Linux。",
+    ogTitle: "EgressScope 外发审计｜AI Agent 数据外发审计与进程归因",
+    ogDescription: "本地优先的 AI Agent 外发审计工具：看清 HTTPS 外发流量、定位发起进程、识别密钥与敏感数据，并保留可验证的本地证据链。",
+    ogImageAlt: "EgressScope 本机数据外发审计：让每一次 AI 外发都有迹可循",
+    ogLocale: "zh_CN"
+  },
+  en: {
+    title: "EgressScope — AI Agent Egress Audit & Process Attribution",
+    description: "EgressScope is a local-first AI agent egress audit tool: see HTTPS traffic from AI and desktop apps, attribute the originating process, detect secrets and sensitive data, and keep a verifiable local evidence chain. Windows, macOS and Linux.",
+    ogTitle: "EgressScope — AI Agent Egress Audit & Process Attribution",
+    ogDescription: "Local-first egress audit for AI agents: see HTTPS traffic, attribute the originating process, detect secrets and sensitive data, and keep a verifiable local evidence chain.",
+    ogImageAlt: "EgressScope local egress audit: every AI egress leaves a trace",
+    ogLocale: "en_US"
+  }
+};
+
+const textOriginals = new WeakMap();
+const translatedNodes = new Set();
+const ariaOriginals = new WeakMap();
+
+function normalizeText(value) {
+  return value.replace(/\s+/g, " ").trim();
+}
+
+function restoreSourceText() {
+  translatedNodes.forEach((node) => {
+    const original = textOriginals.get(node);
+    if (original !== undefined) node.nodeValue = original;
+  });
+  translatedNodes.clear();
+}
+
+function translateText() {
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  const nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach((node) => {
+    const parent = node.parentElement;
+    const raw = node.nodeValue;
+    if (!parent || !raw || !raw.trim()) return;
+    if (parent.closest("script,style,noscript,textarea,svg,[data-no-i18n]")) return;
+    const key = normalizeText(raw);
+    if (!Object.prototype.hasOwnProperty.call(I18N_EN, key)) return;
+    if (!textOriginals.has(node)) textOriginals.set(node, raw);
+    const leading = raw.match(/^\s*/)[0];
+    const trailing = raw.match(/\s*$/)[0];
+    node.nodeValue = leading + I18N_EN[key] + trailing;
+    translatedNodes.add(node);
+  });
+}
+
+function applyAria() {
+  document.querySelectorAll("[aria-label]").forEach((el) => {
+    if (el === langToggle || el === themeToggle) return;
+    if (!ariaOriginals.has(el)) ariaOriginals.set(el, el.getAttribute("aria-label"));
+    const original = ariaOriginals.get(el);
+    el.setAttribute("aria-label", currentLang === "en" ? (ARIA_EN[original] || original) : original);
+  });
+  if (langToggle) {
+    const label = currentLang === "en" ? "Switch to Chinese" : "切换到英文";
+    langToggle.textContent = currentLang === "en" ? "中文" : "EN";
+    langToggle.setAttribute("aria-label", label);
+    langToggle.setAttribute("title", label);
+  }
+}
+
+function applyMeta() {
+  const meta = META[currentLang];
+  document.title = meta.title;
+  const set = (selector, value) => {
+    const el = document.querySelector(selector);
+    if (el) el.setAttribute("content", value);
+  };
+  set('meta[name="description"]', meta.description);
+  set('meta[property="og:title"]', meta.ogTitle);
+  set('meta[property="og:description"]', meta.ogDescription);
+  set('meta[property="og:image:alt"]', meta.ogImageAlt);
+  set('meta[property="og:locale"]', meta.ogLocale);
+  set('meta[name="twitter:title"]', meta.ogTitle);
+  set('meta[name="twitter:description"]', meta.ogDescription);
+}
+
 function applyTheme(theme) {
   root.dataset.theme = theme;
+  const dark = theme === "dark";
   if (themeToggle) {
-    themeToggle.setAttribute("aria-label", theme === "dark" ? "切换浅色模式" : "切换深色模式");
-    themeToggle.setAttribute("aria-pressed", theme === "dark" ? "true" : "false");
+    const label = currentLang === "en"
+      ? (dark ? "Switch to light mode" : "Switch to dark mode")
+      : (dark ? "切换浅色模式" : "切换深色模式");
+    themeToggle.setAttribute("aria-label", label);
+    themeToggle.setAttribute("title", label);
+    themeToggle.setAttribute("aria-pressed", dark ? "true" : "false");
   }
-  if (themeMeta) themeMeta.setAttribute("content", theme === "dark" ? "#1d1915" : "#efeae1");
+  if (themeMeta) themeMeta.setAttribute("content", dark ? "#1d1915" : "#fbfbf9");
 }
-applyTheme(root.dataset.theme === "dark" ? "dark" : "light");
+
+function applyLangButtons() {
+  langButtons.forEach((button) => {
+    const active = button.dataset.langSet === currentLang;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", active ? "true" : "false");
+  });
+}
+
+function applyLocalReleaseLabels() {
+  if (hasRepo) return;
+  releaseLinks.forEach((link) => {
+    const label = link.querySelector(".cta-label");
+    if (!label) return;
+    if (isFile) {
+      label.textContent = currentLang === "en" ? "Open local console" : "打开本机审计台";
+    } else if (isLocal) {
+      label.textContent = currentLang === "en" ? "Open console" : "打开审计台";
+    }
+  });
+}
+
+function syncLanguageUrl() {
+  try {
+    const url = new URL(location.href);
+    if (currentLang === "en") {
+      url.searchParams.set("lang", "en");
+    } else {
+      url.searchParams.delete("lang");
+    }
+    history.replaceState(null, "", url.href);
+  } catch (error) {}
+}
+
+function setLanguage(next, options) {
+  const lang = next === "en" ? "en" : "zh";
+  const opts = options || {};
+  restoreSourceText();
+  currentLang = lang;
+  root.lang = lang === "en" ? "en" : "zh-CN";
+  root.dataset.lang = lang;
+  if (lang === "en") translateText();
+  applyAria();
+  applyLangButtons();
+  applyLocalReleaseLabels();
+  applyMeta();
+  applyTheme(root.dataset.theme === "dark" ? "dark" : "light");
+  if (opts.syncUrl !== false) syncLanguageUrl();
+  if (opts.persist !== false) {
+    try { localStorage.setItem("egressscope-lang", lang); } catch (error) {}
+  }
+}
+
+const queryLang = new URLSearchParams(location.search).get("lang");
+if (queryLang === "en" || queryLang === "zh") {
+  try { localStorage.setItem("egressscope-lang", queryLang); } catch (error) {}
+}
+setLanguage(currentLang, { syncUrl: false, persist: false });
+
 if (themeToggle) {
   themeToggle.addEventListener("click", () => {
     const next = root.dataset.theme === "dark" ? "light" : "dark";
@@ -1274,6 +1827,15 @@ if (themeToggle) {
     try { localStorage.setItem("egressscope-theme", next); } catch (error) {}
   });
 }
+
+if (langToggle) {
+  langToggle.addEventListener("click", () => {
+    setLanguage(currentLang === "en" ? "zh" : "en");
+  });
+}
+langButtons.forEach((button) => {
+  button.addEventListener("click", () => setLanguage(button.dataset.langSet));
+});
 
 const nav = document.querySelector(".nav");
 function onScroll() {

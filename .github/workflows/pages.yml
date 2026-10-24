@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - "web/intro.html"
+      - "web/**"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -32,9 +32,11 @@ jobs:
 
       - name: Build static site
         run: |
-          mkdir -p _site
+          mkdir -p _site/assets
           sed "s|__REPO_URL__|https://github.com/${{ github.repository }}|g" web/intro.html > _site/index.html
           grep -q "https://github.com/${{ github.repository }}" _site/index.html
+          cp web/assets/* _site/assets/
+          cp web/robots.txt web/sitemap.xml _site/
 
       - uses: actions/upload-pages-artifact@v3
         with:
