@@ -2,7 +2,10 @@
 
 **本机数据外发审计 · Local Egress Audit for AI Agents & Desktop Apps**
 
-项目名：**EgressScope**（中文：本机数据外发审计；建议仓库名：`egress-scope`）。
+项目名：**EgressScope**（中文：本机数据外发审计；仓库：[1wu-davy-2/EgressScope](https://github.com/1wu-davy-2/EgressScope)）。
+
+- 官网 / 产品介绍页：<https://1wu-davy-2.github.io/EgressScope/>
+- 发布版本与 SHA-256 校验：<https://github.com/1wu-davy-2/EgressScope/releases/latest>
 
 EgressScope 是一个以 Windows 为主的本机审计工具。它在用户明确授权的前提下，通过本地 HTTP/HTTPS 转发代理、本地 CA、进程归因和内容策略，回答一个传统流量面板经常回答不了的问题：
 
@@ -41,6 +44,7 @@ EgressScope 是一个以 Windows 为主的本机审计工具。它在用户明�
 | 桌面控制窗口 | 可执行文件启动后的主窗口 | 安装/移除 CA、启用/恢复系统代理、暂停采集、导出证据 |
 | 构建校验清单 | `dist\SHA256SUMS.txt` | 可执行文件的 SHA-256，用于确认文件完整性 |
 | GitHub Actions | `.github/workflows/` | CI 冒烟、五平台发布构建、介绍页 Pages 部署 |
+| GitHub Release | [releases/latest](https://github.com/1wu-davy-2/EgressScope/releases/latest) | Windows x64、Linux x64 / arm64、macOS x64 / arm64；每个产物附带 `.sha256` 与汇总 `SHA256SUMS.txt` |
 | 研究/执行计划 | `PLAN.md` | 本项目的技术与产品调研底稿 |
 
 审计台固定访问 `http://127.0.0.1:8898/`（端口可在设置中修改）。`18898` 只是自动化测试临时使用的端口，不是产品默认端口；临时测试进程关闭后访问会被拒绝。
@@ -136,10 +140,11 @@ set "SSL_CERT_FILE=%LOCALAPPDATA%\EgressScope\data\certs\mitmproxy-ca-cert.pem"
 
 Windows 版本是功能完整的桌面产品。Linux / macOS 版本共享同一套代理、归因、策略、证据和 Web 审计台，面向“手动配置代理与环境变量”的审计场景；系统代理备份/恢复、当前用户 CA 一键安装仍只支持 Windows。Linux 的 PID 归因依赖 `/proc/net/tcp`；macOS 在非 root 下无法读取系统 TCP 归属表，会诚实降级为不含 PID 的流量记录。
 
-非 Windows 启动示例：
+非 Windows 启动示例（发布包内的可执行文件名为 `EgressScope-<tag>-<platform>`）：
 
 ```bash
-./EgressScope --headless --home ~/.egressscope --proxy-port 8899 --web-port 8898
+tar -xzf EgressScope-<tag>-linux-x64.tar.gz
+./EgressScope-<tag>-linux-x64 --headless --home ~/.egressscope --proxy-port 8899 --web-port 8898
 # 另一个终端加载接入变量
 source ~/.egressscope/data/agent-env.sh
 ```
