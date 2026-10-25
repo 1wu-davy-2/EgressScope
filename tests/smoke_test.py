@@ -278,6 +278,22 @@ def run() -> None:
                 status_payload = status_resp.json()
                 check("status API reports running proxy", status_resp.status_code == 200 and status_payload.get("proxy", {}).get("running"))
                 check("status API is honest about invisible traffic", "QUIC" in status_payload.get("coverage", {}).get("not_visible", ""))
+                network_status = status_payload.get("network") or {}
+                check(
+                    "status API reports bounded bypass observation",
+                    network_status.get("enabled") is True and "透明重定向" in network_status.get("note", ""),
+                    str(network_status)[:200],
+                )
+                network_api = session.get(web_base + "/api/network?limit=10", headers={"X-Egress-Token": token}, timeout=10)
+                network_payload = network_api.json()
+                check(
+                    "network API returns observation metadata",
+                    network_api.status_code == 200
+                    and network_payload.get("enabled") is True
+                    and isinstance(network_payload.get("events"), list)
+                    and "counts" in network_payload,
+                    str(network_payload)[:200],
+                )
 
                 proxies = {"http": f"http://127.0.0.1:{app.listen_port}", "https": f"http://127.0.0.1:{app.listen_port}"}
                 url = f"https://localhost:{mock_port}/v1/chat/completions"
@@ -320,6 +336,7 @@ def run() -> None:
                         f"pid={flow.get('pid')} proc={proc_name} resolve_error={app.resolver.last_error}",
                     )
                 check("AI local endpoint classified", flow.get("category") == "ai_local", str(flow.get("category")))
+                check("captured flow is graded full", flow.get("visibility") == "full" and not flow.get("visibility_reason"), str(flow.get("visibility")))
                 check("model extracted", flow.get("model") == "gpt-4o-mini", str(flow.get("model")))
                 check("TLS metadata captured", "TLS" in str(flow.get("tls", "")), str(flow.get("tls")))
                 check("risk reaches critical", int(flow.get("risk") or 0) >= 85, str(flow.get("risk")))
@@ -357,6 +374,27 @@ def run() -> None:
 
                 stats = session.get(web_base + "/api/stats", headers=api_headers, timeout=10).json()["stats"]
                 check("stats count today's traffic", stats["today"]["total"] >= 3 and stats["today"]["ai"] >= 2, json.dumps(stats["today"]))
+                check("stats expose visibility distribution", int((stats.get("visibility") or {}).get("full", 0)) >= 3, str(stats.get("visibility")))
+                app.store.add_net_event({
+                    "ts": time.time(),
+                    "kind": "quic",
+                    "pid": flow.get("pid"),
+                    "proc_name": "smoke-agent.exe",
+                    "remote_ip": "203.0.113.10",
+                    "remote_port": 443,
+                    "protocol": "udp",
+                    "domain": "",
+                    "confidence": "candidate",
+                    "note": "QUIC test candidate",
+                })
+                observed = session.get(web_base + "/api/network?limit=10", headers=api_headers, timeout=10).json()
+                observed_events = observed.get("events") or []
+                check(
+                    "network API exposes stored candidates with counts",
+                    any(e.get("remote_ip") == "203.0.113.10" and e.get("kind") == "quic" for e in observed_events)
+                    and int((observed.get("counts") or {}).get("quic", 0)) >= 1,
+                    str(observed)[:200],
+                )
                 listed = session.get(web_base + "/api/flows?limit=10&ai=1", headers=api_headers, timeout=10).json()
                 check("flow filter API works", listed["total"] >= 2 and all(f["category"].startswith("ai_") for f in listed["flows"]))
                 findings = session.get(web_base + "/api/findings", headers=api_headers, timeout=10).json()["findings"]
@@ -399,6 +437,20 @@ def run() -> None:
                     json={"blocking_enabled": False, "block_risk": 85},
                     timeout=10,
                 )
+                paused = session.post(
+                    web_base + "/api/settings",
+                    headers={**api_headers, "Content-Type": "application/json"},
+                    json={"network_watch_enabled": False},
+                    timeout=10,
+                ).json()
+                check("network watch setting hot-disables the observer", paused["settings"]["network_watch_enabled"] is False and app.netwatch.status()["enabled"] is False)
+                resumed = session.post(
+                    web_base + "/api/settings",
+                    headers={**api_headers, "Content-Type": "application/json"},
+                    json={"network_watch_enabled": True},
+                    timeout=10,
+                ).json()
+                check("network watch setting hot-enables the observer", resumed["settings"]["network_watch_enabled"] is True and app.netwatch.status()["enabled"] is True)
 
                 before_proxy_port = app.listen_port
                 app.stop(restore_proxy=False)

@@ -54,7 +54,9 @@ CREATE TABLE IF NOT EXISTS flows (
     tags TEXT NOT NULL DEFAULT '[]',
     headers_json TEXT NOT NULL DEFAULT '{}',
     note TEXT NOT NULL DEFAULT '',
-    coverage TEXT NOT NULL DEFAULT 'proxied'
+    coverage TEXT NOT NULL DEFAULT 'proxied',
+    visibility TEXT NOT NULL DEFAULT 'full',
+    visibility_reason TEXT NOT NULL DEFAULT ''
 );
 CREATE INDEX IF NOT EXISTS idx_flows_ts ON flows(ts DESC);
 CREATE INDEX IF NOT EXISTS idx_flows_pid ON flows(pid, ts DESC);
@@ -93,6 +95,25 @@ CREATE TABLE IF NOT EXISTS file_events (
 CREATE INDEX IF NOT EXISTS idx_file_events_ts ON file_events(ts DESC);
 CREATE INDEX IF NOT EXISTS idx_file_events_pid ON file_events(pid, ts DESC);
 
+CREATE TABLE IF NOT EXISTS net_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ts REAL NOT NULL,
+    kind TEXT NOT NULL DEFAULT '',
+    pid INTEGER,
+    proc_name TEXT NOT NULL DEFAULT '',
+    proc_path TEXT NOT NULL DEFAULT '',
+    app_kind TEXT NOT NULL DEFAULT '',
+    remote_ip TEXT NOT NULL DEFAULT '',
+    remote_port INTEGER NOT NULL DEFAULT 0,
+    protocol TEXT NOT NULL DEFAULT '',
+    domain TEXT NOT NULL DEFAULT '',
+    confidence TEXT NOT NULL DEFAULT '',
+    note TEXT NOT NULL DEFAULT '',
+    seen_count INTEGER NOT NULL DEFAULT 1
+);
+CREATE INDEX IF NOT EXISTS idx_net_events_ts ON net_events(ts DESC);
+CREATE INDEX IF NOT EXISTS idx_net_events_kind ON net_events(kind, ts DESC);
+
 CREATE TABLE IF NOT EXISTS canaries (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     ts REAL NOT NULL,
@@ -130,9 +151,27 @@ class Store:
         self._conn.execute("PRAGMA synchronous=NORMAL")
         self._conn.execute("PRAGMA foreign_keys=ON")
         self._conn.executescript(SCHEMA)
+        self._migrate()
         self._conn.execute("INSERT OR IGNORE INTO meta(key, value) VALUES('schema_version', '1')")
         self._conn.commit()
         self._last_hash = self._load_last_hash()
+
+    def _migrate(self) -> None:
+        """Add visibility columns to databases created before v0.4."""
+        columns = {row["name"] for row in self._conn.execute("PRAGMA table_info(flows)").fetchall()}
+        added_visibility = False
+        if "visibility" not in columns:
+            self._conn.execute("ALTER TABLE flows ADD COLUMN visibility TEXT NOT NULL DEFAULT 'full'")
+            added_visibility = True
+        if "visibility_reason" not in columns:
+            self._conn.execute("ALTER TABLE flows ADD COLUMN visibility_reason TEXT NOT NULL DEFAULT ''")
+        if added_visibility:
+            # Historical rows were never graded. Do not claim they were full.
+            self._conn.execute(
+                "UPDATE flows SET visibility='partial', visibility_reason=?",
+                ("升级前的历史记录未做可见性分级",),
+            )
+        self._conn.commit()
 
     def close(self) -> None:
         with self._lock:
@@ -190,6 +229,8 @@ class Store:
             "headers_json": record.get("headers_json", "{}"),
             "note": record.get("note", ""),
             "coverage": record.get("coverage", "proxied"),
+            "visibility": record.get("visibility") or "full",
+            "visibility_reason": record.get("visibility_reason") or "",
         }
         with self._lock, self._conn:
             placeholders = ", ".join("?" for _ in columns)
@@ -340,7 +381,7 @@ class Store:
                 f.req_bytes, f.resp_bytes, f.duration_ms, f.pid, f.proc_name, f.proc_path,
                 f.cmdline, f.app_chain, f.app_kind, f.category, f.provider, f.endpoint_kind, f.model, f.risk, f.severity,
                 f.action, f.blocked, f.req_preview, f.resp_preview, f.tags, f.tls, f.coverage,
-                f.client_ip, f.note,
+                f.client_ip, f.note, f.visibility, f.visibility_reason,
                 (SELECT COUNT(*) FROM findings x WHERE x.flow_id=f.id) AS finding_count
                 FROM flows f{clause} ORDER BY f.ts DESC, f.id DESC LIMIT ? OFFSET ?""",
                 [*args, max(1, min(500, limit)), max(0, offset)],
@@ -407,6 +448,84 @@ class Store:
         with self._lock:
             return int(self._conn.execute("SELECT COUNT(*) AS n FROM file_events").fetchone()["n"])
 
+    def add_net_event(self, record: dict[str, Any]) -> int | None:
+        """Store a bypass/protocol observation with 600-second deduplication."""
+        ts = float(record.get("ts") or time.time())
+        kind = str(record.get("kind") or "")
+        pid = record.get("pid")
+        remote_ip = str(record.get("remote_ip") or "")
+        remote_port = int(record.get("remote_port") or 0)
+        domain = str(record.get("domain") or "")
+        with self._lock, self._conn:
+            dup = self._conn.execute(
+                """SELECT id, seen_count FROM net_events
+                WHERE kind=? AND pid IS ? AND remote_ip=? AND remote_port=? AND domain=? AND ts>?
+                ORDER BY id DESC LIMIT 1""",
+                (kind, pid, remote_ip, remote_port, domain, ts - 600),
+            ).fetchone()
+            if dup:
+                self._conn.execute(
+                    "UPDATE net_events SET ts=?, seen_count=seen_count+1 WHERE id=?",
+                    (ts, dup["id"]),
+                )
+                return int(dup["id"])
+            cur = self._conn.execute(
+                """INSERT INTO net_events
+                (ts, kind, pid, proc_name, proc_path, app_kind, remote_ip, remote_port,
+                 protocol, domain, confidence, note, seen_count)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    ts,
+                    kind,
+                    pid,
+                    str(record.get("proc_name") or ""),
+                    str(record.get("proc_path") or ""),
+                    str(record.get("app_kind") or ""),
+                    remote_ip,
+                    remote_port,
+                    str(record.get("protocol") or ""),
+                    domain,
+                    str(record.get("confidence") or ""),
+                    str(record.get("note") or ""),
+                    max(1, int(record.get("seen_count") or 1)),
+                ),
+            )
+            return int(cur.lastrowid)
+
+    def list_net_events(self, limit: int = 50, kind: str = "") -> list[dict[str, Any]]:
+        limit = max(1, min(500, int(limit or 50)))
+        with self._lock:
+            if kind:
+                rows = self._conn.execute(
+                    "SELECT * FROM net_events WHERE kind=? ORDER BY ts DESC, id DESC LIMIT ?",
+                    (kind, limit),
+                ).fetchall()
+            else:
+                rows = self._conn.execute(
+                    "SELECT * FROM net_events ORDER BY ts DESC, id DESC LIMIT ?", (limit,)
+                ).fetchall()
+            return [dict(row) for row in rows]
+
+    def net_event_counts(self, since: float | None = None) -> dict[str, int]:
+        with self._lock:
+            if since is not None:
+                rows = self._conn.execute(
+                    "SELECT kind, COUNT(*) AS n FROM net_events WHERE ts >= ? GROUP BY kind",
+                    (float(since),),
+                ).fetchall()
+            else:
+                rows = self._conn.execute(
+                    "SELECT kind, COUNT(*) AS n FROM net_events GROUP BY kind"
+                ).fetchall()
+        counts = {"direct_tcp": 0, "quic": 0, "dns": 0}
+        for row in rows:
+            counts[str(row["kind"])] = int(row["n"] or 0)
+        counts["total"] = sum(value for key, value in counts.items() if key != "total")
+        return counts
+
+    def count_net_events(self, since: float | None = None) -> int:
+        return self.net_event_counts(since)["total"]
+
     def stats(self) -> dict[str, Any]:
         now = time.time()
         local_midnight = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0).timestamp()
@@ -445,9 +564,17 @@ class Store:
                 GROUP BY rule_id ORDER BY n DESC LIMIT 6""",
                 (local_midnight,),
             ).fetchall()
+            visibility_rows = self._conn.execute(
+                "SELECT visibility, COUNT(*) AS n FROM flows WHERE ts >= ? GROUP BY visibility",
+                (local_midnight,),
+            ).fetchall()
         severity = {key: 0 for key in ("info", "low", "medium", "high", "critical")}
         for item in severity_rows:
             severity[item["severity"]] = item["n"]
+        visibility = {key: 0 for key in ("full", "partial", "metadata", "blocked", "error")}
+        for item in visibility_rows:
+            key = str(item["visibility"] or "full")
+            visibility[key] = int(item["n"] or 0)
         buckets = [{"hour": i, "total": 0, "ai": 0, "high": 0} for i in range(24)]
         start = now - 86400
         for item in recent:
@@ -469,6 +596,7 @@ class Store:
                 "file_events": file_count or 0,
             },
             "severity": severity,
+            "visibility": visibility,
             "top_hosts": [dict(r) for r in host_rows],
             "top_procs": [dict(r) for r in proc_rows],
             "top_rules": [dict(r) for r in finding_rows],
@@ -480,11 +608,12 @@ class Store:
         with self._lock, self._conn:
             cur = self._conn.execute("DELETE FROM flows WHERE ts < ?", (cutoff,))
             self._conn.execute("DELETE FROM file_events WHERE ts < ?", (cutoff,))
+            self._conn.execute("DELETE FROM net_events WHERE ts < ?", (cutoff,))
             return int(cur.rowcount or 0)
 
     def clear_all(self) -> None:
         with self._lock, self._conn:
-            for table in ("findings", "flows", "file_events", "canaries", "audit_chain"):
+            for table in ("findings", "flows", "file_events", "net_events", "canaries", "audit_chain"):
                 self._conn.execute(f"DELETE FROM {table}")
             self._conn.execute("UPDATE meta SET value='GENESIS' WHERE key='last_hash'")
             self._last_hash = "GENESIS"
@@ -507,6 +636,7 @@ class Store:
             flow_rows = self._conn.execute("SELECT * FROM flows ORDER BY id").fetchall()
             finding_rows = self._conn.execute("SELECT * FROM findings ORDER BY id").fetchall()
             file_rows = self._conn.execute("SELECT * FROM file_events ORDER BY id").fetchall()
+            net_rows = self._conn.execute("SELECT * FROM net_events ORDER BY id").fetchall()
             canary_rows = self._conn.execute("SELECT * FROM canaries ORDER BY id").fetchall()
             chain = self.verify_chain()
         findings_by_flow: dict[int, list[dict[str, Any]]] = {}
@@ -529,7 +659,10 @@ class Store:
                 "type": "manifest",
                 "product": "EgressScope",
                 "exported_at": datetime.now().isoformat(timespec="seconds"),
-                "note": "Previews are redacted. Raw bodies are not included in this export.",
+                "note": (
+                    "Previews are redacted. Raw bodies are not included in this export. "
+                    "Network events are local observation metadata, not captured payloads."
+                ),
                 "chain": chain,
             }
             handle.write(json.dumps(header, ensure_ascii=False) + "\n")
@@ -538,9 +671,16 @@ class Store:
                 count += 1
             for item in file_rows:
                 handle.write(json.dumps({"type": "file_event", **dict(item)}, ensure_ascii=False) + "\n")
+            for item in net_rows:
+                handle.write(json.dumps({"type": "net_event", **dict(item)}, ensure_ascii=False) + "\n")
             for item in canary_rows:
                 handle.write(json.dumps({"type": "canary", **dict(item)}, ensure_ascii=False) + "\n")
-        return {"path": str(target), "flows": count, "chain_valid": bool(chain.get("valid"))}
+        return {
+            "path": str(target),
+            "flows": count,
+            "net_events": len(net_rows),
+            "chain_valid": bool(chain.get("valid")),
+        }
 
     @staticmethod
     def _decode_row(row: dict[str, Any]) -> dict[str, Any]:

@@ -44,6 +44,8 @@ class Settings:
     upstream_proxy: str = ""
     inherit_system_proxy: bool = True
     autostart_enabled: bool = True
+    update_check_enabled: bool = True
+    network_watch_enabled: bool = True
     onboarded: bool = False
 
     def normalized(self) -> "Settings":
@@ -107,6 +109,8 @@ EDITABLE_KEYS = {
     "upstream_proxy",
     "inherit_system_proxy",
     "autostart_enabled",
+    "update_check_enabled",
+    "network_watch_enabled",
     "onboarded",
 }
 

@@ -14,11 +14,12 @@ import webbrowser
 from pathlib import Path
 from typing import Any
 
-from ai_audit import APP_NAME, __version__
+from ai_audit import APP_NAME, __version__, updater
 from ai_audit.attribution import ProcessResolver
 from ai_audit.config import ConfigStore
 from ai_audit.crypto import SecureBox
 from ai_audit.fileguard import FileGuard, create_canary_files, remove_canary_files
+from ai_audit.netwatch import NetworkWatch
 from ai_audit.paths import AppPaths
 from ai_audit.policy import PolicyEngine
 from ai_audit.proxy import ProxyController
@@ -27,6 +28,10 @@ from ai_audit import system
 from ai_audit.web import WebServer
 
 log = logging.getLogger("egressscope")
+
+UPDATE_CACHE_SECONDS = 6 * 60 * 60
+UPDATE_CHECK_INTERVAL_SECONDS = 24 * 60 * 60
+UPDATE_FIRST_DELAY_SECONDS = 30.0
 
 
 class EgressApp:
@@ -41,6 +46,7 @@ class EgressApp:
         self.resolver = ProcessResolver(self.settings.listen_port)
         self.proxy = ProxyController(self)
         self.fileguard = FileGuard(self)
+        self.netwatch = NetworkWatch(self)
         self.web = WebServer(self)
         self.listen_port = 0
         self.web_port = 0
@@ -52,6 +58,11 @@ class EgressApp:
         self._chain_cache: tuple[float, dict] = (0.0, {})
         self._blocked_count = 0
         self.config_reload: dict[str, Any] = {}
+        self.integration_health: dict[str, Any] = {}
+        self.update_info: dict[str, Any] = updater.empty_update_result(__version__)
+        self._update_checked_at = 0.0
+        self._update_lock = threading.Lock()
+        self._update_install_lock = threading.Lock()
 
     # ---------- lifecycle ----------
     def start(self) -> None:
@@ -84,31 +95,68 @@ class EgressApp:
                 log.exception("failed to restore a stale system proxy after a startup error")
         if self.settings.file_guard_enabled:
             self.fileguard.start()
+        self.netwatch.start()
         if self.settings.canary_enabled:
             try:
                 create_canary_files(self.paths, self.store, self.settings.canary_dir)
             except Exception:
                 log.exception("failed to create canary files on startup")
-        self._ensure_autostart()
+        self._repair_integrations("startup")
         hook = system.install_shutdown_hook(self._on_os_shutdown)
         if hook.get("window") or hook.get("console"):
             log.info("shutdown/logoff proxy restore hook installed (%s)", hook)
         elif hook.get("supported") and hook.get("error"):
             log.warning("shutdown/logoff proxy restore hook unavailable: %s", hook.get("error"))
+        if sys.platform == "win32":
+            threading.Thread(target=self._integration_watch_loop, name="egressscope-integration", daemon=True).start()
         threading.Thread(target=self._config_watch_loop, name="egressscope-config", daemon=True).start()
+        threading.Thread(target=self._update_check_loop, name="egressscope-update", daemon=True).start()
 
     def _ensure_autostart(self) -> None:
-        if sys.platform != "win32":
-            return
+        self._repair_integrations("startup")
+
+    def _integration_watch_loop(self) -> None:
+        while not self._stop.wait(600.0):
+            try:
+                self._repair_integrations("periodic")
+            except Exception:
+                log.debug("periodic integration repair failed", exc_info=True)
+
+    def _repair_integrations(self, reason: str) -> dict[str, Any]:
+        backup = system.load_proxy_backup(self.paths) or {}
+        guard_enabled = bool((backup.get("guard") or {}).get("enabled"))
         try:
-            status = system.autostart_status(self.paths)
-            if self.settings.autostart_enabled and not status.get("enabled"):
-                result = system.enable_autostart(self.paths)
-                log.info("logon autostart registered: %s", result.get("command"))
-            elif not self.settings.autostart_enabled and status.get("ours"):
-                system.disable_autostart(self.paths)
-        except Exception:
-            log.exception("failed to reconcile logon autostart")
+            result = system.repair_integrations(
+                self.paths,
+                bool(self.settings.autostart_enabled),
+                guard_enabled,
+            )
+        except Exception as exc:
+            result = {
+                "supported": sys.platform == "win32",
+                "ok": False,
+                "error": f"{type(exc).__name__}: {exc}",
+                "at": time.time(),
+            }
+        result.setdefault("at", time.time())
+        result["reason"] = reason
+        self.integration_health = result
+        if not result.get("supported"):
+            return result
+        if result.get("error"):
+            log.warning("integration repair (%s) failed: %s", reason, result["error"])
+        for name in ("autostart", "guard"):
+            item = result.get(name) or {}
+            action = str(item.get("action") or "")
+            if not action or action == "healthy":
+                continue
+            if action == "repointed":
+                log.warning("logon autostart repointed from %s to %s", item.get("value", ""), item.get("command", ""))
+            elif item.get("error") or item.get("ok") is False:
+                log.warning("integration repair (%s) %s failed: %s", reason, name, item.get("error") or action)
+            else:
+                log.info("integration repair (%s) %s: %s", reason, name, action)
+        return result
 
     def _on_os_shutdown(self, source: str) -> None:
         """Restore the system proxy while Windows is still shutting down."""
@@ -134,6 +182,70 @@ class EgressApp:
             elif self.config.reload_error and self.config.reload_error != (self.config_reload or {}).get("error"):
                 self.config_reload = {"at": time.time(), "source": "file", "keys": [], "error": self.config.reload_error}
                 log.warning("config reload skipped: %s", self.config.reload_error)
+
+    def _update_check_loop(self) -> None:
+        if self._stop.wait(UPDATE_FIRST_DELAY_SECONDS):
+            return
+        while not self._stop.is_set():
+            if self.settings.update_check_enabled:
+                try:
+                    self.check_update()
+                except Exception:
+                    log.debug("background update check failed", exc_info=True)
+            if self._stop.wait(UPDATE_CHECK_INTERVAL_SECONDS):
+                return
+
+    def check_update(self, force: bool = False) -> dict[str, Any]:
+        """Check GitHub Releases; non-forced results are cached for six hours."""
+        if not force and not self.settings.update_check_enabled:
+            result = updater.empty_update_result(__version__)
+            result["disabled"] = True
+            return result
+        if not force and self._update_checked_at and time.time() - self._update_checked_at < UPDATE_CACHE_SECONDS:
+            return dict(self.update_info)
+        with self._update_lock:
+            if not force and self._update_checked_at and time.time() - self._update_checked_at < UPDATE_CACHE_SECONDS:
+                return dict(self.update_info)
+            try:
+                result = updater.check_for_update(__version__)
+            except Exception as exc:
+                result = updater.empty_update_result(__version__, error=f"{type(exc).__name__}: {exc}")
+            result["checked_at"] = time.time()
+            self._update_checked_at = result["checked_at"]
+            self.update_info = result
+            return dict(result)
+
+    def install_update(self) -> dict[str, Any]:
+        """Download, verify and launch the update installer, then exit shortly."""
+        info = dict(self.update_info or {})
+        if not info.get("available"):
+            raise ValueError("当前没有可用更新")
+        if not info.get("installable"):
+            raise ValueError("当前平台或发布资产不支持自动安装，请从 GitHub Releases 手动下载")
+        if not self._update_install_lock.acquire(blocking=False):
+            raise ValueError("已有更新安装任务正在进行")
+        try:
+            path = updater.download_update(info)
+            updater.launch_installer(path)
+            version = str(info.get("latest") or "")
+            log.info("update installer launched for v%s from %s", version, path)
+            threading.Thread(
+                target=self._exit_for_update,
+                name="egressscope-update-exit",
+                daemon=True,
+            ).start()
+            return {"ok": True, "path": str(path), "version": version}
+        finally:
+            self._update_install_lock.release()
+
+    def _exit_for_update(self) -> None:
+        time.sleep(1.0)
+        try:
+            self.stop()
+        except Exception:
+            log.debug("stop during update failed", exc_info=True)
+        log.info("exiting so the update installer can replace files")
+        os._exit(0)
 
     def stop(self, restore_proxy: bool = True) -> None:
         if self._shutdown_done:
@@ -166,6 +278,10 @@ class EgressApp:
         except Exception:
             log.debug("web stop failed", exc_info=True)
         try:
+            self.netwatch.stop()
+        except Exception:
+            log.debug("netwatch stop failed", exc_info=True)
+        try:
             self.store.close()
         except Exception:
             log.debug("store close failed", exc_info=True)
@@ -195,7 +311,7 @@ class EgressApp:
     def update_settings(self, patch: dict[str, Any]) -> dict[str, Any]:
         clean: dict[str, Any] = {}
         for key, value in patch.items():
-            if key in {"capture_enabled", "blocking_enabled", "store_bodies", "file_guard_enabled", "canary_enabled", "inherit_system_proxy", "autostart_enabled", "onboarded"}:
+            if key in {"capture_enabled", "blocking_enabled", "store_bodies", "file_guard_enabled", "canary_enabled", "inherit_system_proxy", "autostart_enabled", "update_check_enabled", "network_watch_enabled", "onboarded"}:
                 clean[key] = bool(value)
             elif key == "block_risk":
                 clean[key] = max(1, min(100, int(value)))
@@ -223,6 +339,8 @@ class EgressApp:
                 "upstream_proxy": self.settings.upstream_proxy,
                 "inherit_system_proxy": self.settings.inherit_system_proxy,
                 "autostart_enabled": self.settings.autostart_enabled,
+                "update_check_enabled": self.settings.update_check_enabled,
+                "network_watch_enabled": self.settings.network_watch_enabled,
             },
             "canary": canary_result,
             "changed": changed,
@@ -258,7 +376,15 @@ class EgressApp:
         if "upstream_proxy" in changed or "inherit_system_proxy" in changed:
             self._restart_proxy_for_config()
         if "autostart_enabled" in changed:
-            self._ensure_autostart()
+            self._repair_integrations("settings")
+        if "network_watch_enabled" in changed or "capture_enabled" in changed:
+            try:
+                if self.settings.network_watch_enabled and self.settings.capture_enabled:
+                    self.netwatch.start()
+                else:
+                    self.netwatch.stop()
+            except Exception:
+                log.debug("network watch settings change failed", exc_info=True)
         return canary_result
 
     def _restart_proxy_for_config(self) -> None:
@@ -394,11 +520,18 @@ class EgressApp:
             "proxy_backup": bool(backup),
             "proxy_guard": system.proxy_guard_status(self.paths),
             "autostart": system.autostart_status(self.paths),
+            "integration_health": self.integration_health,
             "config_reload": self.config_reload,
             "fileguard": self.fileguard.status(),
+            "network": self.netwatch.status(),
             "chain": self.chain_status(),
             "blocked_count": self._blocked_count,
             "version": __version__,
+            "update": {
+                **(self.update_info or {}),
+                "enabled": bool(self.settings.update_check_enabled),
+                "current": __version__,
+            },
             "uptime": int(time.time() - self.started_at),
         }
 
@@ -446,8 +579,19 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--recover-proxy", action="store_true", help="restore a stale EgressScope system proxy if its port is not listening, then exit")
     parser.add_argument("--recover-grace", type=float, default=0.0, help="seconds to wait for the local proxy before restoring (--recover-proxy)")
     parser.add_argument("--autostart", action="store_true", help="start minimized (used by the logon Run key)")
+    parser.add_argument("--no-tray", action="store_true", help="disable the notification-area icon in GUI mode")
     parser.add_argument("--enable-autostart", action="store_true", help="register the per-user logon Run key, then exit")
     parser.add_argument("--disable-autostart", action="store_true", help="remove the per-user logon Run key, then exit")
+    parser.add_argument(
+        "--repair-integrations",
+        action="store_true",
+        help="rewrite autostart/watchdog integrations to the current executable, then exit",
+    )
+    parser.add_argument(
+        "--check-update",
+        action="store_true",
+        help="check GitHub Releases for a newer version, print JSON, then exit (does not install)",
+    )
     parser.add_argument("--log-level", default="INFO", choices=["DEBUG", "INFO", "WARNING", "ERROR"])
     parser.add_argument("--version", action="version", version=f"EgressScope {__version__}")
     return parser.parse_args(argv)
@@ -464,9 +608,33 @@ def _show_recovery_message(ok: bool, text: str) -> None:
         pass
 
 
+def _run_repair_integrations(paths: AppPaths) -> int:
+    settings = ConfigStore(paths.config).settings
+    backup = system.load_proxy_backup(paths) or {}
+    guard_enabled = bool((backup.get("guard") or {}).get("enabled"))
+    result = system.repair_integrations(paths, bool(settings.autostart_enabled), guard_enabled)
+    log.info("manual integration repair: %s", json.dumps(result, ensure_ascii=False, default=str))
+    print(json.dumps(result, ensure_ascii=False, indent=2, default=str))
+    return 0 if result.get("ok") else 1
+
+
+def _run_check_update() -> int:
+    result = updater.check_for_update(__version__)
+    print(json.dumps(result, ensure_ascii=False, indent=2, default=str))
+    return 0 if result.get("ok") else 1
+
+
 def _run_recovery(args: argparse.Namespace, paths: AppPaths) -> int:
     try:
         if args.restore_proxy:
+            if not system.load_proxy_backup(paths):
+                result = {"ok": True, "action": "noop", "reason": "no-backup"}
+                text = "没有找到 EgressScope 的代理备份，未修改系统设置。"
+                log.info("proxy recovery result: %s", json.dumps(result, ensure_ascii=False, default=str))
+                print(json.dumps(result, ensure_ascii=False, indent=2, default=str))
+                if not args.headless:
+                    _show_recovery_message(True, text)
+                return 0
             result = system.restore_system_proxy(paths)
             text = (
                 "系统代理已恢复为 EgressScope 启用前的设置。\n"
@@ -502,13 +670,27 @@ def _run_recovery(args: argparse.Namespace, paths: AppPaths) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
+    if args.check_update:
+        return _run_check_update()
     home = Path(args.home) if args.home else None
     paths = AppPaths(home)
     configure_logging(paths, args.log_level)
     log.info("starting %s %s (data dir: %s)", APP_NAME, __version__, paths.data)
     log.info("only use this tool on devices you own or are explicitly authorized to audit")
+    if args.repair_integrations:
+        return _run_repair_integrations(paths)
     if args.restore_proxy or args.recover_proxy:
         return _run_recovery(args, paths)
+    if args.enable_autostart or args.disable_autostart:
+        config = ConfigStore(paths.config)
+        config.update({"autostart_enabled": bool(args.enable_autostart)})
+        try:
+            result = system.enable_autostart(paths) if args.enable_autostart else system.disable_autostart(paths)
+        except Exception as exc:
+            print(f"autostart update failed: {exc}", file=sys.stderr)
+            return 1
+        print(json.dumps(result, ensure_ascii=False, default=str))
+        return 0
     try:
         app = EgressApp(paths)
     except Exception:
@@ -530,16 +712,6 @@ def main(argv: list[str] | None = None) -> int:
         app.settings.upstream_proxy = args.upstream_proxy
     if args.no_inherit_upstream:
         app.settings.inherit_system_proxy = False
-    if args.enable_autostart or args.disable_autostart:
-        app.settings.autostart_enabled = bool(args.enable_autostart)
-        app.config.save()
-        try:
-            result = system.enable_autostart(paths) if args.enable_autostart else system.disable_autostart(paths)
-        except Exception as exc:
-            print(f"autostart update failed: {exc}", file=sys.stderr)
-            return 1
-        print(json.dumps(result, ensure_ascii=False, default=str))
-        return 0
     app.settings.normalized()
     app.start()
     if args.open:
@@ -571,7 +743,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         from ai_audit.ui import ControlWindow
 
-        window = ControlWindow(app)
+        window = ControlWindow(app, no_tray=args.no_tray)
         if args.autostart:
             window.start_minimized()
         window.run()

@@ -116,6 +116,9 @@ def run() -> None:
     for required in ("覆盖边界", "证书固定", "127.0.0.1:7890", "回环", "断网保护"):
         check(f"page keeps required copy: {required}", required in page)
 
+    for required in ("未签名", "检测，不重定向", "仅元数据", "托盘", "未在 CI", "真实关机"):
+        check(f"page states honest limit: {required}", required in page)
+
     for placeholder in ("__REPO_URL__",):
         check("repo placeholder still present for Pages build", placeholder in page)
 
@@ -127,7 +130,7 @@ def run() -> None:
           and not re.search(r'<script[^>]+src="http', page))
     check("theme toggle exists", 'id="theme-toggle"' in page)
     check("language toggle exists", 'id="lang-toggle"' in page and 'data-lang-set="en"' in page)
-    check("version is current", "0.3.2" in page and "0.2.0" not in page)
+    check("version is current", "0.4.0" in page and "0.3.2" not in page and "0.2.0" not in page)
 
     print("\n=============================")
     print(f"{len(PASSED)} passed, {len(FAILED)} failed")

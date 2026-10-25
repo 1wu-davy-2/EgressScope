@@ -432,6 +432,27 @@ tbody tr:last-child td{border-bottom:0}
 .state-cell b .dot{width:5px;height:5px;border-radius:50%;background:var(--amber)}
 .state-cell b .dot.ok{background:var(--mint)}
 .state-cell b .dot.bad{background:var(--rose)}
+.vis-strip{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 14px;padding:11px 15px;border:1px solid var(--line);border-radius:12px;background:rgba(11,20,32,.64)}
+.vis-strip-label{font-size:10px;color:#6c8197;white-space:nowrap}
+.vis-metrics{display:flex;gap:7px;flex-wrap:wrap}
+.vis-metric{display:flex;align-items:center;gap:6px;border:1px solid rgba(128,160,195,.11);border-radius:7px;padding:4px 8px;font-size:9px;color:#7f94a9;background:rgba(8,15,24,.5)}
+.vis-metric b{font-family:var(--mono);font-size:11px;font-weight:500;color:#cfdeeb}
+.vis-badge{display:inline-flex;align-items:center;padding:1px 5px;border-radius:4px;font-size:8px;line-height:1.5;border:1px solid rgba(128,160,195,.18);color:#8ca0b4;white-space:nowrap}
+.vis-badge.full{color:#8fe3d2;border-color:rgba(60,232,194,.24);background:rgba(60,232,194,.06)}
+.vis-badge.partial{color:#e8bf7d;border-color:rgba(255,190,107,.24);background:rgba(255,190,107,.05)}
+.vis-badge.metadata{color:#a9bce8;border-color:rgba(124,156,255,.26);background:rgba(124,156,255,.06)}
+.vis-badge.blocked{color:#ff9dae;border-color:rgba(255,117,144,.24);background:rgba(255,117,144,.06)}
+.vis-badge.error{color:#ff9dae;border-color:rgba(255,117,144,.24);background:rgba(255,117,144,.06)}
+.net-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border-bottom:1px solid var(--line)}
+.net-cell{background:#0b1420;padding:12px 16px}
+.net-cell span{display:block;color:#5f748a;font-size:9px;margin-bottom:4px}
+.net-cell b{display:block;font-family:var(--mono);font-size:18px;font-weight:500;color:#cbdbea}
+.net-cell small{display:block;color:#5f748a;font-size:8.5px;margin-top:3px}
+.net-caveat{padding:11px 17px 14px;color:#6f8499;font-size:9.5px;line-height:1.7;border-top:1px solid var(--line)}
+.net-kind{color:#9fb3c7;font-size:9.5px}
+.net-kind.quic{color:#b7a8f5}
+.net-kind.dns{color:#7fb7e8}
+.net-kind.direct_tcp{color:#8fe3d2}
 
 /* ------- settings ------- */
 .settings-grid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(300px,.8fr);gap:14px;align-items:start}
@@ -629,6 +650,7 @@ pre.body.empty-body{color:#52667c;font-style:normal}
   .finding-arrow{display:none}
   .finding-score{display:none}
   .state-row{grid-template-columns:1fr 1fr}
+  .net-strip{grid-template-columns:1fr}
   .detail-grid{grid-template-columns:1fr 1fr}
   .modal-foot{flex-wrap:wrap}
   .toast-root{left:15px;right:15px;bottom:15px;align-items:stretch}
@@ -989,6 +1011,31 @@ pre.body.empty-body{color:#52667c;font-style:normal}
           </div>
           <p class="cov-note">说明：系统代理只改变遵循 WinINet / 系统设置的进程；对单个 Agent 更可控的方式是使用环境变量或未来路线中的 WFP 透明重定向。透明重定向不解决 TLS 固定或 E2EE。</p>
         </div>
+        <div class="vis-strip">
+          <span class="vis-strip-label">今日可见性分布</span>
+          <div class="vis-metrics" id="visibility-strip"><span class="vis-metric">等待统计</span></div>
+        </div>
+        <div class="panel" style="margin-bottom:14px">
+          <div class="panel-head">
+            <div>
+              <h3 class="panel-title">旁路与协议观测 · Beta</h3>
+              <div class="panel-hint" id="network-updated" style="margin-top:3px">等待数据</div>
+            </div>
+            <button class="panel-link" id="network-refresh">刷新 <svg class="ic"><use href="#i-refresh"/></svg></button>
+          </div>
+          <div class="net-strip" id="network-counts">
+            <div class="net-cell"><span>直连候选</span><b>—</b><small>TCP 80 / 443 / 8080 / 8443</small></div>
+            <div class="net-cell"><span>QUIC 候选</span><b>—</b><small>UDP 443 · 无法解密</small></div>
+            <div class="net-cell"><span>DNS 目标</span><b>—</b><small>仅目标，不含查询内容</small></div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>时间</th><th>类别</th><th>发起进程</th><th>远端目标</th><th>协议 / 置信度</th><th>次数</th></tr></thead>
+              <tbody id="network-body"><tr><td colspan="6" class="empty">正在读取本机连接表…</td></tr></tbody>
+            </table>
+          </div>
+          <div class="net-caveat" id="network-caveat">只读取本机连接表与 Windows 解析缓存，不抓包、不做透明重定向。直连与 QUIC 都只是候选信号，可能是上游代理或非 HTTP 协议；加密内容不可见。</div>
+        </div>
         <div class="state-row" id="coverage-state"></div>
       </section>
 
@@ -1044,6 +1091,10 @@ pre.body.empty-body{color:#52667c;font-style:normal}
                 <div class="set-copy"><div class="set-name">抽样间隔</div><div class="set-desc">两次句柄扫描之间的间隔（秒）。更频繁会消耗更多 CPU 与句柄枚举时间。</div></div>
                 <div class="set-control range-wrap"><input type="range" id="set-file-interval" min="2" max="30" step="1" value="4"><span class="range-val" id="set-file-interval-val">4s</span></div>
               </div>
+              <div class="set-row">
+                <div class="set-copy"><div class="set-name">网络旁路观测（Beta）</div><div class="set-desc">只读取本机连接表与 Windows DNS 解析缓存，标记直连、QUIC/UDP 443 与 DNS 目标。不做透明重定向、不抓包，也无法解密 QUIC 或 E2EE 内容；DNS 只记录目标，不记录查询内容。关闭流量采集时会自动暂停。</div></div>
+                <div class="set-control"><label class="switch"><input type="checkbox" data-setting="network_watch_enabled"><span></span></label></div>
+              </div>
             </div>
             <div class="panel">
               <div class="panel-head"><h3 class="panel-title">上行链路</h3><span class="panel-hint">热更新 · 代理自动重连</span></div>
@@ -1079,6 +1130,24 @@ pre.body.empty-body{color:#52667c;font-style:normal}
             </div>
           </div>
           <div class="settings-col">
+            <div class="panel" id="update-panel">
+              <div class="panel-head"><h3 class="panel-title">版本与更新</h3><span class="panel-hint" id="upd-badge">—</span></div>
+              <div class="meta-list">
+                <div class="meta-row"><span>当前版本</span><b id="upd-current">—</b></div>
+                <div class="meta-row"><span>最新版本</span><b id="upd-latest">—</b></div>
+                <div class="meta-row"><span>最近检查</span><b id="upd-checked">—</b></div>
+                <div class="meta-row"><span>检查状态</span><b id="upd-status">尚未检查</b></div>
+              </div>
+              <div class="set-row">
+                <div class="set-copy"><div class="set-name">自动检查更新</div><div class="set-desc">每天最多检查一次 GitHub Releases，只读取公开版本信息；不会上传审计数据、主机名或密钥。</div></div>
+                <div class="set-control"><label class="switch"><input type="checkbox" data-setting="update_check_enabled"><span></span></label></div>
+              </div>
+              <div class="action-stack">
+                <button class="btn" id="update-check-btn"><svg class="ic"><use href="#i-refresh"/></svg>检查更新</button>
+                <button class="btn primary" id="update-install-btn" disabled><svg class="ic"><use href="#i-download"/></svg>下载并安装</button>
+              </div>
+              <div class="warn-callout"><svg class="ic"><use href="#i-alert"/></svg><span>安装包必须通过 SHA-256 校验才会运行；未签名构建可能触发 Windows SmartScreen。安装前 EgressScope 会退出并恢复系统代理，然后重新启动。</span></div>
+            </div>
             <div class="panel">
               <div class="panel-head"><h3 class="panel-title">证据与隐私</h3></div>
               <div class="action-stack">
@@ -1136,6 +1205,7 @@ const state = {
   status: null,
   stats: null,
   settings: Object.assign({}, (BOOT && BOOT.settings) || {}),
+  update: {info: null, enabled: true, current: (BOOT && BOOT.version) || "", installing: false},
   recentFlows: [],
   findings: [],
   findingFilter: "all",
@@ -1148,12 +1218,17 @@ const state = {
   detailRevealed: false,
   env: "",
   chartSeries: [],
+  network: null,
+  networkAt: 0,
   lastUpdated: null,
 };
 const PAGE_TITLES = {overview:"态势总览", traffic:"流量审计", findings:"风险发现", files:"文件触达", coverage:"覆盖范围", settings:"策略与设置"};
 const SEV_LABEL = {info:"信息", low:"低风险", medium:"中风险", high:"高风险", critical:"严重"};
 const CAT_LABEL = {ai_service:"云端 AI", ai_local:"本地模型", ai_candidate:"AI 候选", other:"普通流量"};
 const ACTION_LABEL = {observe:"观察", alert:"告警", blocked:"已阻断"};
+const VIS_LABEL = {full:"完整", partial:"部分", metadata:"仅元数据", blocked:"已拦截", error:"错误"};
+const NET_LABEL = {direct_tcp:"直连候选", quic:"QUIC", dns:"DNS"};
+const NET_CONF_LABEL = {candidate:"候选信号", metadata:"目标元数据"};
 
 const $ = (sel, root=document) => root.querySelector(sel);
 const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
@@ -1200,6 +1275,10 @@ const icon = (name, cls="ic") => `<svg class="${cls}"><use href="#i-${name}"/></
 const sevClass = (v) => ["info","low","medium","high","critical"].includes(v) ? v : "info";
 const riskColor = (risk) => risk >= 85 ? "var(--rose)" : risk >= 70 ? "#ff9b65" : risk >= 45 ? "var(--amber)" : risk >= 25 ? "var(--blue)" : "#52677f";
 const actionClass = (a, blocked) => blocked ? "action blocked" : "action";
+const visBadge = (f) => {
+  const key = VIS_LABEL[f.visibility] ? f.visibility : "full";
+  return `<span class="vis-badge ${esc(key)}" title="${esc(f.visibility_reason || "")}">${esc(VIS_LABEL[key])}</span>`;
+};
 
 async function api(path, options={}) {
   const headers = Object.assign({"X-Egress-Token": TOKEN}, options.headers || {});
@@ -1234,8 +1313,8 @@ function setPage(page, updateHash=true) {
   if (page === "traffic") loadFlows();
   if (page === "findings") loadFindings();
   if (page === "files") loadFiles();
-  if (page === "coverage") renderCoverage();
-  if (page === "settings") { syncSettings(); renderSettingsMeta(); }
+  if (page === "coverage") { renderCoverage(); loadStats(); loadNetwork(); }
+  if (page === "settings") { syncSettings(); renderSettingsMeta(); loadUpdateInfo(); }
 }
 
 async function refreshStatus(silent=false) {
@@ -1248,7 +1327,7 @@ async function refreshStatus(silent=false) {
     renderOnboarding();
     renderOverviewMini();
     if (state.page === "settings") renderSettingsMeta();
-    if (state.page === "coverage") renderCoverage();
+    if (state.page === "coverage") { renderCoverage(); loadNetwork(); }
     return data;
   } catch (err) {
     if (!silent) toast("无法连接本地审计服务：" + err.message, "err");
@@ -1294,6 +1373,7 @@ async function loadStats() {
     renderOverviewMini();
     $("#nav-flow-count").textContent = fmtNum(state.stats.today.total);
     $("#risk-file-events").textContent = fmtNum(state.stats.today.file_events);
+    if (state.page === "coverage") renderCoverage();
   } catch (err) { toast("读取统计失败：" + err.message, "err"); }
 }
 
@@ -1412,7 +1492,7 @@ async function loadRecent() {
       <tr data-flow-id="${f.id}" tabindex="0">
         <td><div class="t-time">${fmtClock(f.ts)}<small>${fmtDay(f.ts)}</small></div></td>
         <td><div class="proc-cell"><div class="proc-avatar">${esc((f.proc_name || "?").slice(0,2))}</div><div style="min-width:0"><div class="proc-name">${esc(f.proc_name || "未归因进程")}</div><div class="proc-id">${f.pid ? "PID " + esc(f.pid) : "PID 未归因"}</div></div></div></td>
-        <td><div class="endpoint"><div class="endpoint-host">${esc(f.host)}${f.port && f.port !== 443 && f.port !== 80 ? ":" + esc(f.port) : ""}</div><div class="endpoint-path">${esc(f.method)} ${esc(short(f.path, 56))}</div><div class="tagline">${f.category && f.category !== "other" ? `<span class="tag ai">${esc(CAT_LABEL[f.category] || f.category)}</span>` : ""}${f.model ? `<span class="tag">${esc(f.model)}</span>` : ""}${f.blocked ? `<span class="tag block">已阻断</span>` : ""}</div></div></td>
+        <td><div class="endpoint"><div class="endpoint-host">${esc(f.host)}${f.port && f.port !== 443 && f.port !== 80 ? ":" + esc(f.port) : ""}</div><div class="endpoint-path">${esc(f.method)} ${esc(short(f.path, 56))}</div><div class="tagline">${f.category && f.category !== "other" ? `<span class="tag ai">${esc(CAT_LABEL[f.category] || f.category)}</span>` : ""}${f.model ? `<span class="tag">${esc(f.model)}</span>` : ""}${f.blocked ? `<span class="tag block">已阻断</span>` : ""}${visBadge(f)}</div></div></td>
         <td><span class="sev ${sevClass(f.severity)}">${SEV_LABEL[sevClass(f.severity)] || f.severity}</span></td>
         <td><span class="action">${esc(ACTION_LABEL[f.action] || f.action)}</span></td>
       </tr>`).join("");
@@ -1424,7 +1504,7 @@ function flowRow(f) {
   return `<tr data-flow-id="${f.id}" tabindex="0">
     <td><div class="t-time">${fmtClock(f.ts)}<small>${relTime(f.ts)}</small></div></td>
     <td><div class="proc-cell"><div class="proc-avatar">${esc((f.proc_name || "?").slice(0,2))}</div><div style="min-width:0"><div class="proc-name">${esc(f.proc_name || "未归因进程")}</div><div class="proc-id">${f.pid ? "PID " + esc(f.pid) : "未归因"}</div></div></div></td>
-    <td><div class="endpoint"><div class="endpoint-host">${esc(f.host)}${f.port && f.port !== 443 && f.port !== 80 ? ":" + esc(f.port) : ""}</div><div class="endpoint-path">${esc(f.method)} ${esc(short(f.path, 62))}</div><div class="tagline">${f.blocked ? `<span class="tag block">已阻断</span>` : ""}${f.coverage && f.coverage !== "proxied" ? `<span class="tag">${esc(f.coverage)}</span>` : ""}</div></div></td>
+    <td><div class="endpoint"><div class="endpoint-host">${esc(f.host)}${f.port && f.port !== 443 && f.port !== 80 ? ":" + esc(f.port) : ""}</div><div class="endpoint-path">${esc(f.method)} ${esc(short(f.path, 62))}</div><div class="tagline">${f.blocked ? `<span class="tag block">已阻断</span>` : ""}${f.coverage && f.coverage !== "proxied" ? `<span class="tag">${esc(f.coverage)}</span>` : ""}${visBadge(f)}</div></div></td>
     <td><div style="color:#aebfd0;font-size:10px">${esc(f.model || "—")}</div><div class="tagline"><span class="tag ${f.category === "ai_service" || f.category === "ai_local" ? "ai" : ""}">${esc(cat)}</span>${f.endpoint_kind ? `<span class="tag">${esc(f.endpoint_kind)}</span>` : ""}</div></td>
     <td><div class="risk-value"><span class="risk-num">${esc(f.risk)}</span><span class="risk-line"><i style="width:${Math.min(100, f.risk || 0)}%;background:${riskColor(f.risk)}"></i></span><span class="sev ${sevClass(f.severity)}">${SEV_LABEL[sevClass(f.severity)]}</span></div></td>
     <td><span class="${actionClass(f.action, f.blocked)}">${esc(ACTION_LABEL[f.action] || f.action)}</span></td>
@@ -1606,7 +1686,9 @@ function renderDrawer() {
       <div class="detail-cell"><span>流量体积</span><b>↑ ${fmtBytes(f.req_bytes)} · ↓ ${fmtBytes(f.resp_bytes)}</b></div>
       <div class="detail-cell"><span>TLS</span><b>${esc(f.tls || "—")}</b></div>
       <div class="detail-cell"><span>覆盖方式</span><b>${esc(f.coverage || "proxied")}</b></div>
+      <div class="detail-cell"><span>可见性</span><b>${esc(VIS_LABEL[f.visibility] || f.visibility || "完整")}</b>${f.visibility_reason ? `<small style="display:block;color:#71869b;font-size:8.5px;line-height:1.5;margin-top:4px">${esc(f.visibility_reason)}</small>` : ""}</div>
     </div>
+    ${["metadata", "error"].includes(f.visibility) ? `<div class="privacy-note" style="margin-top:12px">${icon("info")}<span>${esc(f.visibility_reason || "本次仅记录连接元数据，没有可读正文。")}</span></div>` : ""}
     <div class="detail-section">
       <div class="detail-section-head"><h4>${icon("activity")}请求目标</h4><span>${esc(f.scheme || "https")}://${esc(f.host)}${f.port && f.port !== 443 && f.port !== 80 ? ":" + esc(f.port) : ""}</span></div>
       <pre class="body">${esc(f.method + " " + f.path)}</pre>
@@ -1748,6 +1830,98 @@ async function saveSettings(patch, {silent=false}={}) {
   }
 }
 
+async function loadUpdateInfo() {
+  try {
+    const data = await api("/api/update");
+    state.update.info = data.update || {};
+    state.update.enabled = data.enabled !== false;
+    state.update.current = data.current || state.update.current;
+    state.settings.update_check_enabled = state.update.enabled;
+    renderUpdatePanel();
+    syncSettings();
+  } catch (err) {
+    state.update.info = Object.assign({}, state.update.info || {}, {ok:false, error:"无法读取更新状态：" + err.message});
+    renderUpdatePanel();
+  }
+}
+
+function renderUpdatePanel() {
+  const panel = $("#update-panel"); if (!panel) return;
+  const info = (state.update && state.update.info) || {};
+  const current = info.current || state.update.current || (BOOT && BOOT.version) || "—";
+  const enabled = state.update.enabled !== false;
+  const available = !!(info.ok && info.available);
+  const installable = !!(available && info.installable);
+  const setText = (sel, value) => { const el = $(sel); if (el) el.textContent = value; };
+  setText("#upd-current", "v" + current);
+  setText("#upd-latest", info.latest ? "v" + info.latest : "—");
+  setText("#upd-checked", info.checked_at ? relTime(info.checked_at) : "尚未检查");
+  const status = $("#upd-status");
+  if (status) {
+    let text = "尚未检查", cls = "";
+    if (!enabled) { text = "自动检查已关闭"; cls = "muted"; }
+    else if (state.update.installing) { text = "安装程序已启动，应用即将退出"; cls = "ok"; }
+    else if (info.error) { text = short(info.error, 46); cls = "bad"; }
+    else if (available) { text = "发现新版本 v" + info.latest + (installable ? "" : " · 当前平台需手动下载"); cls = "warn"; }
+    else if (info.ok) { text = "已是最新版本"; cls = "ok"; }
+    status.textContent = text;
+    status.className = cls;
+  }
+  setText("#upd-badge", state.update.installing ? "安装中" : available ? "有更新" : enabled ? "已开启" : "已关闭");
+  const installBtn = $("#update-install-btn");
+  if (installBtn) {
+    installBtn.disabled = !installable || !!state.update.installing;
+    installBtn.textContent = state.update.installing ? "正在安装…" : "下载并安装";
+  }
+}
+
+async function checkForUpdates() {
+  const btn = $("#update-check-btn");
+  if (btn) { btn.disabled = true; btn.textContent = "正在检查…"; }
+  try {
+    const data = await api("/api/update/check", {method:"POST", body:"{}"});
+    state.update.info = data.update || {};
+    state.update.enabled = data.enabled !== false;
+    state.update.current = data.current || state.update.current;
+    renderUpdatePanel();
+    const info = state.update.info;
+    if (!info.ok) toast("检查更新失败：" + (info.error || "无法连接 GitHub Releases"), "err");
+    else if (info.available) toast("发现新版本 v" + info.latest + (info.installable ? "" : "（当前平台需手动下载）"));
+    else toast("当前已是最新版本 v" + (info.current || state.update.current));
+  } catch (err) {
+    toast("检查更新失败：" + err.message, "err");
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = "检查更新"; }
+    renderUpdatePanel();
+  }
+}
+
+async function installUpdate() {
+  const info = (state.update && state.update.info) || {};
+  if (!info.available || !info.installable) { toast("当前没有可自动安装的更新", "err"); return; }
+  const ok = await confirmDialog({
+    title: "下载并安装 v" + info.latest + "？",
+    kicker: "UPDATE · SHA-256 REQUIRED",
+    body: `<p>将从 GitHub Releases 下载 <b>${esc(info.asset_name || "安装包")}</b>，并强制校验 SHA-256。校验失败会删除文件，不会运行安装程序。</p>
+           <p>安装前 EgressScope 会退出并恢复系统代理，安装完成后重新启动应用。未签名构建可能触发 Windows SmartScreen，请确认来源为官方发布页。</p>
+           <p class="muted">此过程不会上传任何审计数据。</p>`,
+    confirm: "下载并安装"
+  });
+  if (!ok) return;
+  state.update.installing = true;
+  renderUpdatePanel();
+  try {
+    await api("/api/update/install", {method:"POST", body:JSON.stringify({confirm:"UPDATE"})});
+    toast("安装程序已启动，应用即将退出");
+    state.update.info = Object.assign({}, info, {available: false});
+    renderUpdatePanel();
+  } catch (err) {
+    state.update.installing = false;
+    renderUpdatePanel();
+    toast("更新失败：" + err.message, "err");
+  }
+}
+
 function confirmDialog({title, kicker="PLEASE CONFIRM", body, confirm="确认", tone="normal"}) {
   return new Promise(resolve => {
     const root = $("#modal-root");
@@ -1780,6 +1954,11 @@ async function handleToggle(input) {
       if (!ok) { input.checked = false; return; }
     }
     await saveSettings({[key]: desired});
+    if (key === "update_check_enabled") {
+      state.update.enabled = desired;
+      renderUpdatePanel();
+      if (desired) loadUpdateInfo();
+    }
     if (key === "file_guard_enabled" || key === "canary_enabled") loadFiles();
     if (key === "capture_enabled") refreshStatus(true);
   } catch (_) { input.checked = !desired; }
@@ -1891,6 +2070,15 @@ async function copyEnv() {
   } catch (err) { toast("读取环境变量失败：" + err.message, "err"); }
 }
 
+function renderVisibilityStrip() {
+  const host = $("#visibility-strip");
+  if (!host) return;
+  const vis = state.stats && state.stats.visibility;
+  if (!vis) { host.innerHTML = `<span class="vis-metric">等待统计</span>`; return; }
+  const keys = ["full", "partial", "metadata", "blocked", "error"];
+  host.innerHTML = keys.map(key => `<span class="vis-metric"><span class="vis-badge ${key}">${VIS_LABEL[key]}</span><b>${fmtNum(vis[key] || 0)}</b></span>`).join("");
+}
+
 function renderCoverage() {
   const s = state.status; if (!s) return;
   const ca = s.ca || {}; const sys = s.system_proxy || {}; const proxy = s.proxy || {}; const fg = s.fileguard || {};
@@ -1901,6 +2089,83 @@ function renderCoverage() {
     stateCell("本地 CA", ca.installed ? "当前用户已信任" : "未安装", !!ca.installed),
     stateCell("文件触达", fg.enabled ? "Beta 抽样中" : "已关闭", !!fg.enabled),
   ].join("");
+  renderVisibilityStrip();
+}
+
+async function loadNetwork(force=false) {
+  if (!force && state.networkAt && Date.now() - state.networkAt < 15000) return;
+  try {
+    const data = await api("/api/network?limit=50");
+    state.network = data;
+    state.networkAt = Date.now();
+    renderNetwork();
+  } catch (err) {
+    const updated = $("#network-updated");
+    if (updated) updated.textContent = "读取失败：" + err.message;
+  }
+}
+
+function renderNetwork() {
+  const data = state.network;
+  if (!data) return;
+  const counts = data.counts || {};
+  const enabled = data.enabled !== false;
+  const paused = !!data.paused;
+  const updated = $("#network-updated");
+  if (updated) {
+    updated.textContent = !enabled
+      ? "已关闭 · 可在设置中启用"
+      : paused
+        ? "已暂停 · 流量采集已关闭"
+        : data.last_scan_at
+          ? `最近扫描 ${relTime(data.last_scan_at)} · 每 ${Math.round(data.interval || 15)} 秒` + (data.running ? "" : " · 未运行")
+          : "等待首次扫描";
+  }
+  const cards = [
+    ["direct_tcp", "直连候选", "TCP 80 / 443 / 8080 / 8443"],
+    ["quic", "QUIC 候选", "UDP 443 · 无法解密"],
+    ["dns", "DNS 目标", "仅目标，不含查询内容"],
+  ];
+  $("#network-counts").innerHTML = cards.map(([key, label, hint]) => `
+    <div class="net-cell"><span>${label}</span><b>${fmtNum(counts[key] || 0)}</b><small>${hint}</small></div>`).join("");
+  const body = $("#network-body");
+  const events = data.events || [];
+  if (!events.length) {
+    const message = !enabled
+      ? "网络旁路观测已关闭。开启后只会读取本机连接表与 DNS 解析缓存，不抓包、不做透明重定向。"
+      : paused
+        ? "流量采集已暂停，旁路观测同步暂停。恢复采集后会继续读取连接表与 DNS 解析缓存。"
+        : "尚未观测到直连候选、QUIC 或 DNS 目标。没有候选是正常的：可能当前应用都遵循系统代理，或连接表中暂时没有这类公网连接。";
+    body.innerHTML = `<tr><td colspan="6"><div class="empty">${icon("eye")}<p>${esc(message)}</p></div></td></tr>`;
+  } else {
+    body.innerHTML = events.map(e => {
+      const kind = NET_LABEL[e.kind] || e.kind || "—";
+      const target = `${esc(e.remote_ip || "—")}${e.remote_port ? ":" + esc(e.remote_port) : ""}`;
+      const domain = e.domain ? `<div class="mono" style="font-size:8.5px;color:#60758b;margin-top:2px">${esc(e.domain)}</div>` : "";
+      const proc = `${esc(e.proc_name || "未归因进程")}${e.pid ? `<div class="proc-id">PID ${esc(e.pid)}</div>` : `<div class="proc-id">PID 未归因</div>`}`;
+      return `<tr>
+        <td><div class="t-time">${fmtClock(e.ts)}<small>${relTime(e.ts)}</small></div></td>
+        <td><span class="net-kind ${esc(e.kind || "")}">${esc(kind)}</span></td>
+        <td><div class="proc-name">${proc}</div></td>
+        <td><div class="mono" style="font-size:9.5px;color:#aebfd0">${target}</div>${domain}</td>
+        <td><span class="tag">${esc((e.protocol || "").toUpperCase())}</span> <span class="tag">${esc(NET_CONF_LABEL[e.confidence] || e.confidence || "候选")}</span></td>
+        <td><span class="mono" style="font-size:9.5px;color:#8398ad">${fmtNum(e.seen_count || 1)}</span></td>
+      </tr>`;
+    }).join("");
+  }
+  const caveat = $("#network-caveat");
+  if (caveat) {
+    const dns = data.dns || {};
+    let text = "只读取本机连接表" + (dns.supported ? "与 Windows 解析缓存" : "") + "，不抓包、不做透明重定向。直连与 QUIC 都只是候选信号，可能是上游代理或非 HTTP 协议；加密内容不可见。";
+    if (!dns.supported) text += " 当前平台不支持读取 DNS 解析缓存，连接表观测仍会继续。";
+    try {
+      if (dns.last_at) text += ` DNS 缓存 ${dns.cached || 0} 条，更新于 ${fmtClock(dns.last_at)}。`;
+    } catch (_) {}
+    if (dns.error) text += " " + dns.error;
+    if (paused) text = "流量采集已暂停，旁路观测同步暂停。" + text;
+    if (data.last_error) text += " 观测错误：" + data.last_error + "。";
+    caveat.textContent = text;
+  }
 }
 
 async function refreshAll() {
@@ -1931,9 +2196,12 @@ function bindEvents() {
     if (e.target.closest("#traffic-refresh")) { loadFlows(); toast("正在刷新流量"); return; }
     if (e.target.closest("#findings-refresh")) { loadFindings(); toast("正在刷新风险发现"); return; }
     if (e.target.closest("#files-refresh")) { loadFiles(); refreshStatus(true); toast("正在刷新关联事件"); return; }
+    if (e.target.closest("#network-refresh")) { loadNetwork(true); loadStats(); refreshStatus(true); toast("正在刷新旁路观测"); return; }
     if (e.target.closest("#copy-env-btn")) { copyEnv(); return; }
     if (e.target.closest("#export-btn")) { downloadEvidence(); return; }
     if (e.target.closest("#clear-btn")) { openClearDialog(); return; }
+    if (e.target.closest("#update-check-btn")) { checkForUpdates(); return; }
+    if (e.target.closest("#update-install-btn")) { installUpdate(); return; }
     const findChip = e.target.closest("[data-find]");
     if (findChip) {
       state.findingFilter = findChip.dataset.find;

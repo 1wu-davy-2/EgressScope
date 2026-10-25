@@ -29,6 +29,8 @@ GUARD_TASK = "EgressScope Proxy Recovery"
 AUDIT_TASK = "EgressScope Audit"
 GUARD_SCRIPT = "proxy-guard.ps1"
 GUARD_LOG = "proxy-recovery.log"
+TASK_CACHE_TTL = 300.0
+_task_cache: dict[str, tuple[float, bool]] = {}
 
 
 class SystemControlError(RuntimeError):
@@ -588,16 +590,51 @@ def guard_log_path(paths: AppPaths) -> Path:
     return paths.logs / GUARD_LOG
 
 
+def _task_exists(name: str) -> bool:
+    if sys.platform != "win32":
+        return False
+    now = time.time()
+    cached = _task_cache.get(name)
+    if cached and now - cached[0] < TASK_CACHE_TTL:
+        return cached[1]
+    try:
+        result = subprocess.run(
+            ["schtasks", "/Query", "/TN", name],
+            capture_output=True,
+            text=True,
+            errors="replace",
+            timeout=20,
+            creationflags=CREATE_NO_WINDOW,
+        )
+        exists = result.returncode == 0
+    except (OSError, subprocess.SubprocessError):
+        exists = False
+    _task_cache[name] = (now, exists)
+    return exists
+
+
+def _guard_task_cached() -> bool | None:
+    """Return the cached guard task state without spawning schtasks."""
+    if sys.platform != "win32":
+        return None
+    cached = _task_cache.get(GUARD_TASK)
+    if not cached or time.time() - cached[0] >= TASK_CACHE_TTL:
+        return None
+    return cached[1]
+
+
 def proxy_guard_status(paths: AppPaths) -> dict[str, Any]:
     backup = load_proxy_backup(paths)
     guard = (backup or {}).get("guard") or {}
     script_exists = guard_script_path(paths).exists()
     enabled = bool(guard.get("enabled"))
+    task_present = _guard_task_cached()
     return {
         "supported": sys.platform == "win32",
         "enabled": enabled,
         "installed": enabled and script_exists,
-        "degraded": enabled and not script_exists,
+        "degraded": enabled and (not script_exists or task_present is False),
+        "task_present": task_present,
         "script": str(guard_script_path(paths)),
         "log": str(guard_log_path(paths)),
         "recovery_task": GUARD_TASK,
@@ -712,13 +749,15 @@ def _run_key_read() -> str:
 
 def autostart_status(paths: AppPaths) -> dict[str, Any]:
     if sys.platform != "win32":
-        return {"supported": False, "enabled": False, "command": "", "value": ""}
+        return {"supported": False, "enabled": False, "ours": False, "stale": False, "command": "", "value": ""}
     value = _run_key_read()
     expected = autostart_command(paths)
+    ours = bool(value) and value == expected
     return {
         "supported": True,
         "enabled": bool(value),
-        "ours": bool(value) and value == expected,
+        "ours": ours,
+        "stale": bool(value) and not ours,
         "command": expected,
         "value": value,
     }
@@ -751,6 +790,75 @@ def disable_autostart(paths: AppPaths) -> dict[str, Any]:
     except FileNotFoundError:
         pass
     return {"ok": True, "enabled": False, "removed": True}
+
+
+def repair_integrations(paths: AppPaths, want_autostart: bool, want_guard: bool) -> dict[str, Any]:
+    """Rewrite per-user autostart and watchdog integrations for this executable."""
+    at = time.time()
+    if sys.platform != "win32":
+        return {
+            "supported": False,
+            "ok": True,
+            "autostart": {"action": "noop", "reason": "unsupported-platform", "ok": True},
+            "guard": {"action": "noop", "reason": "unsupported-platform", "ok": True},
+            "at": at,
+        }
+
+    autostart: dict[str, Any] = {"action": "none", "ok": True}
+    try:
+        value = _run_key_read()
+        expected = autostart_command(paths)
+        autostart.update(command=expected, value=value, stale=bool(value) and value != expected)
+        if want_autostart:
+            if value == expected:
+                autostart.update(action="healthy", ok=True)
+            else:
+                enable_autostart(paths)
+                autostart.update(action="repointed" if value else "registered", ok=True)
+        elif not value:
+            autostart.update(action="healthy", ok=True)
+        elif value == expected:
+            result = disable_autostart(paths)
+            autostart.update(action="removed", ok=bool(result.get("ok", True)))
+        else:
+            autostart.update(action="skipped", reason="not-ours", ok=True)
+    except Exception as exc:
+        autostart.update(action="error" if autostart.get("action") == "none" else autostart["action"], ok=False)
+        autostart["error"] = f"{type(exc).__name__}: {exc}"
+
+    guard: dict[str, Any] = {"action": "none", "ok": True}
+    try:
+        backup = load_proxy_backup(paths) or {}
+        guard_enabled = bool((backup.get("guard") or {}).get("enabled"))
+        guard["enabled"] = guard_enabled
+        if not want_guard:
+            guard.update(action="skipped", reason="disabled", ok=True)
+        elif not guard_enabled:
+            guard.update(action="skipped", reason="not-enabled", ok=True)
+        else:
+            script = guard_script_path(paths)
+            script_exists = script.exists()
+            task_present = _task_exists(GUARD_TASK)
+            guard.update(script=str(script), script_present=script_exists, task_present=task_present)
+            if script_exists and task_present:
+                guard.update(action="healthy", ok=True)
+            else:
+                guard.update(action="reinstalled")
+                result = install_proxy_guard(paths)
+                guard.update(ok=bool(result.get("ok")), install=result, action="reinstalled")
+                if result.get("ok"):
+                    _task_cache[GUARD_TASK] = (time.time(), True)
+    except Exception as exc:
+        guard.update(action="error" if guard.get("action") == "none" else guard["action"], ok=False)
+        guard["error"] = f"{type(exc).__name__}: {exc}"
+
+    return {
+        "supported": True,
+        "ok": bool(autostart.get("ok") and guard.get("ok")),
+        "autostart": autostart,
+        "guard": guard,
+        "at": at,
+    }
 
 
 def install_proxy_guard(paths: AppPaths) -> dict[str, Any]:
@@ -797,6 +905,7 @@ def install_proxy_guard(paths: AppPaths) -> dict[str, Any]:
         }
         backup["guard"] = guard
         _save_proxy_backup(paths, backup)
+        _task_cache[GUARD_TASK] = (time.time(), True)
     return {
         "ok": bool(recovery_result.get("ok")),
         "recovery_task": recovery_result,
@@ -816,6 +925,8 @@ def uninstall_proxy_guard(paths: AppPaths, disable_only: bool = False) -> dict[s
         "audit": _remove_task(AUDIT_TASK, disable_only=disable_only),
     }
     if not disable_only:
+        _task_cache.pop(GUARD_TASK, None)
+        _task_cache.pop(AUDIT_TASK, None)
         try:
             (paths.data / GUARD_SCRIPT).unlink(missing_ok=True)
         except OSError:

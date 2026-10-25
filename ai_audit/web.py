@@ -41,6 +41,8 @@ ALLOWED_SETTINGS = {
     "upstream_proxy",
     "inherit_system_proxy",
     "autostart_enabled",
+    "update_check_enabled",
+    "network_watch_enabled",
     "onboarded",
 }
 
@@ -235,8 +237,16 @@ class WebHandler(BaseHTTPRequestHandler):
                 return
             if path == "/api/status":
                 self._send_json(self._status())
+            elif path == "/api/update":
+                self._send_json({"ok": True, "update": self.app.update_info, "enabled": self.app.settings.update_check_enabled, "current": __version__})
             elif path == "/api/stats":
                 self._send_json({"ok": True, "stats": self.app.store.stats()})
+            elif path == "/api/network":
+                try:
+                    limit = int(parse_qs(parsed.query).get("limit", ["50"])[0])
+                except (TypeError, ValueError):
+                    limit = 50
+                self._send_json({"ok": True, **self.app.netwatch.snapshot(max(1, min(200, limit)))})
             elif path == "/api/flows":
                 self._flows(parsed.query)
             elif path.startswith("/api/flows/"):
@@ -286,6 +296,21 @@ class WebHandler(BaseHTTPRequestHandler):
                     return
                 result = self.app.clear_data()
                 self._send_json({"ok": True, **result})
+            elif path == "/api/update/check":
+                result = self.app.check_update(force=True)
+                self._send_json({
+                    "ok": True,
+                    "update": result,
+                    "enabled": self.app.settings.update_check_enabled,
+                    "current": __version__,
+                })
+            elif path == "/api/update/install":
+                data = self._read_json()
+                if str(data.get("confirm", "")) != "UPDATE":
+                    self._error(400, "Confirmation required")
+                    return
+                result = self.app.install_update()
+                self._send_json({"ok": True, **result})
             else:
                 self._error(404, "Not found")
         except Exception as exc:
@@ -314,6 +339,8 @@ class WebHandler(BaseHTTPRequestHandler):
                 "file_guard_interval": settings.file_guard_interval,
                 "upstream_proxy": settings.upstream_proxy,
                 "inherit_system_proxy": settings.inherit_system_proxy,
+                "update_check_enabled": settings.update_check_enabled,
+                "network_watch_enabled": settings.network_watch_enabled,
                 "onboarded": settings.onboarded,
             },
         }
@@ -349,6 +376,8 @@ class WebHandler(BaseHTTPRequestHandler):
                 "upstream_proxy": settings.upstream_proxy,
                 "inherit_system_proxy": settings.inherit_system_proxy,
                 "autostart_enabled": settings.autostart_enabled,
+                "update_check_enabled": settings.update_check_enabled,
+                "network_watch_enabled": settings.network_watch_enabled,
                 "onboarded": settings.onboarded,
             },
             "ca": {**ca, "installed": installed},
@@ -356,12 +385,15 @@ class WebHandler(BaseHTTPRequestHandler):
             "autostart": _autostart_status(self.app),
             "config_reload": self.app.config_reload,
             "fileguard": fileguard,
+            "network": self.app.netwatch.status() if getattr(self.app, "netwatch", None) else {},
             "chain": self.web.chain_status(),
             "data_dir": str(self.app.paths.data),
             "coverage": {
                 "proxied": "经本地代理的 HTTP/HTTPS 流量",
                 "decryptable": "信任 EgressScope CA 且未启用证书固定的 TLS 流量",
                 "not_visible": "直连、未信任 CA、证书固定、mTLS、QUIC/HTTP3、E2EE 内容、服务/SYSTEM 进程",
+                "visibility": "每条流量标记完整 / 部分 / 仅元数据 / 已拦截 / 错误；失败隧道只保留连接元数据",
+                "network_watch": "只读取本机连接表与 DNS 解析缓存，标记直连与 QUIC 候选；不做透明重定向，不抓包",
                 "file_guard": "基于打开文件句柄的抽样关联（Beta），不是完整读取审计",
             },
         }

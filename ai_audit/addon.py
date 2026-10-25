@@ -10,6 +10,11 @@ from mitmproxy import http
 
 from .attribution import ProcessInfo
 from .policy import Assessment, PolicyEngine, sanitize_headers, severity_for_risk
+from .visibility import (
+    TUNNEL_NOTE,
+    classify_visibility,
+    looks_like_tls_failure,
+)
 
 log = logging.getLogger(__name__)
 
@@ -63,6 +68,7 @@ class AuditAddon:
                 "client_port": client_port,
                 "headers": headers,
                 "body": raw_body,
+                "body_note": body_note,
                 "truncated": truncated,
                 "assessment": assessment,
                 "process": info,
@@ -98,11 +104,53 @@ class AuditAddon:
         self._finalize(flow)
 
     def error(self, flow: http.HTTPFlow) -> None:
+        state = flow.metadata.get("egress")
+        if not state:
+            self._record_tunnel_failure(flow)
+            return
         self._finalize(flow, error=True)
 
     def websocket_message(self, flow: http.HTTPFlow) -> None:
         # Handshake is captured as a normal HTTP flow; message bodies are intentionally not persisted.
         return
+
+    def _record_tunnel_failure(self, flow: http.HTTPFlow) -> None:
+        """Persist a metadata-only row for a CONNECT tunnel that never opened."""
+        try:
+            if flow.metadata.get("egress") or flow.metadata.get("egress_saved"):
+                return
+            if flow.request.method.upper() != "CONNECT":
+                return
+            if not self.app.settings.capture_enabled:
+                return
+            flow.metadata["egress_saved"] = True
+            error_text = str(flow.error.msg) if flow.error else ""
+            client_ip = ""
+            client_port = None
+            info: ProcessInfo | None = None
+            try:
+                peername = flow.client_conn.peername
+                client_ip = str(peername[0]) if peername else ""
+                client_port = int(peername[1]) if peername and len(peername) > 1 else None
+                info = self.app.resolver.resolve(client_ip, client_port)
+            except Exception:
+                info = None
+            record = build_tunnel_record(
+                host=flow.request.host or "",
+                port=int(flow.request.port or 0),
+                scheme=flow.request.scheme or "https",
+                ts=float(flow.request.timestamp_start or time.time()),
+                error=error_text,
+                tls_failure=looks_like_tls_failure(error_text),
+                client_ip=client_ip,
+                client_port=client_port,
+                info=info,
+            )
+            flow_id = self.app.store.insert_flow(record, [])
+            if info:
+                self.app.note_flow_saved(flow_id, info.pid)
+        except Exception:
+            log.exception("tunnel failure record failed")
 
     def _finalize(self, flow: http.HTTPFlow, error: bool = False) -> None:
         state = flow.metadata.get("egress")
@@ -116,6 +164,7 @@ class AuditAddon:
             resp = flow.response
             resp_body: bytes | None = None
             resp_note = ""
+            body_note = ""
             status = 0
             resp_preview = ""
             resp_findings = []
@@ -130,6 +179,7 @@ class AuditAddon:
                 resp_bytes = cl if cl is not None else len(resp.content or b"")
                 if not state["blocked"]:
                     resp_body, resp_trunc, resp_note = _read_message(resp, settings.body_limit_bytes)
+                    body_note = resp_note
                     if resp_body:
                         resp_preview, resp_findings = self.app.policy.inspect_response(
                             headers=resp_headers_raw,
@@ -145,6 +195,7 @@ class AuditAddon:
                 resp_note = "代理错误：" + _sanitize_note(str(flow.error.msg))[:300]
             if not duration_ms:
                 duration_ms = max(0, int((time.time() - state["ts"]) * 1000))
+            error_text = str(flow.error.msg) if error and flow.error else ""
 
             request_content: bytes | None = state.get("body")
             request_headers: dict[str, str] = state.get("headers") or {}
@@ -171,6 +222,28 @@ class AuditAddon:
             if resp is not None and getattr(resp, "stream", False):
                 notes.append("响应正文采用流式传输，未保存")
             tls = _tls_label(flow)
+            scheme = flow.request.scheme or ""
+            tls_terminated = True
+            if scheme.lower() == "https":
+                try:
+                    tls_terminated = bool(getattr(flow.client_conn, "tls_established", False))
+                except Exception:
+                    tls_terminated = True
+            visibility, visibility_reason = classify_visibility(
+                blocked=bool(state["blocked"]),
+                is_connect=flow.request.method.upper() == "CONNECT",
+                websocket=bool(flow.websocket),
+                has_response=resp is not None,
+                status=status,
+                method=flow.request.method,
+                scheme=scheme,
+                body_captured=resp_body is not None,
+                body_note=body_note,
+                request_body_note=str(state.get("body_note") or ""),
+                error=error_text,
+                tls_failure=looks_like_tls_failure(error_text),
+                tls_terminated=tls_terminated,
+            )
             record: dict[str, Any] = {
                 "ts": state["ts"],
                 "method": flow.request.method,
@@ -208,6 +281,8 @@ class AuditAddon:
                 ),
                 "note": "；".join(dict.fromkeys(n for n in notes if n))[:500],
                 "coverage": "proxy-error" if error and resp is None else ("websocket" if flow.websocket else "proxied"),
+                "visibility": visibility,
+                "visibility_reason": visibility_reason,
             }
             if info:
                 record.update(info.as_record())
@@ -226,6 +301,76 @@ class AuditAddon:
         if port == int(getattr(self.app, "listen_port", -1) or -1):
             return host in ("127.0.0.1", "localhost", "::1")
         return False
+
+
+def build_tunnel_record(
+    *,
+    host: str,
+    port: int,
+    scheme: str = "https",
+    ts: float | None = None,
+    error: str = "",
+    tls_failure: bool = False,
+    client_ip: str = "",
+    client_port: int | None = None,
+    info: ProcessInfo | None = None,
+) -> dict[str, Any]:
+    """Build a metadata-only flow record for an unopened CONNECT tunnel."""
+    visibility, reason = classify_visibility(
+        is_connect=True,
+        has_response=False,
+        scheme=scheme,
+        error=error,
+        tls_failure=tls_failure,
+    )
+    note = TUNNEL_NOTE if tls_failure or looks_like_tls_failure(error) else (
+        "CONNECT 隧道未能建立，仅记录连接元数据，未获得请求内容。"
+    )
+    tags = ["tunnel-unseen"]
+    if info is None:
+        tags.append("unattributed")
+    record: dict[str, Any] = {
+        "ts": float(ts or time.time()),
+        "method": "CONNECT",
+        "scheme": scheme or "https",
+        "host": host or "",
+        "port": int(port or 0),
+        "path": "",
+        "status": 0,
+        "req_bytes": 0,
+        "resp_bytes": 0,
+        "duration_ms": 0,
+        "content_type": "",
+        "app_kind": info.app_kind if info else "",
+        "category": "other",
+        "provider": "",
+        "endpoint_kind": "",
+        "model": "",
+        "risk": 0,
+        "severity": "info",
+        "action": "observe",
+        "blocked": False,
+        "req_preview": "",
+        "resp_preview": "",
+        "req_sha": "",
+        "resp_sha": "",
+        "enc_req": None,
+        "enc_resp": None,
+        "client_ip": client_ip,
+        "client_port": client_port,
+        "tls": "",
+        "tags": tags,
+        "headers_json": "{}",
+        "note": note,
+        "coverage": "tunnel",
+        "visibility": visibility,
+        "visibility_reason": reason,
+    }
+    if info:
+        record.update(info.as_record())
+    else:
+        record["pid"] = None
+    return record
 
 
 def _flatten_headers(headers) -> dict[str, str]:

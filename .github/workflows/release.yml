@@ -13,6 +13,9 @@ jobs:
   build:
     name: Build / ${{ matrix.platform }}
     runs-on: ${{ matrix.os }}
+    env:
+      WINDOWS_CERT_PFX_BASE64: ${{ secrets.WINDOWS_CERT_PFX_BASE64 }}
+      WINDOWS_CERT_PASSWORD: ${{ secrets.WINDOWS_CERT_PASSWORD }}
     strategy:
       fail-fast: false
       matrix:
@@ -113,6 +116,93 @@ jobs:
         shell: pwsh
         run: python tests/packaged_test.py
 
+      - name: Packaged acceptance test (Windows x64)
+        if: matrix.platform == 'windows-x64'
+        shell: pwsh
+        run: python tests/packaged_test.py
+
+      - name: Resolve installer version
+        if: matrix.platform == 'windows-x64'
+        id: installer_version
+        shell: pwsh
+        run: |
+          $version = "0.0.0-dev"
+          if ($env:GITHUB_REF_TYPE -eq "tag") {
+            $tag = $env:GITHUB_REF_NAME
+            if ($tag.StartsWith("v")) { $tag = $tag.Substring(1) }
+            $tag = $tag -replace "-.*$", ""
+            if ($tag -match '^\d+\.\d+\.\d+$') { $version = $tag }
+          }
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          Write-Output "Installer version: $version"
+
+      - name: Sign executable (optional)
+        if: matrix.platform == 'windows-x64' && env.WINDOWS_CERT_PFX_BASE64 != ''
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $pfx = Join-Path $env:RUNNER_TEMP "egressscope-signing.pfx"
+          try {
+            [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:WINDOWS_CERT_PFX_BASE64))
+            $signtool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin\*\x64\signtool.exe" -ErrorAction SilentlyContinue | Sort-Object FullName | Select-Object -Last 1
+            if (-not $signtool) { throw "Signing was requested but signtool.exe was not found in the Windows SDK" }
+            $signArgs = @("sign", "/fd", "SHA256", "/f", $pfx)
+            if ($env:WINDOWS_CERT_PASSWORD) { $signArgs += @("/p", $env:WINDOWS_CERT_PASSWORD) }
+            $signArgs += @("/tr", "http://timestamp.digicert.com", "/td", "SHA256", "dist\EgressScope.exe")
+            & $signtool.FullName @signArgs
+            if ($LASTEXITCODE -ne 0) { throw "signtool failed for dist\EgressScope.exe" }
+          }
+          finally {
+            if (Test-Path $pfx) { Remove-Item -LiteralPath $pfx -Force }
+          }
+
+      - name: Build installer (Windows x64)
+        if: matrix.platform == 'windows-x64'
+        shell: pwsh
+        env:
+          EGRESS_SCOPE_VERSION: ${{ steps.installer_version.outputs.version }}
+          EGRESS_SCOPE_EXE: ${{ github.workspace }}\dist\EgressScope.exe
+          EGRESS_SCOPE_OUTPUT_DIR: ${{ github.workspace }}\dist
+        run: |
+          $ErrorActionPreference = "Stop"
+          $iscc = Join-Path ${env:ProgramFiles(x86)} "Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) {
+            choco install innosetup -y --no-progress
+            $iscc = Join-Path ${env:ProgramFiles(x86)} "Inno Setup 6\ISCC.exe"
+          }
+          if (-not (Test-Path $iscc)) {
+            $fallback = Join-Path $env:ProgramFiles "Inno Setup 6\ISCC.exe"
+            if (Test-Path $fallback) { $iscc = $fallback }
+          }
+          if (-not (Test-Path $iscc)) { throw "ISCC.exe was not found after installing Inno Setup 6" }
+          & $iscc "installer\EgressScope.iss"
+          if ($LASTEXITCODE -ne 0) { throw "Inno Setup compilation failed with exit code $LASTEXITCODE" }
+          $setup = Get-ChildItem "dist\EgressScope-Setup-v*.exe" | Select-Object -First 1
+          if (-not $setup) { throw "Installer output was not produced" }
+          Write-Output "Built $($setup.FullName)"
+
+      - name: Sign installer (optional)
+        if: matrix.platform == 'windows-x64' && env.WINDOWS_CERT_PFX_BASE64 != ''
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $pfx = Join-Path $env:RUNNER_TEMP "egressscope-signing.pfx"
+          try {
+            [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:WINDOWS_CERT_PFX_BASE64))
+            $signtool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin\*\x64\signtool.exe" -ErrorAction SilentlyContinue | Sort-Object FullName | Select-Object -Last 1
+            if (-not $signtool) { throw "Signing was requested but signtool.exe was not found in the Windows SDK" }
+            $setup = Get-ChildItem "dist\EgressScope-Setup-v*.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+            if (-not $setup) { throw "Signing was requested but the installer output was not found" }
+            $signArgs = @("sign", "/fd", "SHA256", "/f", $pfx)
+            if ($env:WINDOWS_CERT_PASSWORD) { $signArgs += @("/p", $env:WINDOWS_CERT_PASSWORD) }
+            $signArgs += @("/tr", "http://timestamp.digicert.com", "/td", "SHA256", $setup.FullName)
+            & $signtool.FullName @signArgs
+            if ($LASTEXITCODE -ne 0) { throw "signtool failed for $($setup.FullName)" }
+          }
+          finally {
+            if (Test-Path $pfx) { Remove-Item -LiteralPath $pfx -Force }
+          }
+
       - name: Package artifact
         shell: bash
         env:
@@ -121,9 +211,15 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p release
+          setup_asset=""
           if [[ "$PLATFORM" == windows-* ]]; then
             asset="EgressScope-${TAG}-${PLATFORM}.exe"
             cp dist/EgressScope.exe "release/$asset"
+            if [[ "$PLATFORM" == "windows-x64" ]]; then
+              setup_path=$(ls dist/EgressScope-Setup-v*.exe | head -n 1)
+              setup_asset=$(basename "$setup_path")
+              cp "$setup_path" "release/$setup_asset"
+            fi
           else
             asset="EgressScope-${TAG}-${PLATFORM}"
             cp dist/EgressScope "release/$asset"
@@ -134,8 +230,14 @@ jobs:
           fi
           if command -v sha256sum >/dev/null 2>&1; then
             (cd release && sha256sum "$asset" > "${asset}.sha256")
+            if [[ -n "$setup_asset" ]]; then
+              (cd release && sha256sum "$setup_asset" > "${setup_asset}.sha256")
+            fi
           else
             (cd release && shasum -a 256 "$asset" > "${asset}.sha256")
+            if [[ -n "$setup_asset" ]]; then
+              (cd release && shasum -a 256 "$setup_asset" > "${setup_asset}.sha256")
+            fi
           fi
           ls -lh release
 

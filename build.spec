@@ -20,6 +20,14 @@ hiddenimports = [
 ]
 if IS_WINDOWS:
     hiddenimports.append("winreg")
+    hiddenimports += ["pystray", "pystray._win32", "PIL.Image", "PIL.ImageDraw"]
+    try:
+        pystray_datas, pystray_binaries, pystray_hidden = collect_all("pystray")
+        datas += pystray_datas
+        binaries += pystray_binaries
+        hiddenimports += pystray_hidden
+    except Exception:
+        pass
     openssl_dll = os.environ.get("EGRESS_SCOPE_OPENSSL_DLL")
     if openssl_dll:
         binaries.append((openssl_dll, "."))

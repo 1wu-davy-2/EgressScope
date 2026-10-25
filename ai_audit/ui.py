@@ -3,11 +3,14 @@ from __future__ import annotations
 import logging
 import os
 import sys
+import threading
 import time
 import webbrowser
 from pathlib import Path
 from tkinter import BOTH, END, LEFT, RIGHT, TOP, X, filedialog, messagebox
 import tkinter as tk
+
+from ai_audit import tray
 
 log = logging.getLogger(__name__)
 
@@ -28,7 +31,7 @@ FONT = "Microsoft YaHei UI"
 
 
 class ControlWindow:
-    def __init__(self, app) -> None:
+    def __init__(self, app, no_tray: bool = False) -> None:
         self.app = app
         if sys.platform == "win32":
             try:
@@ -40,14 +43,31 @@ class ControlWindow:
         self.root = tk.Tk()
         self.root.title("EgressScope · 本机数据外发审计")
         self.root.configure(bg=BG)
-        self.root.geometry("810x930")
-        self.root.minsize(760, 800)
+        self.root.geometry("810x1020")
+        self.root.minsize(760, 930)
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
         self._closing = False
         self._values: dict[str, tk.Label] = {}
         self._buttons: dict[str, tk.Button] = {}
         self._build()
+        self._tray = tray.TrayController(
+            app,
+            show_window=lambda: self._post_to_ui(self._show_from_tray),
+            show_dashboard=lambda: self._post_to_ui(self._open_dashboard),
+            refresh=lambda: self._post_to_ui(self._refresh_once),
+            quit_app=lambda: self._post_to_ui(self._quit_from_tray),
+        )
         self._refresh()
+        if not no_tray:
+            try:
+                started = self._tray.start()
+            except Exception:
+                log.exception("notification-area startup failed")
+                started = False
+            if started:
+                log.info("closing the control window now hides it to the notification area")
+            else:
+                log.info("notification area unavailable; closing the control window stops EgressScope")
 
     # ---------- ui construction ----------
     def _build(self) -> None:
@@ -102,6 +122,8 @@ class ControlWindow:
         self._card(status_grid, 2, 1, "chain", "证据链状态", "—", padx_left=0)
         self._card(status_grid, 3, 0, "autostart", "开机自启（当前用户）", "—")
         self._card(status_grid, 3, 1, "reload", "配置热更新", "—", padx_left=0)
+        self._card(status_grid, 4, 0, "update", "版本与更新", "—")
+        self._card(status_grid, 4, 1, "network", "旁路与协议观测 · Beta", "—", padx_left=0)
 
         controls = tk.Frame(outer, bg=BG)
         controls.pack(fill=BOTH, expand=True, pady=(22, 0))
@@ -122,6 +144,7 @@ class ControlWindow:
         self._action(grid, 4, 1, "data", "打开数据目录", self._open_data)
         self._action(grid, 5, 0, "autostart", "关闭开机自启", self._toggle_autostart)
         self._action(grid, 5, 1, "guard", "注册断网保护", self._toggle_guard)
+        self._action(grid, 6, 0, "update", "检查更新", self._check_update, colspan=2)
 
         note = tk.Frame(outer, bg=PANEL, highlightthickness=1, highlightbackground=BORDER)
         note.pack(fill=X, pady=(20, 10))
@@ -146,20 +169,29 @@ class ControlWindow:
         tk.Label(footer, text="Local-only by default · 数据保存在本机", bg=BG, fg="#54657a", font=(FONT, 9)).pack(side=LEFT)
         tk.Label(footer, text="仅限授权审计", bg=BG, fg="#54657a", font=(FONT, 9)).pack(side=RIGHT)
 
-    def _card(self, parent, row: int, col: int, key: str, title: str, value: str, padx_left: int = 0) -> None:
+    def _card(self, parent, row: int, col: int, key: str, title: str, value: str, padx_left: int = 0, colspan: int = 1) -> None:
         padx = (0, 8) if col == 0 else (8, 0)
         card = tk.Frame(parent, bg=PANEL, highlightthickness=1, highlightbackground=BORDER)
-        card.grid(row=row, column=col, sticky="nsew", padx=padx, pady=5)
-        tk.Label(card, text=title, bg=PANEL, fg=MUTED, font=(FONT, 9)).pack(anchor="w", padx=14, pady=(11, 2))
-        label = tk.Label(card, text=value, bg=PANEL, fg=TEXT, font=(FONT, 11, "bold"), anchor="w", justify="left")
-        label.pack(fill=X, padx=14, pady=(0, 11))
+        card.grid(row=row, column=col, columnspan=colspan, sticky="nsew", padx=padx, pady=4)
+        tk.Label(card, text=title, bg=PANEL, fg=MUTED, font=(FONT, 9)).pack(anchor="w", padx=14, pady=(10, 2))
+        label = tk.Label(
+            card,
+            text=value,
+            bg=PANEL,
+            fg=TEXT,
+            font=(FONT, 11, "bold"),
+            anchor="w",
+            justify="left",
+            wraplength=700 if colspan > 1 else 320,
+        )
+        label.pack(fill=X, padx=14, pady=(0, 10))
         self._values[key] = label
 
-    def _action(self, parent, row: int, col: int, key: str, text: str, command, kind: str = "default") -> None:
+    def _action(self, parent, row: int, col: int, key: str, text: str, command, kind: str = "default", colspan: int = 1) -> None:
         bg = ACCENT if kind == "accent" else PANEL_2
         fg = ACCENT_DARK if kind == "accent" else TEXT
         active = "#5cf0d1" if kind == "accent" else "#1d2a38"
-        padx = (0, 8) if col == 0 else (8, 0)
+        padx = (0, 8) if col == 0 and colspan == 1 else ((8, 0) if col == 1 else (0, 0))
         button = tk.Button(
             parent,
             text=text,
@@ -179,7 +211,7 @@ class ControlWindow:
             pady=11,
             anchor="center",
         )
-        button.grid(row=row, column=col, sticky="nsew", padx=padx, pady=5)
+        button.grid(row=row, column=col, columnspan=colspan, sticky="nsew", padx=padx, pady=5)
         self._buttons[key] = button
 
     # ---------- refresh ----------
@@ -191,6 +223,10 @@ class ControlWindow:
             self._apply_status(status)
         except Exception:
             log.exception("status refresh failed")
+        try:
+            self._tray.sync()
+        except Exception:
+            log.debug("notification-area sync failed", exc_info=True)
         self.root.after(2000, self._refresh)
 
     def _apply_status(self, status: dict) -> None:
@@ -259,6 +295,45 @@ class ControlWindow:
             self._values["reload"].configure(text=f"{stamp} · {source} · {keys} 项已生效", fg=GREEN)
         else:
             self._values["reload"].configure(text="无需重启 · 等待配置变更", fg=MUTED)
+
+        network = status.get("network") or {}
+        net_counts = network.get("counts") or {}
+        net_dns = network.get("dns") or {}
+        if not network.get("enabled", True):
+            self._values["network"].configure(text="已关闭 · 仅代理可见流量", fg=MUTED)
+        elif network.get("paused"):
+            self._values["network"].configure(text="已暂停 · 流量采集已关闭", fg=MUTED)
+        else:
+            dns_text = f"DNS 缓存 {net_dns.get('cached', 0)} 条" if net_dns.get("supported", True) else "DNS 仅 Windows"
+            prefix = "运行中" if network.get("running") else "等待首次扫描"
+            text = (
+                f"{prefix} · 直连候选 {net_counts.get('direct_tcp', 0)} · "
+                f"QUIC {net_counts.get('quic', 0)} · DNS {net_counts.get('dns', 0)} · {dns_text}"
+            )
+            if network.get("last_error"):
+                text = f"{prefix} · 观测异常：{str(network.get('last_error'))[:48]}"
+            self._values["network"].configure(
+                text=text,
+                fg=GREEN if network.get("running") else AMBER,
+            )
+
+        update = status.get("update") or {}
+        current = str(update.get("current") or status.get("version") or "—")
+        enabled = update.get("enabled", True)
+        latest = str(update.get("latest") or "")
+        if not enabled:
+            self._values["update"].configure(text=f"v{current} · 自动检查已关闭", fg=MUTED)
+        elif update.get("available"):
+            self._values["update"].configure(
+                text=f"v{current} → v{latest or '?'} 可用" + (" · 可自动安装" if update.get("installable") else " · 需手动下载"),
+                fg=AMBER,
+            )
+        elif update.get("ok"):
+            self._values["update"].configure(text=f"v{current} · 已是最新版本", fg=GREEN)
+        elif update.get("error"):
+            self._values["update"].configure(text=f"v{current} · 检查失败：{str(update.get('error'))[:48]}", fg=DANGER)
+        else:
+            self._values["update"].configure(text=f"v{current} · 尚未检查", fg=MUTED)
 
         self._buttons["capture"].configure(text="暂停审计" if capture else "继续审计")
         self._buttons["enable_proxy"].configure(state="normal" if proxy_ok else "disabled")
@@ -517,6 +592,92 @@ class ControlWindow:
                 messagebox.showwarning("注册失败", str((result.get("recovery_task") or {}).get("message") or "")[:600])
         self._refresh_once()
 
+    def _check_update(self) -> None:
+        if self._closing:
+            return
+        button = self._buttons.get("update")
+        if button:
+            button.configure(state="disabled", text="正在检查…")
+
+        def worker() -> None:
+            try:
+                result = self.app.check_update(force=True)
+            except Exception as exc:
+                result = {"ok": False, "error": str(exc)}
+            try:
+                self.root.after(0, lambda: self._show_update_result(result))
+            except Exception:
+                pass
+
+        threading.Thread(target=worker, name="egressscope-ui-update", daemon=True).start()
+
+    def _show_update_result(self, result: dict) -> None:
+        if self._closing:
+            return
+        button = self._buttons.get("update")
+        if button:
+            button.configure(state="normal", text="检查更新")
+        self._refresh_once()
+        if not result.get("ok"):
+            messagebox.showwarning("检查更新失败", str(result.get("error") or "无法连接 GitHub Releases。"))
+            return
+        current = str(result.get("current") or "—")
+        if not result.get("available"):
+            messagebox.showinfo("版本与更新", f"当前已是最新版本 v{current}。")
+            return
+        latest = str(result.get("latest") or "?")
+        if not result.get("installable"):
+            messagebox.showinfo(
+                "发现新版本",
+                f"最新版本 v{latest}（当前 v{current}）无法在当前平台自动安装。\n"
+                "请打开 GitHub Releases 页面手动下载。",
+            )
+            return
+        if not messagebox.askyesno(
+            "安装更新",
+            f"发现新版本 v{latest}（当前 v{current}）。\n\n"
+            "将下载安装包并强制校验 SHA-256；校验失败会删除文件且不会运行。\n"
+            "安装前 EgressScope 会退出并恢复系统代理。\n\n"
+            "安装包默认未签名；除非发布者已签名，Windows SmartScreen 可能提示“未知发布者”。"
+            "请确认下载来自官方 GitHub Releases。\n\n继续？",
+            icon="warning",
+        ):
+            return
+        self._install_update(result)
+
+    def _install_update(self, result: dict) -> None:
+        button = self._buttons.get("update")
+        if button:
+            button.configure(state="disabled", text="正在下载…")
+
+        def worker() -> None:
+            try:
+                data = self.app.install_update()
+            except Exception as exc:
+                data = {"ok": False, "error": str(exc)}
+            try:
+                self.root.after(0, lambda: self._show_update_installed(data))
+            except Exception:
+                pass
+
+        threading.Thread(target=worker, name="egressscope-ui-update-install", daemon=True).start()
+
+    def _show_update_installed(self, result: dict) -> None:
+        if self._closing:
+            return
+        button = self._buttons.get("update")
+        if not result.get("ok"):
+            if button:
+                button.configure(state="normal", text="检查更新")
+            messagebox.showerror("更新失败", str(result.get("error") or "未知错误"))
+            self._refresh_once()
+            return
+        messagebox.showinfo(
+            "安装程序已启动",
+            f"已校验并启动 v{result.get('version') or ''} 安装程序。\n"
+            "EgressScope 即将退出，系统代理会先恢复。",
+        )
+
     def _ask_with_check(self, title: str, message: str, check_text: str, checked: bool = True) -> tuple[bool, bool]:
         dialog = tk.Toplevel(self.root)
         dialog.title(title)
@@ -579,20 +740,71 @@ class ControlWindow:
             pass
 
     # ---------- lifecycle ----------
-    def _on_close(self) -> None:
+    def _post_to_ui(self, callback) -> None:
+        """Marshal a notification-area callback onto the Tk thread."""
+        try:
+            self.root.after(0, callback)
+        except Exception:
+            log.debug("failed to post a notification-area action to the UI", exc_info=True)
+
+    def _show_from_tray(self) -> None:
+        if self._closing:
+            return
+        try:
+            self.root.deiconify()
+            self.root.lift()
+            self.root.focus_force()
+        except Exception:
+            log.debug("failed to restore the control window", exc_info=True)
+        self._refresh_once()
+
+    def _shutdown(self) -> None:
         if self._closing:
             return
         self._closing = True
-        self.banner_text.configure(text="正在停止代理并恢复系统代理…")
-        self.root.update_idletasks()
-        self.app.stop()
-        self.root.destroy()
+        try:
+            self.banner_text.configure(text="正在停止代理并恢复系统代理…")
+            self.root.update_idletasks()
+        except Exception:
+            log.debug("failed to update the shutdown banner", exc_info=True)
+        try:
+            self._tray.stop()
+        except Exception:
+            log.debug("failed to stop the notification-area icon", exc_info=True)
+        try:
+            self.app.stop()
+        finally:
+            try:
+                self.root.destroy()
+            except Exception:
+                log.debug("failed to destroy the control window", exc_info=True)
+
+    def _on_close(self) -> None:
+        if self._closing:
+            return
+        if tray.close_behavior(self._tray.active, self._closing) == "tray":
+            try:
+                self.root.withdraw()
+            except Exception:
+                log.debug("failed to hide the control window", exc_info=True)
+            try:
+                self._tray.notify_hidden()
+            except Exception:
+                log.debug("failed to explain the notification-area behavior", exc_info=True)
+            return
+        self._shutdown()
+
+    def _quit_from_tray(self) -> None:
+        self._shutdown()
 
     def start_minimized(self) -> None:
         try:
-            self.root.iconify()
+            if self._tray.active:
+                self.root.withdraw()
+            else:
+                self.root.iconify()
         except Exception:
-            pass
+            log.debug("failed to minimize the control window", exc_info=True)
 
     def run(self) -> None:
         self.root.mainloop()
