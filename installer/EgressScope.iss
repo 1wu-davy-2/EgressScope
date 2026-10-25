@@ -55,6 +55,7 @@ ArchitecturesInstallIn64BitMode=x64
 UninstallDisplayName={#MyAppName}
 UninstallDisplayIcon={app}\EgressScope.exe
 SetupIconFile=..\web\assets\favicon.ico
+LicenseFile=..\LICENSE
 InfoBeforeFile=UNSIGNED-NOTE.txt
 CloseApplications=yes
 RestartApplications=no
@@ -64,6 +65,7 @@ MinVersion=10.0
 
 [Files]
 Source: "{#MySourceExe}"; DestDir: "{app}"; DestName: "EgressScope.exe"; Flags: ignoreversion
+Source: "..\LICENSE"; DestDir: "{app}"; DestName: "LICENSE.txt"; Flags: ignoreversion
 
 [Tasks]
 Name: "desktopicon"; Description: "创建桌面快捷方式"; GroupDescription: "附加任务："; Flags: unchecked

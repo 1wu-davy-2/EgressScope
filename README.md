@@ -16,7 +16,8 @@
   <a href="https://1wu-davy-2.github.io/EgressScope/">官网 / Product site</a> ·
   <a href="https://1wu-davy-2.github.io/EgressScope/tech.html">技术实现 / Technical notes</a> ·
   <a href="https://github.com/1wu-davy-2/EgressScope/releases/latest">Releases</a> ·
-  <a href="https://github.com/1wu-davy-2/EgressScope">GitHub</a>
+  <a href="https://github.com/1wu-davy-2/EgressScope">GitHub</a> ·
+  <a href="https://github.com/1wu-davy-2/EgressScope/blob/main/LICENSE">License</a>
 </p>
 
 项目名：**EgressScope**（中文：**本机数据外发审计**；仓库：[1wu-davy-2/EgressScope](https://github.com/1wu-davy-2/EgressScope)）。英文检索词：`AI agent egress audit`、`agent audit`、`AI DLP`、`data exfiltration`、`DLP for AI agents`、`shadow AI`、`LLM security`、`process attribution`。
@@ -65,6 +66,7 @@ EgressScope 是一个以 Windows 为主的本机审计工具。它在用户明�
 | Linux / macOS | `EgressScope-v0.4.0-linux-x64.tar.gz` 等 | 审计引擎 + 本机 Web 审计台；没有 Windows 系统代理接管与托盘 |
 | 静态产品介绍页 | `web\intro.html` | 能力优先的官网首页；启动程序后同样可通过 `/intro` 访问 |
 | 技术实现文档 | `web\tech.html` | 数据路径、进程归因、可见性、旁路观测、断网保护、安装更新、数据安全与验证状态；启动程序后可通过 `/tech` 访问 |
+| 许可协议 | `LICENSE` | PolyForm Noncommercial License 1.0.0；允许非商业使用，禁止商业用途；安装器显示并安装 `LICENSE.txt`，Release 同时提供 `LICENSE` 资产 |
 | 本机审计台 | 启动后 `http://127.0.0.1:8898/` | 流量、发现、文件触达、覆盖范围、可见性统计、旁路观测与策略设置 |
 | 桌面控制窗口 + Windows 托盘 | 可执行文件启动后的主窗口 / 通知区域 | 安装/移除 CA、启用/恢复系统代理、暂停采集、导出证据；Windows 上关闭窗口默认隐藏到托盘 |
 | 构建校验清单 | `dist\SHA256SUMS.txt` | 本地构建的可执行文件 SHA-256；发布页另有每个产物的 `.sha256` 与汇总 `SHA256SUMS.txt` |
@@ -874,4 +876,21 @@ certutil -hashfile dist\EgressScope.exe SHA256
 
 ## License / 使用声明
 
-本项目为本地安全审计工程与产品原型。使用即表示你理解并接受上述授权、安全与覆盖边界。对因超出授权范围使用、在生产设备上安装审计 CA、或依赖启发式风险分做出处置而造成的后果，作者不承担责任。
+EgressScope 采用 **PolyForm Noncommercial License 1.0.0**（源码可用 / source-available，非 OSI 开源许可）。SPDX 标识：`PolyForm-Noncommercial-1.0.0`。
+
+**允许**
+
+- 下载、安装并运行本软件，用于个人学习、研究、实验、测试与爱好项目。
+- 慈善、教育、公共研究、公共安全与卫生、环境保护及政府机构等非商业组织使用。
+- 复制、修改和分发源码或衍生作品，前提是保留许可证与 `Required Notice`，且用途仍限于非商业目的。
+
+**禁止**
+
+- 任何商业用途，包括在公司业务中使用、向客户提供收费服务、把本软件或衍生作品集成进商业产品等。
+- 商业使用必须事先取得版权持有人的书面授权。
+
+**说明**
+
+- “禁止商用”不符合 OSI 对开源许可证的定义，因此本项目的准确表述是 **source-available（源码可用）**，而不是 OSI 开源；中文语境中的“开源协议”仅为通俗说法。
+- 以上为便于阅读的摘要，不构成法律意见，也不替代 [LICENSE](LICENSE) 英文全文；如条款冲突，以 LICENSE 为准。
+- 软件按“现状”提供，不附带任何明示或默示担保。使用即表示你理解并接受上述授权、安全与覆盖边界；对超出授权范围使用、在生产设备上安装审计 CA、或依赖启发式风险分做出处置而造成的后果，作者不承担责任。

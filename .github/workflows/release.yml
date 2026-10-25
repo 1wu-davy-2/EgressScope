@@ -263,6 +263,9 @@ jobs:
           pattern: EgressScope-*
           merge-multiple: true
 
+      - name: Include license
+        run: cp LICENSE release/LICENSE
+
       - name: Generate checksum manifest
         run: |
           set -euo pipefail

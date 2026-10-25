@@ -2,6 +2,11 @@
 
 每个 `v*` 标签的 GitHub Release 会自动携带本文件中对应版本的说明。
 
+## Unreleased
+
+- 许可协议：新增 PolyForm Noncommercial License 1.0.0。允许个人与非商业组织下载、使用、修改和非商业分发，禁止商业用途；分发需保留许可证与 `Required Notice`。严格来说这是 source-available，而不是 OSI 开源。安装器、安装目录与 GitHub Release 资产都会携带 LICENSE。
+- License: adopted the PolyForm Noncommercial License 1.0.0. Individuals and noncommercial organizations may download, use, modify and redistribute it for noncommercial purposes; commercial use is prohibited. Redistribution must retain the license and the Required Notice. This is source-available, not OSI open source. The installer, installed files and GitHub release assets include the LICENSE.
+
 ## v0.4.0
 
 - 安装包：新增 Windows x64 的 per-user 安装包 `EgressScope-Setup-v0.4.0.exe`。无需管理员权限，固定安装到 `%LOCALAPPDATA%\Programs\EgressScope`；可选桌面快捷方式（默认不勾选），开始菜单提供主程序与“恢复系统代理”（`--restore-proxy`）快捷方式。卸载时移除开机自启并恢复系统代理；静默安装/升级保留审计数据，交互式卸载会先询问是否删除 `%LOCALAPPDATA%\EgressScope`。Windows ARM64 不提供安装包，继续使用便携版。当前 EXE 与安装包默认未签名；只有仓库所有者配置 `WINDOWS_CERT_PFX_BASE64` / `WINDOWS_CERT_PASSWORD` 后，CI 的可选 signtool 步骤才会签名。

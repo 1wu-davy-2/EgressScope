@@ -253,6 +253,7 @@ def main() -> int:
             tech = session.get(web_base + "/tech", timeout=10)
             check("bundled technical page loads", tech.status_code == 200 and "检测，不重定向" in tech.text, str(tech.status_code))
             check("bundled technical page explains upstream chaining", "127.0.0.1:7890" in tech.text and "回环" in tech.text, "upstream copy missing")
+            check("bundled pages state the noncommercial license", "禁止商业使用" in intro.text and "禁止商业使用" in tech.text, "license copy missing")
 
             unauth = session.get(web_base + "/api/status", timeout=10)
             check("API rejects missing token", unauth.status_code == 401, str(unauth.status_code))

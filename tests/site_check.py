@@ -168,6 +168,22 @@ def run() -> None:
     check("technical page covers the data path", 'id="pipeline"' in tech)
     check("technical page covers verification status", 'id="verification"' in tech)
 
+    license_text = (ROOT / "LICENSE").read_text(encoding="utf-8")
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    license_url = '"license": "https://polyformproject.org/licenses/noncommercial/1.0.0/"'
+    check(
+        "repository includes the PolyForm Noncommercial license",
+        "PolyForm Noncommercial License 1.0.0" in license_text and "Required Notice:" in license_text,
+    )
+    check(
+        "README states the noncommercial restriction",
+        "PolyForm Noncommercial License 1.0.0" in readme
+        and "禁止" in readme
+        and "商业使用必须事先取得版权持有人的书面授权" in readme,
+    )
+    check("both pages link to the license", "/blob/main/LICENSE" in intro and "/blob/main/LICENSE" in tech)
+    check("both pages declare the license in JSON-LD", license_url in intro and license_url in tech)
+
     print("\n=============================")
     print(f"{len(PASSED)} passed, {len(FAILED)} failed")
     if FAILED:

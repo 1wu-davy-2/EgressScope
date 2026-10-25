@@ -267,6 +267,10 @@ def run() -> None:
                 intro_resp = session.get(web_base + "/intro", timeout=10)
                 check("intro returns 200", intro_resp.status_code == 200, str(intro_resp.status_code))
                 check("intro explains honest limits", "覆盖边界" in intro_resp.text and "证书固定" in intro_resp.text and "未签名" in intro_resp.text)
+                check(
+                    "intro states the noncommercial license",
+                    "PolyForm Noncommercial" in intro_resp.text and "禁止商业使用" in intro_resp.text,
+                )
                 tech_resp = session.get(web_base + "/tech", timeout=10)
                 check("technical page returns 200", tech_resp.status_code == 200, str(tech_resp.status_code))
                 check(
