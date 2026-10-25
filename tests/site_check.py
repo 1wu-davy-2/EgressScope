@@ -1,4 +1,4 @@
-"""Static checks for the public intro page.
+"""Static checks for the public product pages.
 
 Verifies that every Chinese text node has an English translation in the
 embedded dictionary, that required honest-limit copy is present, and that the
@@ -15,12 +15,25 @@ from html.parser import HTMLParser
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-PAGE = ROOT / "web" / "intro.html"
-
 SKIP_TAGS = {"script", "style", "noscript", "textarea", "svg", "title"}
 CJK = re.compile(r"[\u3400-\u4dbf\u4e00-\u9fff]")
 PASSED: list[str] = []
 FAILED: list[str] = []
+
+PAGES = {
+    "intro.html": {
+        "label": "homepage",
+        "required": ("覆盖边界", "证书固定", "回环", "断网保护", "未签名", "仅元数据", "托盘"),
+        "jsonld": {"SoftwareApplication", "FAQPage"},
+        "min_entries": 150,
+    },
+    "tech.html": {
+        "label": "technical page",
+        "required": ("可见性", "证书固定", "127.0.0.1:7890", "回环", "断网保护", "未签名", "仅元数据", "托盘", "未在 CI", "真实关机", "检测，不重定向"),
+        "jsonld": {"TechArticle"},
+        "min_entries": 250,
+    },
+}
 
 
 def check(name: str, condition: bool, detail: str = "") -> None:
@@ -83,54 +96,77 @@ def extract_jsonld(page: str) -> list[dict]:
     return [json.loads(block) for block in blocks]
 
 
-def run() -> None:
-    print("\nEgressScope intro page checks")
-    print("=============================")
-    page = PAGE.read_text(encoding="utf-8")
+def run_page(filename: str, config: dict) -> None:
+    print(f"\n{config['label']} — web/{filename}")
+    print("-" * 40)
+    path = ROOT / "web" / filename
+    page = path.read_text(encoding="utf-8")
 
     parser = TextCollector()
     parser.feed(page)
     parser.close()
 
     dictionary = extract_dictionary(page)
-    check("i18n dictionary parses", isinstance(dictionary, dict) and len(dictionary) > 100, f"{len(dictionary)} entries")
+    check(
+        f"{filename}: i18n dictionary parses",
+        isinstance(dictionary, dict) and len(dictionary) >= config["min_entries"],
+        f"{len(dictionary)} entries",
+    )
 
     unique_texts = list(dict.fromkeys(parser.texts))
     missing = [text for text in unique_texts if text not in dictionary]
     check(
-        "every Chinese text node is translated",
+        f"{filename}: every Chinese text node is translated",
         not missing,
         f"{len(missing)} missing: {missing[:8]}",
     )
 
     stale = [key for key in dictionary if key not in set(unique_texts)]
-    check("no stale dictionary entries", not stale, f"{len(stale)} unused: {stale[:8]}")
+    check(f"{filename}: no stale dictionary entries", not stale, f"{len(stale)} unused: {stale[:8]}")
 
     values = [value for value in dictionary.values() if isinstance(value, str)]
     untranslated = [value for value in values if CJK.search(value)]
-    check("no English value still contains Chinese", not untranslated, str(untranslated[:5]))
+    check(f"{filename}: no English value still contains Chinese", not untranslated, str(untranslated[:5]))
 
-    aria_missing = [label for label in dict.fromkeys(parser.aria) if label not in page.split("const ARIA_EN")[1].split("};")[0]]
-    check("aria labels are mapped for English", not aria_missing, str(aria_missing[:4]))
+    aria_block = page.split("const ARIA_EN")[1].split("};")[0]
+    aria_missing = [label for label in dict.fromkeys(parser.aria) if label not in aria_block]
+    check(f"{filename}: aria labels are mapped for English", not aria_missing, str(aria_missing[:4]))
 
-    for required in ("覆盖边界", "证书固定", "127.0.0.1:7890", "回环", "断网保护"):
-        check(f"page keeps required copy: {required}", required in page)
+    for required in config["required"]:
+        check(f"{filename}: keeps required copy: {required}", required in page)
 
-    for required in ("未签名", "检测，不重定向", "仅元数据", "托盘", "未在 CI", "真实关机"):
-        check(f"page states honest limit: {required}", required in page)
-
-    for placeholder in ("__REPO_URL__",):
-        check("repo placeholder still present for Pages build", placeholder in page)
+    check("repo placeholder still present for Pages build", "__REPO_URL__" in page)
 
     blocks = extract_jsonld(page)
     types = {entry.get("@type") for block in blocks for entry in block.get("@graph", [block])}
-    check("JSON-LD parses and describes the product", {"SoftwareApplication", "FAQPage"} <= types, str(types))
+    check(
+        f"{filename}: JSON-LD parses and declares {sorted(config['jsonld'])}",
+        config["jsonld"] <= types,
+        str(types),
+    )
 
-    check("no external stylesheet or script", not re.search(r'<link[^>]+rel="stylesheet"[^>]+href="http', page)
-          and not re.search(r'<script[^>]+src="http', page))
-    check("theme toggle exists", 'id="theme-toggle"' in page)
-    check("language toggle exists", 'id="lang-toggle"' in page and 'data-lang-set="en"' in page)
-    check("version is current", "0.4.0" in page and "0.3.2" not in page and "0.2.0" not in page)
+    check(
+        f"{filename}: no external stylesheet or script",
+        not re.search(r'<link[^>]+rel="stylesheet"[^>]+href="http', page)
+        and not re.search(r'<script[^>]+src="http', page),
+    )
+    check(f"{filename}: theme toggle exists", 'id="theme-toggle"' in page)
+    check(f"{filename}: language toggle exists", 'id="lang-toggle"' in page and 'data-lang-set="en"' in page)
+    check(f"{filename}: version is current", "0.4.0" in page and "0.3.2" not in page and "0.2.0" not in page)
+
+
+def run() -> None:
+    print("EgressScope public site checks")
+    print("=============================")
+    for filename, config in PAGES.items():
+        run_page(filename, config)
+
+    intro = (ROOT / "web" / "intro.html").read_text(encoding="utf-8")
+    tech = (ROOT / "web" / "tech.html").read_text(encoding="utf-8")
+    check("homepage links to the technical page", "./tech.html" in intro)
+    check("technical page links back to the homepage", 'href="./"' in tech)
+    check("technical page covers the data path", 'id="pipeline"' in tech)
+    check("technical page covers verification status", 'id="verification"' in tech)
 
     print("\n=============================")
     print(f"{len(PASSED)} passed, {len(FAILED)} failed")

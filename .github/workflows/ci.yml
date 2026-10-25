@@ -67,5 +67,5 @@ jobs:
       - name: Run upstream chaining test
         run: python tests/upstream_test.py
 
-      - name: Run intro page checks
+      - name: Run site checks
         run: python tests/site_check.py

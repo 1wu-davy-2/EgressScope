@@ -3,11 +3,20 @@
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://1wu-davy-2.github.io/EgressScope/</loc>
-    <lastmod>2026-10-24</lastmod>
+    <lastmod>2026-10-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
     <xhtml:link rel="alternate" hreflang="zh-CN" href="https://1wu-davy-2.github.io/EgressScope/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://1wu-davy-2.github.io/EgressScope/?lang=en"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://1wu-davy-2.github.io/EgressScope/"/>
+  </url>
+  <url>
+    <loc>https://1wu-davy-2.github.io/EgressScope/tech.html</loc>
+    <lastmod>2026-10-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="zh-CN" href="https://1wu-davy-2.github.io/EgressScope/tech.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://1wu-davy-2.github.io/EgressScope/tech.html?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://1wu-davy-2.github.io/EgressScope/tech.html"/>
   </url>
 </urlset>

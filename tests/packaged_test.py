@@ -250,7 +250,9 @@ def main() -> int:
 
             intro = session.get(web_base + "/intro", timeout=10)
             check("bundled intro page loads", intro.status_code == 200 and "覆盖边界" in intro.text and "证书固定" in intro.text, str(intro.status_code))
-            check("bundled intro explains upstream chaining", "127.0.0.1:7890" in intro.text and "回环" in intro.text, "upstream copy missing")
+            tech = session.get(web_base + "/tech", timeout=10)
+            check("bundled technical page loads", tech.status_code == 200 and "检测，不重定向" in tech.text, str(tech.status_code))
+            check("bundled technical page explains upstream chaining", "127.0.0.1:7890" in tech.text and "回环" in tech.text, "upstream copy missing")
 
             unauth = session.get(web_base + "/api/status", timeout=10)
             check("API rejects missing token", unauth.status_code == 401, str(unauth.status_code))

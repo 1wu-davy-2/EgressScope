@@ -266,7 +266,13 @@ def run() -> None:
                 check("bootstrap token is non-empty", bool(token))
                 intro_resp = session.get(web_base + "/intro", timeout=10)
                 check("intro returns 200", intro_resp.status_code == 200, str(intro_resp.status_code))
-                check("intro explains honest limits", "覆盖边界" in intro_resp.text and "证书固定" in intro_resp.text)
+                check("intro explains honest limits", "覆盖边界" in intro_resp.text and "证书固定" in intro_resp.text and "未签名" in intro_resp.text)
+                tech_resp = session.get(web_base + "/tech", timeout=10)
+                check("technical page returns 200", tech_resp.status_code == 200, str(tech_resp.status_code))
+                check(
+                    "technical page documents data path and limits",
+                    "127.0.0.1:7890" in tech_resp.text and "检测，不重定向" in tech_resp.text and "未在 CI" in tech_resp.text,
+                )
                 ca_resp = session.get(web_base + "/api/ca.pem", timeout=10)
                 check("public CA is downloadable", ca_resp.status_code == 200 and b"BEGIN CERTIFICATE" in ca_resp.content)
                 unauth = session.get(web_base + "/api/status", timeout=10)

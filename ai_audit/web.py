@@ -214,6 +214,9 @@ class WebHandler(BaseHTTPRequestHandler):
             if path in ("/intro", "/intro.html"):
                 self._serve_html("intro.html")
                 return
+            if path in ("/tech", "/tech.html"):
+                self._serve_html("tech.html")
+                return
             if path == "/favicon.ico":
                 self._send_bytes(b"", 204, "image/x-icon")
                 return

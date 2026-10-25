@@ -14,6 +14,7 @@
 
 <p align="center">
   <a href="https://1wu-davy-2.github.io/EgressScope/">官网 / Product site</a> ·
+  <a href="https://1wu-davy-2.github.io/EgressScope/tech.html">技术实现 / Technical notes</a> ·
   <a href="https://github.com/1wu-davy-2/EgressScope/releases/latest">Releases</a> ·
   <a href="https://github.com/1wu-davy-2/EgressScope">GitHub</a>
 </p>
@@ -21,6 +22,7 @@
 项目名：**EgressScope**（中文：**本机数据外发审计**；仓库：[1wu-davy-2/EgressScope](https://github.com/1wu-davy-2/EgressScope)）。英文检索词：`AI agent egress audit`、`agent audit`、`AI DLP`、`data exfiltration`、`DLP for AI agents`、`shadow AI`、`LLM security`、`process attribution`。
 
 - 官网 / 产品介绍页：<https://1wu-davy-2.github.io/EgressScope/>
+- 技术实现与安全边界：<https://1wu-davy-2.github.io/EgressScope/tech.html>
 - 发布版本与 SHA-256 校验：<https://github.com/1wu-davy-2/EgressScope/releases/latest>
 - 当前版本：**v0.4.0**。Windows x64 提供 per-user 安装包与便携版；Windows ARM64 使用便携版；Linux / macOS 以命令行和 Web 审计台为主。
 
@@ -61,7 +63,8 @@ EgressScope 是一个以 Windows 为主的本机审计工具。它在用户明�
 | Windows per-user 安装包 | `EgressScope-Setup-v0.4.0.exe` | **仅 Windows x64**；无需管理员权限；固定安装到 `%LOCALAPPDATA%\Programs\EgressScope`；当前发布构建未签名，详见下方说明 |
 | Windows 便携版 | `dist\EgressScope.exe`（本地构建）/ `EgressScope-v0.4.0-windows-x64.exe`、`EgressScope-v0.4.0-windows-arm64.exe`（发布页） | 单文件 GUI 程序；Windows x64 支持自动更新，Windows ARM64 需手动更新 |
 | Linux / macOS | `EgressScope-v0.4.0-linux-x64.tar.gz` 等 | 审计引擎 + 本机 Web 审计台；没有 Windows 系统代理接管与托盘 |
-| 静态产品介绍页 | `web\intro.html` | 可直接双击打开的完整介绍页；启动程序后同样可通过 `/intro` 访问 |
+| 静态产品介绍页 | `web\intro.html` | 能力优先的官网首页；启动程序后同样可通过 `/intro` 访问 |
+| 技术实现文档 | `web\tech.html` | 数据路径、进程归因、可见性、旁路观测、断网保护、安装更新、数据安全与验证状态；启动程序后可通过 `/tech` 访问 |
 | 本机审计台 | 启动后 `http://127.0.0.1:8898/` | 流量、发现、文件触达、覆盖范围、可见性统计、旁路观测与策略设置 |
 | 桌面控制窗口 + Windows 托盘 | 可执行文件启动后的主窗口 / 通知区域 | 安装/移除 CA、启用/恢复系统代理、暂停采集、导出证据；Windows 上关闭窗口默认隐藏到托盘 |
 | 构建校验清单 | `dist\SHA256SUMS.txt` | 本地构建的可执行文件 SHA-256；发布页另有每个产物的 `.sha256` 与汇总 `SHA256SUMS.txt` |
@@ -298,7 +301,7 @@ source ~/.egressscope/data/agent-env.sh
 | --- | --- | --- |
 | `.github/workflows/ci.yml` | push / PR / 手动 | Windows x64、Linux x64、macOS arm64 上运行冒烟、更新器、断网保护 / 自启 / 热更新、可见性、旁路观测、托盘、上游链路与官网页面门禁 |
 | `.github/workflows/release.yml` | `v*` tag / 手动 | 六平台构建；Windows x64 额外构建 per-user 安装包并支持可选签名；Windows x64 / ARM64 运行打包验收；tag 时由 publish job 汇总产物、生成 `SHA256SUMS.txt`、从 `CHANGELOG.md` 截取发布说明并创建 GitHub Release |
-| `.github/workflows/pages.yml` | push main（介绍页变更）/ 手动 | 把 `web/intro.html` 发布到 GitHub Pages |
+| `.github/workflows/pages.yml` | push main（介绍页变更）/ 手动 | 把 `web/intro.html` 与 `web/tech.html` 发布到 GitHub Pages |
 
 ### 首次推送到 GitHub
 
@@ -322,8 +325,8 @@ git push origin v0.4.0
 ### GitHub Pages 官网
 
 1. 推送代码后，在仓库 **Settings → Pages** 将 **Source** 设为 **GitHub Actions**（工作流也会尝试自动启用）。
-2. 手动运行一次 **Deploy intro page**，或修改 `web/intro.html` 后推送到 `main`。
-3. 页面地址通常为 `https://<owner>.github.io/EgressScope/`。
+2. 手动运行一次 **Deploy product site**，或修改 `web/intro.html` / `web/tech.html` 后推送到 `main`。
+3. 页面地址通常为 `https://<owner>.github.io/EgressScope/`，技术文档为 `https://<owner>.github.io/EgressScope/tech.html`。
 4. Pages 版本会把顶部和底部的“打开审计台”按钮改写为 **下载发布版本**，指向 `https://github.com/<owner>/EgressScope/releases/latest`；本地 `/intro` 与 `file://` 打开时仍指向本机审计台。
 
 如果首次运行在 `configure-pages` 步骤报 `Resource not accessible by integration`，说明仓库尚未启用 Pages：在 **Settings → Pages** 把 **Source** 设为 **GitHub Actions**，再重新运行工作流。该一次性设置需要仓库管理员权限。

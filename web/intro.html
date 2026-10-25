@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#ffffff">
-<meta name="description" content="EgressScope（本机数据外发审计）是本地优先的 AI Agent 审计工具：看清 AI 与桌面应用的 HTTPS 外发流量，定位发起进程，识别密钥与敏感数据，保留可验证的本地证据链。提供 Windows 每用户安装器、自动更新与托盘，并以检测方式观测直连、QUIC 与 DNS 目标。支持 Windows / macOS / Linux。">
+<meta name="description" content="EgressScope（本机数据外发审计）是本地优先的 AI Agent 审计工具：查看经过本地代理的 HTTPS 外发内容，定位发起进程，识别密钥与敏感数据，并把加密证据留在本机。Windows 提供免管理员安装器、自动更新与托盘；直连、QUIC 与 DNS 仅做检测。">
 <meta name="keywords" content="EgressScope,外发审计,本机数据外发审计,AI审计,AI 审计,Agent审计,Agent 审计,AI Agent 审计,智能体审计,数据外发审计,数据防泄漏,DLP,AI DLP,大模型安全,LLM 安全,AI Agent 安全,出站流量审计,HTTPS 审计,进程归因,本地审计,本地优先,影子 AI,AI 使用审计,数据外泄检测,安装器,自动更新,系统托盘,托盘,QUIC,DNS,代理逃逸,直连检测,可见性分级,AI audit,agent audit,AI agent audit,egress audit,AI egress audit,data exfiltration,data exfiltration detection,DLP for AI agents,LLM security,AI agent security,shadow AI,AI usage audit,process attribution,local-first,Windows installer,per-user installer,auto update,system tray,QUIC,DNS,proxy bypass">
 <meta name="robots" content="index,follow,max-image-preview:large">
 <title>EgressScope 外发审计｜AI Agent 数据外发审计与进程归因</title>
@@ -20,7 +20,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="EgressScope 外发审计">
 <meta property="og:title" content="EgressScope 外发审计｜AI Agent 数据外发审计与进程归因">
-<meta property="og:description" content="本地优先的 AI Agent 外发审计工具：看清 HTTPS 外发流量、定位发起进程、识别密钥与敏感数据，并保留可验证的本地证据链。">
+<meta property="og:description" content="本地优先的 AI Agent 外发审计工具：查看 HTTPS 外发内容、定位发起进程、识别敏感数据，并把加密证据留在本机。">
 <meta property="og:url" content="https://1wu-davy-2.github.io/EgressScope/">
 <meta property="og:image" content="https://1wu-davy-2.github.io/EgressScope/assets/og-cover.png">
 <meta property="og:image:width" content="1200">
@@ -30,7 +30,7 @@
 <meta property="og:locale:alternate" content="en_US">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="EgressScope 外发审计｜AI Agent 数据外发审计与进程归因">
-<meta name="twitter:description" content="本地优先的 AI Agent 外发审计工具：看清 HTTPS 外发流量、定位发起进程、识别密钥与敏感数据，并保留可验证的本地证据链。">
+<meta name="twitter:description" content="本地优先的 AI Agent 外发审计工具：查看 HTTPS 外发内容、定位发起进程、识别敏感数据，并把加密证据留在本机。">
 <meta name="twitter:image" content="https://1wu-davy-2.github.io/EgressScope/assets/og-cover.png">
 <script type="application/ld+json">
 {
@@ -74,58 +74,56 @@
       "@type": "FAQPage",
       "@id": "https://1wu-davy-2.github.io/EgressScope/#faq",
       "inLanguage": "zh-CN",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "电脑突然关机或程序崩溃后，系统代理会不会让本机断网？",
-          "acceptedAnswer": { "@type": "Answer", "text": "这是真实存在的失败模式：系统代理仍指向 127.0.0.1 上已停止的监听端口时，浏览器与多数应用会连接失败。v0.4.0 提供四层处理：关机、重启或注销时收到 Windows 会话结束通知后立刻恢复原始代理；启动时校正过期设置；启用系统代理时默认勾选的每用户计划任务看门狗在登录后自动恢复；以及 EgressScope.exe --restore-proxy 手动恢复。v0.4.0 还会自愈：程序被移动或覆盖更新后，自动把 Run 键与看门狗计划任务改指当前 exe；--restore-proxy 不需要先启动应用。直接拔电源、内核崩溃或强制结束进程时收不到会话结束通知，恢复发生在下一次登录后。" }
-        },
-        {
-          "@type": "Question",
-          "name": "EgressScope 能看见所有加密流量吗？",
-          "acceptedAnswer": { "@type": "Answer", "text": "不能。只有遵循代理设置并信任本地 CA 的 TLS 1.2 / 1.3 连接才能还原内容。证书固定、mTLS、应用层端到端加密以及完全绕过代理的直连流量都不提供内容可见性。v0.4.0 会把直连、UDP 443 QUIC 与 DNS 目标记为候选或元数据，但检测不等于拦截，也不解密 QUIC。" }
-        },
-        {
-          "@type": "Question",
-          "name": "审计数据会上传到云端吗？",
-          "acceptedAnswer": { "@type": "Answer", "text": "不会。证据保存在本机 SQLite，请求与响应正文用 AES-256-GCM 加密，主密钥由当前 Windows 用户的 DPAPI 保护。Web 审计台只绑定回环地址，使用每次启动随机生成的会话令牌，页面不含外部字体或脚本。" }
-        },
-        {
-          "@type": "Question",
-          "name": "可以用它审计别人的设备吗？",
-          "acceptedAnswer": { "@type": "Answer", "text": "只应用于你拥有或已获得明确书面授权的设备。未经授权拦截他人流量可能违法。也不要在存有真实凭据的日常主机上分析疑似恶意软件，请在隔离虚拟机或快照中进行。" }
-        },
-        {
-          "@type": "Question",
-          "name": "修改设置需要重启程序吗？开机自启能关吗？",
-          "acceptedAnswer": { "@type": "Answer", "text": "采集开关、阻断阈值、保留期、文件句柄抽样、上游代理、自动更新检查与开机自启都是热更新，改完立即生效；直接编辑 config.json 也会在 2 秒内被运行中的进程采纳，接口返回 config_reload 说明哪些键已生效。只有监听端口、Web 端口与证书目录这类需要重建进程的字段要重启一次。开机自启默认开启，写入当前用户 Run 键，可一键关闭或运行 --disable-autostart。" }
-        },
-        {
-          "@type": "Question",
-          "name": "Windows 安装器需要管理员权限吗？构建签名了吗？",
-          "acceptedAnswer": { "@type": "Answer", "text": "不需要管理员权限。安装器面向 Windows x64，把程序装到固定目录 %LOCALAPPDATA%\\Programs\\EgressScope，可选创建桌面快捷方式；卸载时恢复系统代理并移除开机自启，交互式卸载会先询问是否删除审计数据，静默卸载默认保留。当前构建未签名，SmartScreen 可能提示未知发布者；发布页提供 SHA-256，请先核对再运行。" }
-        },
-        {
-          "@type": "Question",
-          "name": "自动更新如何工作？可以关闭吗？",
-          "acceptedAnswer": { "@type": "Answer", "text": "应用默认向 GitHub Releases 检查更新：启动约 30 秒后首次检查，之后每 24 小时一次，结果缓存 6 小时。安装包必须通过 SHA-256 校验后才会静默安装；只有 Windows x64 且发布页同时提供安装器与校验文件时才支持自动安装，ARM64、Linux 与 macOS 请手动下载。检查可以在设置中关闭。" }
-        },
-        {
-          "@type": "Question",
-          "name": "关闭窗口会退出吗？托盘能做什么？",
-          "acceptedAnswer": { "@type": "Answer", "text": "Windows 上关闭控制窗口会隐藏到通知区域而不是退出。托盘菜单可打开控制台与审计台、暂停或恢复采集、退出并恢复系统代理；登录自启默认隐藏启动，--no-tray 可恢复关闭即退出。托盘仅 Windows 提供，macOS 与 Linux 没有托盘；Windows x64 已手动冒烟测试，ARM64 的 Tk / 托盘界面尚未验证。" }
-        },
-        {
-          "@type": "Question",
-          "name": "检测，不重定向是什么意思？直连和 QUIC 被拦截了吗？",
-          "acceptedAnswer": { "@type": "Answer", "text": "v0.4.0 每 15 秒读取本机连接表与 Windows 解析缓存，记录直连 TCP 80/443/8080/8443、UDP 443 QUIC 与 DNS 目标（不记录查询内容）。这只是检测：不拦截、不重定向、不安装驱动，也不解密 QUIC；候选信号不代表内容已经外发。暂停采集会同时暂停观测，WFP / WinDivert 透明重定向仍未实现。" }
-        },
-        {
-          "@type": "Question",
-          "name": "这些功能做过真实关机或重启验证吗？",
-          "acceptedAnswer": { "@type": "Answer", "text": "没有。仓库提供 tools/shutdown_lab.ps1 关机实验脚本，包含 prepare / verify 与需显式确认的重启选项，但本版本未在 CI 或真实虚拟机中执行真实关机或重启，契约测试只覆盖 Windows 会话结束回调。updater 52、visibility 42、netwatch 69、tray 67、smoke 61、recovery 78、upstream 15 项测试由 CI 运行；它们不覆盖打包后的托盘 UI，也不等于真实关机验证。" }
-        }
-      ]
+      "mainEntity": [[
+          {
+                    "@type": "Question",
+                    "name": "关机或崩溃后，系统代理会不会让本机断网？",
+                    "acceptedAnswer": {
+                              "@type": "Answer",
+                              "text": "这是真实存在的失败模式：系统代理仍指向已停止的本地端口时，浏览器与多数应用会连接失败。v0.4.0 提供四层处理：系统关机、重启或注销时收到会话结束通知后立即恢复原始代理；启动时校正过期设置；每用户计划任务看门狗在登录后自动恢复；以及 EgressScope.exe --restore-proxy 手动恢复。程序移动或覆盖更新后会自动把 Run 键与计划任务改指当前 exe。直接拔电源或强制结束进程时收不到会话结束通知，恢复发生在下一次登录后。"
+                    }
+          },
+          {
+                    "@type": "Question",
+                    "name": "它是杀毒软件或 EDR 吗？",
+                    "acceptedAnswer": {
+                              "@type": "Answer",
+                              "text": "不是。EgressScope 只做外发可见性、进程归因、策略与证据留存；风险分是启发式信号，需要人工复核，不替代杀毒软件或 EDR。"
+                    }
+          },
+          {
+                    "@type": "Question",
+                    "name": "能看见所有加密流量吗？",
+                    "acceptedAnswer": {
+                              "@type": "Answer",
+                              "text": "不能。只有遵循代理设置并信任本地 CA 的 TLS 1.2 / 1.3 连接才能还原内容。证书固定、mTLS、应用层端到端加密与绕过代理的直连内容都不可见；UDP 443 QUIC 只记录候选元数据，且不解密。检测不等于拦截。"
+                    }
+          },
+          {
+                    "@type": "Question",
+                    "name": "数据会上云吗？需要管理员权限吗？",
+                    "acceptedAnswer": {
+                              "@type": "Answer",
+                              "text": "不会上云。证据保存在本机 SQLite，正文使用 AES-256-GCM 加密，主密钥由当前 Windows 用户的 DPAPI 保护。Windows 安装器、CA、系统代理与开机自启均按当前用户运行，不需要管理员权限。"
+                    }
+          },
+          {
+                    "@type": "Question",
+                    "name": "支持哪些系统？",
+                    "acceptedAnswer": {
+                              "@type": "Answer",
+                              "text": "Windows 10 / 11 x64 与 ARM64 提供安装器或原生便携版；x64 支持自动更新与托盘，ARM64 的 Tk / 托盘界面尚未实机验收。macOS 与 Linux 提供审计引擎和 Web 审计台，代理与 CA 需手动配置。"
+                    }
+          },
+          {
+                    "@type": "Question",
+                    "name": "可以审计别人的设备吗？",
+                    "acceptedAnswer": {
+                              "@type": "Answer",
+                              "text": "只应用于你拥有或已获得明确书面授权的设备。未经授权拦截他人流量可能违法。也不要在存有真实凭据的日常主机上分析疑似恶意软件，请在隔离虚拟机或快照中进行，结束后移除 CA。"
+                    }
+          }
+]]
     }
   ]
 }
@@ -632,6 +630,47 @@ table{border-collapse:collapse;width:100%}
   .final-inner{flex-direction:column;align-items:flex-start}
   .hero-actions .btn{width:100%}
 }
+
+/* ---------- capability-first homepage additions ---------- */
+.hero-footnote{margin-top:18px;font-size:12.5px;color:var(--dim)}
+.more-strip{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin-top:18px;padding:14px 16px;border:1px dashed var(--line-strong);border-radius:var(--r);background:var(--surface-2);font-size:13px;color:var(--muted)}
+.more-strip b{color:var(--ink);font-size:12px;font-weight:650;letter-spacing:.05em;text-transform:uppercase}
+.more-strip .tag{display:inline-flex;padding:2px 8px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:12px;color:var(--muted)}
+.more-strip a{margin-left:auto;display:inline-flex;align-items:center;gap:5px;font-weight:600;color:var(--accent);font-size:13px}
+.more-strip a .ic{width:14px;height:14px}
+.vis-strip{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:18px;padding:12px 16px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+.vis-strip .label{font-size:12.5px;font-weight:600;color:var(--muted);margin-right:4px}
+.data-band{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.data-tile{padding:16px 18px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface-2)}
+.data-tile dt{font-size:12px;color:var(--dim);letter-spacing:.03em}
+.data-tile dd{margin-top:6px;font-size:14.5px;font-weight:600;color:var(--ink);word-break:break-word}
+.data-tile dd.good{color:var(--ok)}
+.data-note{margin-top:14px;font-size:13.5px;color:var(--muted);line-height:1.7}
+.data-note a{display:inline-flex;align-items:center;gap:4px;margin-left:4px;color:var(--accent);font-weight:600}
+.data-note a .ic{width:13px;height:13px}
+.platform-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.platform-list{list-style:none;margin-top:12px;display:grid;gap:8px}
+.platform-list li{display:flex;gap:10px;font-size:13.5px;color:var(--muted);padding-bottom:8px;border-bottom:1px dashed var(--line);line-height:1.6}
+.platform-list li:last-child{border-bottom:0;padding-bottom:0}
+.platform-list b{flex:none;min-width:38px;color:var(--ink);font-weight:650;font-size:12.5px}
+.download-actions{display:flex;flex-wrap:wrap;align-items:center;gap:14px 20px;margin-top:24px}
+.download-note{flex:1;min-width:260px;font-size:12.5px;color:var(--dim);line-height:1.65}
+.quick-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.quick-card{padding:22px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface-2)}
+.quick-card .step-num{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-weight:650;font-size:13px;margin-bottom:12px}
+.quick-card h3{font-size:16px}
+.quick-card p{margin-top:8px;font-size:14px;color:var(--muted)}
+.quick-link{margin-top:18px;font-size:13.5px}
+.quick-link a{display:inline-flex;align-items:center;gap:5px;color:var(--accent);font-weight:600}
+.quick-link a .ic{width:14px;height:14px}
+@media (max-width:1080px){
+  .data-band{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:760px){
+  .data-band,.quick-grid{grid-template-columns:minmax(0,1fr)}
+  .more-strip a{margin-left:0}
+}
 </style>
 </head>
 <body>
@@ -679,8 +718,8 @@ table{border-collapse:collapse;width:100%}
 <div class="announce">
   <div class="wrap announce-inner">
     <span class="dot" aria-hidden="true"></span>
-    <span><b>v0.4.0 已发布</b>：Windows 每用户安装器与自动更新、托盘常驻、代理逃逸与 QUIC / DNS 观测（Beta）。</span>
-    <a href="#whats-new">查看 v0.4.0 新增<svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+    <span><b>v0.4.0 已发布</b>：安装器、自动更新、断网保护与 Windows 托盘。</span>
+    <a href="#whats-new">查看新增<svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg></a>
   </div>
 </div>
 
@@ -695,12 +734,10 @@ table{border-collapse:collapse;width:100%}
     </a>
     <div class="nav-links">
       <a href="#capabilities">能力</a>
-      <a href="#how">工作原理</a>
-      <a href="#coverage">覆盖边界</a>
-      <a href="#safety">断网保护</a>
-      <a href="#defaults">默认行为</a>
+      <a href="#coverage">边界</a>
       <a href="#download">下载</a>
       <a href="#faq">常见问题</a>
+      <a href="./tech.html">技术实现</a>
     </div>
     <div class="nav-actions">
       <a class="icon-btn" data-repo href="__REPO_URL__" target="_blank" rel="noopener" aria-label="GitHub 仓库">
@@ -722,25 +759,25 @@ table{border-collapse:collapse;width:100%}
   <section class="hero" id="top">
     <div class="wrap hero-grid">
       <div class="hero-copy">
-        <div class="hero-badge"><i aria-hidden="true"></i>v0.4.0 · 每用户安装器 · 自动更新 · 本地优先</div>
+        <div class="hero-badge"><i aria-hidden="true"></i>v0.4.0 · Windows-first · 本地优先</div>
         <h1>看清本机 AI Agent 的<br>每一次数据外发</h1>
-        <p class="hero-sub">EgressScope 在本机运行一个只绑定 127.0.0.1 的审计代理：还原 HTTPS 外发内容、定位发起进程、识别密钥与敏感数据，并把结果写入可验证的本地证据链。</p>
+        <p class="hero-sub">在本机还原 HTTPS 外发内容、定位发起进程、识别敏感数据，并写入可验证的本地证据链。无需内核驱动，数据不上云。</p>
         <div class="hero-actions">
           <a class="btn btn-primary btn-lg" data-release href="__REPO_URL__/releases/latest">
             <span class="cta-label">下载 v0.4.0</span>
             <svg class="ic" aria-hidden="true"><use href="#i-download"/></svg>
           </a>
-          <a class="btn btn-ghost btn-lg" data-repo-path="/blob/main/README.md" href="__REPO_URL__/blob/main/README.md" target="_blank" rel="noopener">
-            阅读技术文档
-            <svg class="ic" aria-hidden="true"><use href="#i-external"/></svg>
+          <a class="btn btn-ghost btn-lg" href="./tech.html">
+            查看技术实现
+            <svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg>
           </a>
         </div>
         <ul class="hero-points">
-          <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>观察能力默认开启；阻断与 Canary 诱饵需要显式开启</li>
-          <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>证据留在本机，正文以 AES-256-GCM 加密保存</li>
-          <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>关机优雅恢复、开机自启、根证书与系统代理都可一键撤销</li>
-          <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>Windows 安装器无需管理员；更新包通过 SHA-256 校验后才安装</li>
+          <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>观察默认开启，阻断与诱饵需显式确认</li>
+          <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>正文 AES-256-GCM 加密，证据只留在本机</li>
+          <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>断网保护、开机自启与 CA 均可一键撤销</li>
         </ul>
+        <p class="hero-footnote">Windows 安装包免管理员 · 当前构建未签名</p>
       </div>
 
       <div class="hero-visual">
@@ -813,535 +850,216 @@ table{border-collapse:collapse;width:100%}
       <dl class="spec-grid">
         <div class="spec"><dt>代理监听</dt><dd class="mono">127.0.0.1:8899</dd></div>
         <div class="spec"><dt>审计台</dt><dd class="mono">127.0.0.1:8898</dd></div>
-        <div class="spec"><dt>正文加密</dt><dd>AES-256-GCM<span class="mono"> + DPAPI</span></dd></div>
-        <div class="spec"><dt>证据完整性</dt><dd>SHA-256 链</dd></div>
+        <div class="spec"><dt>正文加密</dt><dd>AES-256-GCM</dd></div>
+        <div class="spec"><dt>进程归因</dt><dd>PID + 父链</dd></div>
         <div class="spec"><dt>原生构建</dt><dd>6 个平台目标</dd></div>
         <div class="spec"><dt>云同步</dt><dd>无</dd></div>
       </dl>
     </div>
   </section>
+
   <section class="specs" id="whats-new" aria-label="v0.4.0 新增">
     <div class="wrap" style="padding-top:24px;padding-bottom:24px">
       <div class="pipeline-caption reveal" style="margin-top:0">
         <b>v0.4.0 新增</b>
-        <a class="pill accent" href="#download">每用户安装器 + 自动更新</a>
-        <a class="pill accent" href="#safety">集成自愈与关机实验脚本</a>
+        <a class="pill accent" href="#download">每用户安装器</a>
+        <a class="pill accent" href="#download">SHA-256 自动更新</a>
+        <a class="pill accent" href="#capabilities">集成自愈</a>
         <a class="pill accent" href="#coverage">五级可见性</a>
-        <a class="pill accent" href="#capabilities">QUIC / DNS 观测 Beta</a>
-        <a class="pill accent" href="#defaults">Windows 托盘</a>
+        <a class="pill accent" href="#download">Windows 托盘</a>
       </div>
     </div>
   </section>
+
   <section class="section" id="capabilities">
     <div class="wrap">
       <div class="section-head reveal">
-        <span class="eyebrow">能力总览</span>
-        <h2>把“有一条连接”变成一次可复核的外发记录</h2>
-        <p>每一项能力都对应本机证据链上的一个环节：从流量入口、内容还原、进程归因，到风险判定与加密留存。审计台可随时校验链条是否完整。</p>
+        <span class="eyebrow">能力</span>
+        <h2>六个环节，组成一条可复核的证据链</h2>
+        <p>不读 Agent 的私有会话文件，只看真实外发：谁、发往哪里、带走了什么、证据是否完整。</p>
       </div>
       <div class="card-grid">
         <article class="card reveal">
           <div class="card-icon"><svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg></div>
           <h3>HTTPS 外发可见性</h3>
-          <p>本地代理终止 TLS，还原请求方法、路径、请求头与正文，并记录响应状态与体积。不遵循代理设置的应用不会被假装看见。</p>
+          <p>还原经过本地代理的请求与响应，并为每条流量标注可见性等级。</p>
           <div class="spec-line">TLS 1.2 / 1.3 · HTTP/1.1 · HTTP/2</div>
         </article>
         <article class="card reveal">
           <div class="card-icon"><svg class="ic" aria-hidden="true"><use href="#i-cpu"/></svg></div>
           <h3>进程级归因</h3>
-          <p>用客户端临时端口匹配本机 TCP 归属表，缓存 PID 与进程创建时间以减少 PID 复用误判，并保留父进程链与脱敏命令行。</p>
-          <div class="spec-line">port → pid → parent chain</div>
+          <p>把连接定位到 PID、父进程链与脱敏命令行，降低 PID 复用误判。</p>
+          <div class="spec-line">port → PID → parent chain</div>
         </article>
         <article class="card reveal">
           <div class="card-icon"><svg class="ic" aria-hidden="true"><use href="#i-activity"/></svg></div>
-          <h3>AI 端点识别</h3>
-          <p>识别主流 AI 服务与本地自建端点，提取模型名与 token 用量，把 AI 外发与普通遥测、下载流量区分开。</p>
-          <div class="spec-line">category: ai_saas / ai_local / other</div>
-        </article>
-        <article class="card reveal">
-          <div class="card-icon"><svg class="ic" aria-hidden="true"><use href="#i-key"/></svg></div>
-          <h3>敏感数据规则</h3>
-          <p>匹配常见 API 密钥、私钥、证件号、银行卡、手机号、源码块与文件路径引用，形成可解释、可复核的风险分。</p>
-          <div class="spec-line">secret.openai_key +55 · pii.cn_id +40</div>
+          <h3>AI 与敏感数据识别</h3>
+          <p>识别 AI 端点、模型与 token 用量，并命中密钥、证件号、银行卡与源码风险。</p>
+          <div class="spec-line">ai_saas / ai_local · DLP rules</div>
         </article>
         <article class="card reveal">
           <div class="card-icon"><svg class="ic" aria-hidden="true"><use href="#i-database"/></svg></div>
-          <h3>加密证据链</h3>
-          <p>每条记录的关键摘要与上一条哈希链接，正文加密保存，列表与导出默认脱敏；可随时校验链条并导出 JSONL 证据。</p>
-          <div class="spec-line">sha256(prev + summary) → chain valid</div>
+          <h3>本地加密证据链</h3>
+          <p>正文加密保存，摘要逐条哈希链接，列表与导出默认脱敏。</p>
+          <div class="spec-line">AES-256-GCM · SHA-256 chain</div>
         </article>
         <article class="card reveal">
-          <div class="card-icon"><svg class="ic" aria-hidden="true"><use href="#i-file"/></svg></div>
-          <h3>文件触达关联（Beta）</h3>
-          <p>抽样近期外发进程打开的文件句柄，并用虚构诱饵文件观察异常触达。只记录路径与时间等元数据，不读取文件内容。</p>
-          <div class="spec-line">metadata only · content never read</div>
+          <div class="card-icon"><svg class="ic" aria-hidden="true"><use href="#i-shield"/></svg></div>
+          <h3>断网保护与自愈</h3>
+          <p>关机恢复、启动校正、看门狗与独立恢复器；程序移动后自动改指当前 exe。</p>
+          <div class="spec-line">4 layers · self-heal</div>
         </article>
         <article class="card reveal">
           <div class="card-icon"><svg class="ic" aria-hidden="true"><use href="#i-download"/></svg></div>
-          <h3>Windows 安装器与自动更新</h3>
-          <p>Windows x64 安装器装到当前用户的固定目录，不需要管理员权限，可选桌面快捷方式；卸载时恢复系统代理与开机自启，交互式卸载会先询问是否删除审计数据。应用启动约 30 秒后检查 GitHub Releases，之后每 24 小时一次；安装包必须通过 SHA-256 校验才会静默安装，检查可在设置中关闭。当前构建未签名。</p>
-          <div class="spec-line">%LOCALAPPDATA%\Programs\EgressScope · SHA-256 update · unsigned</div>
+          <h3>Windows 桌面体验</h3>
+          <p>免管理员安装、SHA-256 校验更新、托盘暂停与关闭到托盘。</p>
+          <div class="spec-line">installer · auto-update · tray</div>
         </article>
-        <article class="card reveal">
-          <div class="card-icon"><svg class="ic" aria-hidden="true"><use href="#i-grid"/></svg></div>
-          <h3>托盘常驻与暂停（Windows）</h3>
-          <p>关闭控制窗口会隐藏到通知区域而不是退出；托盘菜单可打开控制台与审计台、暂停或恢复采集、退出并恢复系统代理。登录自启默认隐藏启动，--no-tray 时关闭窗口即退出。托盘仅 Windows 提供，macOS 与 Linux 没有托盘。</p>
-          <div class="spec-line">close-to-tray · pause / resume · exit restores proxy</div>
-        </article>
-        <article class="card reveal">
-          <div class="card-icon"><svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg></div>
-          <h3>代理逃逸与 QUIC / DNS 观测（Beta）</h3>
-          <p>每 15 秒读取本机连接表与 Windows 解析缓存，记录直连 TCP 80/443/8080/8443、UDP 443 QUIC 候选与 DNS 目标，不记录查询内容。检测，不重定向：没有拦截、驱动或 QUIC 解密，候选也不等于内容已经外发。</p>
-          <div class="spec-line">detection only · no redirect · no QUIC decryption</div>
-        </article>
+      </div>
+      <div class="more-strip reveal">
+        <b>还有</b>
+        <span class="tag">文件触达 · 仅元数据</span>
+        <span class="tag">直连 / QUIC / DNS 观测 · 检测不重定向</span>
+        <span class="tag">配置热更新</span>
+        <span class="tag">一键暂停采集</span>
+        <a href="./tech.html">查看技术实现<svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg></a>
       </div>
     </div>
   </section>
 
-  <section class="section section--tint" id="how">
+  <section class="section section--tint" id="coverage">
     <div class="wrap">
       <div class="section-head reveal">
-        <span class="eyebrow">工作原理</span>
-        <h2>用户态本地代理 + 本地 CA + 进程归因</h2>
-        <p>这条路径不需要内核驱动签名，不依赖任何 Agent 的私有数据格式，并且失败模式清晰：应用不配合就看不到，不会把“代理已启动”说成“全部可见”。</p>
-      </div>
-
-      <div class="table-card reveal" style="padding:20px;background:var(--surface)">
-        <div class="pipeline">
-          <div class="pipe-node">
-            <div class="pipe-idx">STEP 01</div>
-            <h4>应用 / Agent 发起请求</h4>
-            <p>Claude Code、Codex、编辑器插件、SDK 或普通桌面程序发出 HTTPS 请求。</p>
-          </div>
-          <div class="pipe-node">
-            <div class="pipe-idx">STEP 02</div>
-            <h4>进入本地转发代理</h4>
-            <p>代理只监听 127.0.0.1，通过系统代理或进程环境变量接入，不影响局域网。</p>
-          </div>
-          <div class="pipe-node highlight">
-            <div class="pipe-idx">STEP 03</div>
-            <h4>本地 CA 终止 TLS</h4>
-            <p>使用当前用户信任的本地 CA 签发站点证书，还原 HTTP 语义后再重新加密转发。</p>
-          </div>
-          <div class="pipe-node">
-            <div class="pipe-idx">STEP 04</div>
-            <h4>归因到发起进程</h4>
-            <p>客户端端口匹配本机 TCP 表，得到 PID、进程名、父进程链与创建时间。</p>
-          </div>
-          <div class="pipe-node">
-            <div class="pipe-idx">STEP 05</div>
-            <h4>策略判定与证据留存</h4>
-            <p>端点分类、DLP 规则、风险评分与处置动作，正文加密写入哈希链证据库。</p>
-          </div>
-        </div>
-        <div class="pipeline-caption" aria-label="审计流程">
-          <b>进程流量</b><span class="arr">→</span>
-          <b>内容可读</b><span class="arr">→</span>
-          <b>是谁发起</b><span class="arr">→</span>
-          <b>可验证证据</b><span class="arr">→</span>
-          <b>本机审计台</b>
-        </div>
-      </div>
-
-      <div class="card-grid" style="margin-top:16px">
-        <article class="card reveal">
-          <h3>为什么选择本地代理</h3>
-          <p>失败模式清晰、可解释、可撤销。修改系统代理前先备份，退出时恢复；检测到 PAC 脚本时拒绝接管；已有 Clash 等回环代理时自动串联，避免接管后断网。</p>
-        </article>
-        <article class="card reveal">
-          <h3>为什么使用 mitmproxy</h3>
-          <p>不重复造 TLS。成熟的开源代理负责 HTTP/2、证书签发与流式转发，项目把工程精力集中在归因、策略、证据链与产品边界上。</p>
-        </article>
-        <article class="card reveal">
-          <h3>为什么需要本地 CA</h3>
-          <p>还原内容必须经过应用同意。CA 只安装到当前用户信任根且不会自动安装；证书固定、mTLS 与端到端加密不被本项目攻破。</p>
-        </article>
-      </div>
-
-      <div class="table-card reveal" style="margin-top:16px">
-        <div class="table-scroll">
-          <table class="data-table compare">
-            <thead><tr><th>技术路径</th><th>内容可见性</th><th>部署与维护</th><th>覆盖面</th><th>用户可解释性</th></tr></thead>
-            <tbody>
-              <tr class="chosen"><td><b>本地代理 + 本地 CA</b> <span class="pill accent">本版</span></td><td class="yes">高：协议语义、正文、进程</td><td class="yes">中低：用户态、无驱动签名</td><td class="mid">中：需应用遵循代理 / 信任 CA</td><td class="yes">高：授权与边界可见</td></tr>
-              <tr><td><b>WFP / WinDivert 透明重定向</b></td><td class="mid">中：仍受 TLS 固定与信任限制</td><td class="no">高：驱动、签名、兼容性</td><td class="yes">较高：不依赖应用代理设置</td><td class="mid">中：用户不易感知</td></tr>
-              <tr><td><b>Agent 会话 / MCP 旁路</b></td><td class="yes">高：可读会话内容</td><td class="yes">低：只需读本地数据</td><td class="no">窄：只覆盖特定 Agent，不看真实外发</td><td class="mid">中：依赖私有格式</td></tr>
-              <tr><td><b>浏览器扩展</b></td><td class="mid">中：仅浏览器内页面与请求</td><td class="yes">低：无需系统权限</td><td class="no">窄：桌面 Agent、CLI、后台服务不可见</td><td class="yes">高</td></tr>
-              <tr><td><b>ETW / 内核文件审计</b></td><td class="no">不提供内容</td><td class="no">高：需要管理员与规则工程</td><td class="yes">广：网络 / 文件系统事件</td><td class="mid">中：事件量大、噪声高</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="table-foot"><span>选择标准：在可交付、可解释、可撤销的前提下，获得最高的单机内容可见性。</span><span>透明重定向与 ETW / SACL 已列入路线图；不进入这条管道的直连与 QUIC 只做候选元数据观测。</span></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="section" id="coverage">
-    <div class="wrap">
-      <div class="section-head reveal">
-        <span class="eyebrow">覆盖边界</span>
-        <h2>我们主动写清楚了“看不到”的部分</h2>
-        <p>没有一种用户态方案能看见所有加密流量。一个可信的审计产品，不应该把“代理已启动”宣传成“全部可见”。下面是当前版本的真实边界。</p>
+        <span class="eyebrow">边界</span>
+        <h2>能看见什么，不能看见什么</h2>
+        <p>用户态审计有明确边界。我们把限制写在前面，而不是把“代理运行中”说成“全部可见”。</p>
       </div>
       <div class="coverage-grid">
         <div class="coverage good reveal">
           <div class="cov-head"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>在配合路径上可以看见</div>
           <ul>
-            <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span>经过本地代理的 HTTP/HTTPS 请求与响应元数据；系统代理、环境变量代理和手动指定的代理都属于这个范围。</span></li>
-            <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span>启动时自动继承本机回环 HTTP 代理（如 Clash 的 127.0.0.1:7890）并串联转发；只转发重新加密后的 TLS 字节，上游看不到审计器已解密的正文。</span></li>
-            <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span>应用信任本地 CA 且未启用证书固定的 TLS 1.2 / 1.3 流量，可还原请求方法、路径、头、正文和响应。</span></li>
-            <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span>正文保存有体积上限；AI 请求或风险分 ≥ 25 的流量才加密保留原始正文，其他流量保留脱敏预览。</span></li>
-            <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span>客户端进程 PID、父进程链、脱敏命令行与进程创建时间，用于区分真实发起者与 PID 复用。</span></li>
-            <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span>AI 服务分类、模型名、密钥 / PII / 代码 / 文件引用等规则信号，以及可配置的阻断动作。</span></li>
-            <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span>每条流量标注五级可见性：完整 / 部分 / 仅元数据 / 已阻断 / 错误；CONNECT 隧道失败与 TLS 握手失败只保留元数据和原因，不伪装成内容可见。</span></li>
+            <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span>经过本地代理的 HTTPS 请求、响应与五级可见性</span></li>
+            <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span>发起进程、父链、脱敏命令行与创建时间</span></li>
+            <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span>AI 端点、模型、token 与敏感数据风险信号</span></li>
+            <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span>直连、QUIC 与 DNS 目标元数据（仅候选）</span></li>
           </ul>
         </div>
         <div class="coverage bad reveal">
           <div class="cov-head"><svg class="ic" aria-hidden="true"><use href="#i-eye-off"/></svg>不承诺、也看不到</div>
           <ul>
-            <li><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg><span><b>未经过代理的直连流量。</b>v0.4.0 会从本机连接表记录直连 TCP 80/443/8080/8443 候选，但内容不可见，也不会被拦截；要还原内容仍需环境变量接入或未来的透明重定向。</span></li>
-            <li><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg><span><b>证书固定、mTLS、双向证书校验。</b>这些是应用有意建立的安全边界，不被本项目攻破，内容仍然不可见。</span></li>
-            <li><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg><span><b>QUIC / HTTP3。</b>UDP 443 只作为候选信号记录；不解析、不解密、不阻断，无法给出内容级结论。</span></li>
-            <li><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg><span><b>应用层端到端加密。</b>没有密钥时，即使流量经过代理也只能看到密文和元数据。</span></li>
-            <li><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg><span><b>WFP / WinDivert 透明重定向。</b>当前版本未实现，也不安装驱动；不遵循代理的应用无法被强制接管。</span></li>
-            <li><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg><span><b>Windows 服务 / SYSTEM 会话的完整归因。</b>当前面向登录用户进程，服务账户路径在路线图中。</span></li>
-            <li><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg><span><b>完整文件读取历史。</b>打开句柄抽样无法证明文件已被读取，也不覆盖已经关闭的句柄。</span></li>
+            <li><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg><span>证书固定、mTLS 与应用层端到端加密</span></li>
+            <li><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg><span>QUIC / HTTP3 的内容级解析</span></li>
+            <li><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg><span>绕过代理的直连内容</span></li>
+            <li><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg><span>Windows 服务 / SYSTEM 会话的完整归因</span></li>
           </ul>
         </div>
       </div>
-      <div class="table-card reveal" style="margin-top:16px">
-        <div class="table-scroll">
-          <table class="data-table">
-            <thead><tr><th>可见性等级</th><th>含义</th><th>典型情况</th></tr></thead>
-            <tbody>
-              <tr><td><b>完整</b></td><td>本地代理读取并保存了响应正文，仍受单条体积上限约束。</td><td>信任本地 CA 且未启用证书固定的 HTTPS 请求。</td></tr>
-              <tr><td><b>部分</b></td><td>正文缺失、被截断、流式未保留，或 WebSocket 消息正文未持久化。</td><td>WebSocket 握手成功；响应体超限；旧版本记录迁移。</td></tr>
-              <tr><td><b>仅元数据</b></td><td>只记录连接元数据与失败原因，没有请求或响应内容。</td><td>CONNECT 隧道失败；TLS 握手失败，可能是证书固定、mTLS 或客户端拒绝本地 CA。</td></tr>
-              <tr><td><b>已阻断</b></td><td>策略命中，请求在本地被拒绝并记录原因。</td><td>风险分达到阻断阈值且显式开启阻断。</td></tr>
-              <tr><td><b>错误</b></td><td>代理或上游错误，未收到响应。</td><td>上游不可达、代理异常或连接被重置。</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="table-foot"><span>旧记录不会回填不存在的正文；仅元数据不等于内容可见，更不等于已拦截。</span></div>
+      <div class="vis-strip reveal">
+        <span class="label">每条流量都有可见性等级</span>
+        <span class="pill ok">完整</span>
+        <span class="pill warn">部分</span>
+        <span class="pill">仅元数据</span>
+        <span class="pill warn">已阻断</span>
+        <span class="pill">错误</span>
       </div>
-      <div class="notice reveal"><svg class="ic" aria-hidden="true"><use href="#i-alert"/></svg><span><b>重要安全边界：</b>不要在日常使用、存有真实凭据的设备上分析疑似恶意软件。受信 CA 会扩大本机可被中间人解密的范围。请在隔离虚拟机 / 快照中处理未知样本，分析结束后移除 CA 并恢复系统代理。</span></div>
-    </div>
-  </section>
-  <section class="section section--tint" id="safety">
-    <div class="wrap">
-      <div class="safety-grid">
-        <div class="reveal">
-          <div class="section-head left">
-            <span class="eyebrow">断网保护</span>
-            <h2>接管系统代理之后，本机不能失联</h2>
-            <p>这是一个真实存在的失败模式：如果电脑突然断电、程序崩溃或被强制结束，Windows 的系统代理仍会指向 127.0.0.1 上已经停止的端口，浏览器与多数应用会连接失败——和某些 VPN 客户端退出后留下的问题一样。v0.4.0 用四层机制处理它，其中三层不需要你做任何配置。</p>
-          </div>
-          <div class="layers">
-            <div class="layer">
-              <div class="layer-num">1</div>
-              <div>
-                <h4>关机 / 注销时优雅恢复</h4>
-                <p>程序在独立消息线程上创建一个隐藏的顶层窗口并注册 Windows 会话结束通知（WM_QUERYENDSESSION / WM_ENDSESSION，控制台构建同时挂 SetConsoleCtrlHandler）。你点关机、重启或注销时，系统会先通知我们；程序在恢复期间用 ShutdownBlockReasonCreate 让系统显示等待原因，把系统代理还原为启用前的备份值并刷新 WinINET 后立即释放，因此下一次开机不会继承一个指向已停止端口的代理。</p>
-                <span class="tag">AUTOMATIC · v0.4.0 · 无需配置</span>
-              </div>
-            </div>
-            <div class="layer">
-              <div class="layer-num">2</div>
-              <div>
-                <h4>启动时校正</h4>
-                <p>程序启动会检查系统代理是否仍指向本工具：端口变了就重新指向新的监听端口；本地代理没能启动，就立刻恢复原始设置，不把机器留在断网状态。配合默认开启的开机自启，登录后这条链路会重新建立。</p>
-                <span class="tag">AUTOMATIC · 无需配置</span>
-              </div>
-            </div>
-            <div class="layer">
-              <div class="layer-num">3</div>
-              <div>
-                <h4>独立看门狗任务</h4>
-                <p>启用系统代理时的确认对话框默认勾选这一项，一键注册一个仅当前用户的计划任务：登录时以及每 2 分钟检查一次，如果系统代理仍指向已停止的回环端口，等待 30 秒宽限后恢复备份的原始值、刷新 WinINET 设置，然后自动停用任务，避免无意义的重复运行。</p>
-                <span class="tag">默认勾选 · 每用户 · 不需要管理员</span>
-              </div>
-            </div>
-            <div class="layer">
-              <div class="layer-num">4</div>
-              <div>
-                <h4>手动恢复</h4>
-                <p>桌面控制台提供“恢复系统代理”，也可以直接运行命令行恢复；极端情况下还能在 Windows 设置的网络代理页手动关闭。备份文件被保留，直到恢复成功。</p>
-                <span class="tag">MANUAL · 始终可用</span>
-              </div>
-            </div>
-          </div>
-          <div class="notice notice--info" style="margin-top:16px"><svg class="ic" aria-hidden="true"><use href="#i-info"/></svg><span><b>v0.4.0 集成自愈：</b>启动时以及运行中每 10 分钟核对当前用户的 Run 键与看门狗计划任务，程序被移动、覆盖安装或更新后自动改指当前 exe；也可以运行 --repair-integrations 手动修复。--restore-proxy 是独立恢复器，只恢复系统代理，不需要先启动应用。</span></div>
-          <div class="notice" style="margin-top:12px"><svg class="ic" aria-hidden="true"><use href="#i-alert"/></svg><span><b>关机实验的真实边界：</b>仓库提供 tools/shutdown_lab.ps1 实验脚本，包含 prepare / verify 与需要显式确认的重启选项；但本版本未在 CI 或真实虚拟机中执行真实关机 / 重启。契约测试只验证 Windows 会话结束回调能触发恢复，不能替代真实关机验证。</span></div>
-        </div>
-
-        <div class="reveal">
-          <div class="code">
-            <div class="code-bar"><b>PowerShell</b><span class="tagline">手动恢复与自启</span></div>
-            <pre><span class="c"># 恢复启用系统代理前的原始设置</span>
-EgressScope.exe <span class="k">--restore-proxy</span>
-
-<span class="c"># 仅当系统代理指向本工具且端口已停止时恢复</span>
-EgressScope.exe <span class="k">--recover-proxy</span> <span class="k">--recover-grace</span> 30
-
-<span class="c"># 开机自启（当前用户 Run 键，默认开启，可随时撤销）</span>
-EgressScope.exe <span class="k">--enable-autostart</span>
-EgressScope.exe <span class="k">--disable-autostart</span>
-
-<span class="c"># 自愈：把开机自启与看门狗改指当前 exe</span>
-EgressScope.exe <span class="k">--repair-integrations</span>
-
-<span class="c"># 看门狗脚本与日志位置（当前用户）</span>
-%LOCALAPPDATA%\EgressScope\proxy-guard.ps1
-%LOCALAPPDATA%\EgressScope\logs\proxy-recovery.log
-
-<span class="c"># 系统留下的痕迹，全部可逐项撤销</span>
-HKCU\...\Internet Settings      <span class="c"># 系统代理（含备份）</span>
-HKCU\...\CurrentVersion\Run     <span class="c"># EgressScope 开机自启</span>
-EgressScope Proxy Recovery      <span class="c"># 每用户计划任务</span></pre>
-          </div>
-          <div class="notice notice--info" style="margin-top:16px"><svg class="ic" aria-hidden="true"><use href="#i-info"/></svg><span><b>诚实的限制：</b>优雅恢复依赖系统把会话结束消息投递给我们——直接拔电源、内核崩溃或强制结束进程时收不到，此时恢复发生在下一次登录后（启动校正 + 看门狗）。看门狗与开机自启都只覆盖当前登录用户；只要备份文件存在，指向已停止回环端口的系统代理会被视为本工具的设置。Linux 与 macOS 版本不修改系统代理，也不写 Run 键，不受此问题影响。如果不能接受任何全局代理风险，请只用 Agent 环境变量接入。</span></div>
-        </div>
+      <div class="notice reveal">
+        <svg class="ic" aria-hidden="true"><use href="#i-alert"/></svg>
+        <span><b>仅用于你拥有或明确获授权的设备。</b>不要在日常主机上分析未知样本；完整边界与测试状态见 <a href="./tech.html#limits">技术文档</a>。</span>
       </div>
     </div>
   </section>
 
-  <section class="section" id="defaults">
+  <section class="section" id="privacy">
     <div class="wrap">
       <div class="section-head reveal">
-        <span class="eyebrow">默认行为</span>
-        <h2>安装即观察，改动即时生效</h2>
-        <p>v0.4.0 延续“默认就位”：观察能力开箱开启，配置与更新检查都可热更新，登录自启与关机恢复形成闭环，Windows 托盘让关闭窗口不等于退出。会中断请求或写入文件的两项能力仍然保留显式确认。</p>
+        <span class="eyebrow">本地优先</span>
+        <h2>证据留在本机，密钥也留在本机</h2>
+        <p>审计工具本身不应成为新的泄露面。加密、脱敏与撤销路径都是默认设计。</p>
       </div>
-      <div class="card-grid">
-        <article class="card reveal">
-          <div class="card-icon"><svg class="ic" aria-hidden="true"><use href="#i-eye"/></svg></div>
-          <h3>默认开启的观察能力</h3>
-          <p>流量采集、AI 端点识别、敏感数据规则与文件句柄抽样默认全部开启，装完就能看到完整证据链，不必先研究一遍开关。两项例外仍需你显式打开：风险阻断会直接返回 403 中断请求，Canary 诱饵会往 Documents 写入含虚构凭据的文件。</p>
-          <div class="spec-line">capture · ai endpoints · dlp rules · file sampling = on</div>
-        </article>
-        <article class="card reveal">
-          <div class="card-icon"><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg></div>
-          <h3>配置热更新，无需重启</h3>
-          <p>控制台开关、Web 审计台开关，或直接编辑 <code>%LOCALAPPDATA%\EgressScope\config.json</code>，都会在 2 秒内被运行中的进程采纳。上游代理变更会自动重连并重新校正系统代理，抽样间隔、保留期与自启开关即时生效，不需要等待重启窗口。</p>
-          <div class="spec-line">config.json → mtime poll (2s) → live settings</div>
-        </article>
-        <article class="card reveal">
-          <div class="card-icon"><svg class="ic" aria-hidden="true"><use href="#i-power"/></svg></div>
-          <h3>默认开机自启，可随时撤销</h3>
-          <p>启用系统代理后写入当前用户的 Run 键，登录时隐藏启动，与关机 / 注销优雅恢复配合形成闭环，不会出现“开机后代理没人接管”的空档。控制台一键关闭，或运行 <code>--disable-autostart</code>；撤销时只删除我们自己写入的值，不动其他程序的自启项。</p>
-          <div class="spec-line">HKCU\...\CurrentVersion\Run\EgressScope</div>
-        </article>
+      <div class="data-band reveal">
+        <div class="data-tile"><dt>数据目录</dt><dd class="mono">%LOCALAPPDATA%\EgressScope</dd></div>
+        <div class="data-tile"><dt>正文加密</dt><dd>AES-256-GCM + DPAPI</dd></div>
+        <div class="data-tile"><dt>云同步</dt><dd class="good">无</dd></div>
+        <div class="data-tile"><dt>默认保留</dt><dd>7 天 · 可配置</dd></div>
       </div>
-      <div class="notice notice--info reveal"><svg class="ic" aria-hidden="true"><use href="#i-info"/></svg><span><b>你可以确认热更新已经完成：</b>接口与控制台会返回 <code>config_reload</code>（完成时间与本次生效的键名），不需要靠猜。监听端口、Web 端口与证书目录这类需要重建进程的字段不在热更新范围内，改完需要重启一次，控制台会明确提示。</span></div>
-      <div class="notice notice--info reveal" style="margin-top:12px"><svg class="ic" aria-hidden="true"><use href="#i-info"/></svg><span><b>自动更新与托盘的默认值：</b>Windows x64 安装版默认在应用启动约 30 秒后检查一次 GitHub Releases，之后每 24 小时检查，结果缓存 6 小时；只有 Windows x64 且发布页同时提供安装器与 SHA-256 时才允许静默安装，检查可在设置中关闭。Windows 上托盘随控制台启动，关闭窗口会隐藏到通知区域；--no-tray 可恢复“关闭即退出”。</span></div>
+      <p class="data-note reveal">Web 审计台只绑定 127.0.0.1 并使用随机令牌；原始正文需二次确认才解密，且不回写数据库。<a href="./tech.html#data-safety">查看数据安全设计<svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg></a></p>
     </div>
   </section>
 
-  <section class="section" id="download">
+  <section class="section section--tint" id="download">
     <div class="wrap">
       <div class="section-head reveal">
         <span class="eyebrow">下载</span>
-        <h2>Windows 安装器与六个平台目标</h2>
-        <p>每次发布提供六个平台目标、Windows x64 每用户安装器与 SHA-256 校验文件。安装器装到固定目录并支持自动更新；便携版与 ARM64 需要手动下载更新。Linux 与 macOS 提供审计引擎与本机 Web 审计台，系统代理与根证书需要手动配置。</p>
+        <h2>一个 Windows 安装器，六个原生平台</h2>
+        <p>Windows x64 安装器免管理员，支持 SHA-256 自动更新与托盘；macOS 与 Linux 提供同一套审计引擎和 Web 审计台。</p>
       </div>
-      <div class="table-card reveal">
-        <div class="table-scroll">
-          <table class="data-table">
-            <thead><tr><th>平台</th><th>产物文件</th><th>桌面控制台</th><th>一键 CA / 系统代理</th><th>自动更新</th><th>说明</th></tr></thead>
-            <tbody>
-              <tr class="chosen">
-                <td><b>Windows 10 / 11 x64</b> <span class="pill accent">推荐安装器</span></td>
-                <td class="mono">EgressScope-Setup-v&lt;version&gt;.exe</td>
-                <td class="yes">支持 · 托盘</td>
-                <td class="yes">支持</td>
-                <td class="yes">支持 · SHA-256</td>
-                <td>每用户安装到 %LOCALAPPDATA%\Programs\EgressScope，无需管理员，可选桌面快捷方式；卸载恢复系统代理与开机自启，交互式卸载会先询问是否删除审计数据。构建未签名。</td>
-              </tr>
-              <tr>
-                <td><b>Windows 10 / 11 x64</b> <span class="pill">便携版</span></td>
-                <td class="mono">EgressScope-&lt;tag&gt;-windows-x64.exe</td>
-                <td class="yes">支持 · 托盘</td>
-                <td class="yes">支持</td>
-                <td class="no">手动</td>
-                <td>单文件 EXE，不写安装目录；含系统代理备份恢复、当前用户 CA 安装、四层断网保护、开机自启与进程归因。自动安装仅限安装器版本；构建未签名。</td>
-              </tr>
-              <tr>
-                <td><b>Windows on ARM</b> <span class="pill ok">原生 ARM64</span></td>
-                <td class="mono">EgressScope-&lt;tag&gt;-windows-arm64.exe</td>
-                <td class="mid">支持 · 托盘未验收</td>
-                <td class="yes">支持</td>
-                <td class="no">手动</td>
-                <td>在 ARM runner 上编译 OpenSSL 与 Rust 依赖，非 x64 模拟；Tk 界面与托盘未在 ARM64 实机验收；自动安装不适用。构建未签名。</td>
-              </tr>
-              <tr>
-                <td><b>macOS Apple Silicon</b></td>
-                <td class="mono">EgressScope-&lt;tag&gt;-macos-arm64.tar.gz</td>
-                <td class="mid">命令行 / Web</td>
-                <td class="no">手动</td>
-                <td class="no">手动</td>
-                <td>需手动信任 CA，并通过环境变量接入目标 Agent；无托盘，更新请手动下载。二进制未签名。</td>
-              </tr>
-              <tr>
-                <td><b>macOS Intel</b></td>
-                <td class="mono">EgressScope-&lt;tag&gt;-macos-x64.tar.gz</td>
-                <td class="mid">命令行 / Web</td>
-                <td class="no">手动</td>
-                <td class="no">手动</td>
-                <td>使用兼容的 cryptography 版本构建；无托盘，更新请手动下载。二进制未签名，Gatekeeper 可能要求放行。</td>
-              </tr>
-              <tr>
-                <td><b>Linux x64</b></td>
-                <td class="mono">EgressScope-&lt;tag&gt;-linux-x64.tar.gz</td>
-                <td class="mid">命令行 / Web</td>
-                <td class="no">手动</td>
-                <td class="no">手动</td>
-                <td>PID 归因依赖 /proc/net/tcp；代理与 CA 需手动配置；无托盘。</td>
-              </tr>
-              <tr>
-                <td><b>Linux arm64</b></td>
-                <td class="mono">EgressScope-&lt;tag&gt;-linux-arm64.tar.gz</td>
-                <td class="mid">命令行 / Web</td>
-                <td class="no">手动</td>
-                <td class="no">手动</td>
-                <td>面向 ARM64 服务器与开发机，能力与 Linux x64 一致；无托盘。</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="table-foot">
-          <span>每个产物附带 <span class="mono">.sha256</span>，发布页同时提供 <span class="mono">SHA256SUMS.txt</span>；建议先校验再运行。</span>
-          <span>自动安装更新仅在 Windows x64 且发布页同时提供 Setup 与校验文件时可用；ARM64、Linux 与 macOS 请手动下载。</span>
-          <span>托盘仅 Windows 提供，--no-tray 可关闭。</span>
-          <span>当前构建未签名；除非仓库所有者配置签名密钥，SmartScreen 与 Gatekeeper 可能提示未知发布者。CI 提供可选签名钩子。</span>
-          <span>每个 tag 的发布页都附带该版本的更新说明，内容与仓库 CHANGELOG.md 保持一致。</span>
-        </div>
+      <div class="card-grid">
+        <article class="card reveal">
+          <div class="card-icon"><svg class="ic" aria-hidden="true"><use href="#i-grid"/></svg></div>
+          <div class="platform-head"><h3>Windows 10 / 11</h3><span class="pill accent">推荐 · x64 安装器</span></div>
+          <ul class="platform-list">
+            <li><b>x64</b><span>Setup 安装器或便携版；自动更新与托盘</span></li>
+            <li><b>ARM64</b><span>原生便携版；Tk / 托盘未实机验收</span></li>
+            <li><b>安装</b><span>免管理员，固定到 %LOCALAPPDATA%\Programs\EgressScope</span></li>
+          </ul>
+          <div class="spec-line">Setup.exe · portable.exe · unsigned</div>
+        </article>
+        <article class="card reveal">
+          <div class="card-icon"><svg class="ic" aria-hidden="true"><use href="#i-box"/></svg></div>
+          <div class="platform-head"><h3>macOS</h3><span class="pill">Apple Silicon · Intel</span></div>
+          <ul class="platform-list">
+            <li><b>构建</b><span>macOS arm64 / x64 原生 tar.gz</span></li>
+            <li><b>接入</b><span>手动信任 CA，并通过环境变量接入 Agent</span></li>
+            <li><b>限制</b><span>无托盘；非 root 下没有 PID 归因</span></li>
+          </ul>
+          <div class="spec-line">macos-arm64.tar.gz · macos-x64.tar.gz · unsigned</div>
+        </article>
+        <article class="card reveal">
+          <div class="card-icon"><svg class="ic" aria-hidden="true"><use href="#i-server"/></svg></div>
+          <div class="platform-head"><h3>Linux</h3><span class="pill">x64 · arm64</span></div>
+          <ul class="platform-list">
+            <li><b>构建</b><span>Linux x64 / arm64 原生 tar.gz</span></li>
+            <li><b>接入</b><span>代理与 CA 手动配置；PID 归因依赖 /proc</span></li>
+            <li><b>限制</b><span>无托盘；不修改系统代理</span></li>
+          </ul>
+          <div class="spec-line">linux-x64.tar.gz · linux-arm64.tar.gz · unsigned</div>
+        </article>
       </div>
-      <div class="hero-actions reveal" style="margin-top:22px">
+      <div class="download-actions reveal">
         <a class="btn btn-primary btn-lg" data-release href="__REPO_URL__/releases/latest">
           <span class="cta-label">前往 GitHub Releases</span>
-          <svg class="ic" aria-hidden="true"><use href="#i-arrow-up"/></svg>
+          <svg class="ic" aria-hidden="true"><use href="#i-download"/></svg>
         </a>
-        <a class="btn btn-ghost btn-lg" data-repo-path="/actions" href="__REPO_URL__/actions" target="_blank" rel="noopener">
-          查看构建流水线
-          <svg class="ic" aria-hidden="true"><use href="#i-external"/></svg>
-        </a>
+        <span class="download-note">每个产物附 <span class="mono">.sha256</span> 与 <span class="mono">SHA256SUMS.txt</span>。当前构建未签名，SmartScreen / Gatekeeper 可能提示未知发布者。</span>
       </div>
     </div>
   </section>
 
-  <section class="section section--tint" id="start">
+  <section class="section" id="start">
     <div class="wrap">
-      <div class="start-grid">
-        <div class="reveal">
-          <div class="section-head left">
-            <span class="eyebrow">快速开始</span>
-            <h2>三步接入，不自动接管系统</h2>
-            <p>Windows x64 安装器会装到当前用户的固定目录，首次启动会注册登录自启，之后登录时在托盘隐藏运行；桌面控制台与本机审计台会同时启动，采集、AI 端点识别、敏感数据规则与文件句柄抽样默认开启。真正改动系统的三件事——根证书、系统代理与风险阻断——仍然需要你显式确认；所有设置改动即时生效，不需要重启进程。</p>
-          </div>
-          <div class="steps">
-            <div class="step">
-              <div class="step-num">1</div>
-              <div>
-                <h4>启动 EgressScope</h4>
-                <p>运行 Windows 安装器，或双击便携版可执行文件；代理默认监听 <code>127.0.0.1:8899</code>，审计台绑定回环地址并带随机访问令牌。首次启动会写入当前用户 Run 键实现登录自启（Windows 上登录时在托盘隐藏启动），可在控制台一键关闭；用 <code>EgressScope.exe --headless</code> 可运行无窗口模式。</p>
-              </div>
-            </div>
-            <div class="step">
-              <div class="step-num">2</div>
-              <div>
-                <h4>确认根证书</h4>
-                <p>在控制台点击“安装根证书”，把公开 CA 加入当前用户信任根。私钥始终留在本机数据目录，不会分发；安装后可随时移除。</p>
-              </div>
-            </div>
-            <div class="step">
-              <div class="step-num">3</div>
-              <div>
-                <h4>选择流量入口</h4>
-                <p>开启系统代理（确认对话框默认勾选断网保护看门狗），或只给目标 Agent 注入环境变量。若本机原本通过 Clash 等回环代理上网，程序会在启动或热更新时自动串联，避免接管后断网。</p>
-              </div>
-            </div>
-          </div>
+      <div class="section-head reveal">
+        <span class="eyebrow">快速开始</span>
+        <h2>三步开始，不自动接管系统</h2>
+        <p>根证书、系统代理与风险阻断都需要你显式确认；采集与观察能力默认开启。</p>
+      </div>
+      <div class="quick-grid">
+        <div class="quick-card reveal">
+          <div class="step-num">1</div>
+          <h3>安装并启动</h3>
+          <p>运行 Windows 安装器或便携版。代理监听 127.0.0.1:8899，审计台仅回环访问。</p>
         </div>
-
-        <div class="reveal">
-          <div class="code">
-            <div class="code-bar"><b>agent-env.cmd</b><span class="tagline">只影响当前终端</span></div>
-            <pre><span class="c">:: 只给一个终端注入代理与 CA，不改动系统设置</span>
-<span class="k">set</span> HTTPS_PROXY=http://127.0.0.1:8899
-<span class="k">set</span> HTTP_PROXY=http://127.0.0.1:8899
-<span class="k">set</span> NODE_EXTRA_CA_CERTS=%LOCALAPPDATA%\EgressScope\data\certs\mitmproxy-ca-cert.pem
-<span class="k">set</span> REQUESTS_CA_BUNDLE=%LOCALAPPDATA%\EgressScope\data\certs\mitmproxy-ca-cert.pem
-<span class="k">set</span> SSL_CERT_FILE=%LOCALAPPDATA%\EgressScope\data\certs\mitmproxy-ca-cert.pem
-
-<span class="c">:: 验证链路是否被审计</span>
-curl https://api.openai.com/v1/models</pre>
-          </div>
-          <div class="control" style="margin-top:16px" role="img" aria-label="EgressScope 桌面控制台示意：本地代理运行中，审计默认采集，根证书等待信任，系统代理未启用，开机自启已注册">
-            <div class="window-bar">
-              <span class="win-dot"></span><span class="win-dot"></span><span class="win-dot"></span>
-              <span class="window-title">EgressScope · 控制窗口</span>
-            </div>
-            <div class="control-body">
-              <div class="control-head">
-                <div class="control-logo"><svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg></div>
-                <div><h4>本机数据外发审计</h4><span>EgressScope v0.4.0 · Windows</span></div>
-                <span class="control-state"><i></i>运行中</span>
-              </div>
-              <div class="control-cards">
-                <div class="control-card"><div class="label">本地代理 <svg class="ic" aria-hidden="true"><use href="#i-server"/></svg></div><div class="value"><i></i>127.0.0.1:8899</div></div>
-                <div class="control-card"><div class="label">审计状态 <svg class="ic" aria-hidden="true"><use href="#i-eye"/></svg></div><div class="value"><i></i>采集中</div></div>
-                <div class="control-card"><div class="label">本地 CA <svg class="ic" aria-hidden="true"><use href="#i-key"/></svg></div><div class="value warn"><i></i>等待信任</div></div>
-                <div class="control-card"><div class="label">系统代理 <svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg></div><div class="value warn"><i></i>未启用</div></div>
-                <div class="control-card"><div class="label">开机自启 <svg class="ic" aria-hidden="true"><use href="#i-power"/></svg></div><div class="value"><i></i>已注册</div></div>
-                <div class="control-card"><div class="label">配置热更新 <svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg></div><div class="value"><i></i>无需重启</div></div>
-              </div>
-              <div class="control-banner"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>观察能力已默认开启。下一步：安装 CA，再启用系统代理（断网保护默认勾选）或使用 Agent 环境变量。</div>
-              <div class="control-actions">
-                <div class="mock-btn primary"><svg class="ic" aria-hidden="true"><use href="#i-shield"/></svg>安装根证书</div>
-                <div class="mock-btn">启用系统代理</div>
-                <div class="mock-btn"><svg class="ic" aria-hidden="true"><use href="#i-terminal"/></svg>复制环境变量</div>
-                <div class="mock-btn">打开审计台</div>
-              </div>
-              <div class="control-foot"><span>仅限授权设备</span><span>LOCAL · NO CLOUD</span></div>
-            </div>
-          </div>
+        <div class="quick-card reveal">
+          <div class="step-num">2</div>
+          <h3>信任本地 CA</h3>
+          <p>在控制台一键安装到当前用户；私钥不出本机，可随时移除。</p>
+        </div>
+        <div class="quick-card reveal">
+          <div class="step-num">3</div>
+          <h3>选择流量入口</h3>
+          <p>开启系统代理（默认勾选断网保护），或只给目标 Agent 注入环境变量。</p>
         </div>
       </div>
-    </div>
-  </section>
-  <section class="section" id="privacy">
-    <div class="wrap privacy-grid">
-      <div class="reveal">
-        <div class="section-head left">
-          <span class="eyebrow">隐私与安全设计</span>
-          <h2>审计工具本身不应该成为新的泄露面</h2>
-          <p>数据边界不能只靠一句“我们很重视隐私”。它需要落实在密钥位置、导出格式、默认设置与系统变更的撤销路径上。</p>
-        </div>
-        <ul class="privacy-list">
-          <li><svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg><div><b>正文加密存储</b><p>AES-256-GCM 加密请求与响应正文，主密钥由当前 Windows 用户的 DPAPI 保护。更换用户或离线拷走数据库都无法直接解密。</p></div></li>
-          <li><svg class="ic" aria-hidden="true"><use href="#i-eye-off"/></svg><div><b>脱敏是默认值</b><p>列表、搜索、预览与 JSONL 导出只包含脱敏后的内容与哈希。原始正文需要显式二次确认才会在当前会话解密，且不回写数据库。</p></div></li>
-          <li><svg class="ic" aria-hidden="true"><use href="#i-shield"/></svg><div><b>最小化系统变更</b><p>CA 只装当前用户且不自动安装；系统代理修改前先备份，检测到 PAC 时拒绝接管；退出时仅在设置仍属于本工具时恢复。</p></div></li>
-          <li><svg class="ic" aria-hidden="true"><use href="#i-database"/></svg><div><b>本地回环服务</b><p>Web 审计台只绑定 127.0.0.1，使用每次启动随机生成的会话令牌，校验 Host 头并应用严格 CSP。没有云同步、外部字体或第三方脚本。</p></div></li>
-        </ul>
-      </div>
-
-      <div class="boundary reveal">
-        <div class="boundary-head">
-          <div class="label">DATA BOUNDARY</div>
-          <h3>你掌握密钥、保留期与删除权</h3>
-        </div>
-        <div class="boundary-row"><span>数据目录</span><b>%LOCALAPPDATA%\EgressScope</b></div>
-        <div class="boundary-row"><span>安装目录</span><b>%LOCALAPPDATA%\Programs\EgressScope</b></div>
-        <div class="boundary-row"><span>原始正文</span><b>AES-256-GCM</b></div>
-        <div class="boundary-row"><span>主密钥保护</span><b>Windows DPAPI</b></div>
-        <div class="boundary-row"><span>内容上云</span><b class="good">不启用</b></div>
-        <div class="boundary-row"><span>上游链路</span><b class="good">仅回环 · 可关闭</b></div>
-        <div class="boundary-row"><span>更新检查</span><b>GitHub Releases · 可关闭</b></div>
-        <div class="boundary-row"><span>默认审计动作</span><b>观察，不阻断</b></div>
-        <div class="boundary-row"><span>证据保留</span><b>默认 7 天 · 可配置</b></div>
-        <div class="boundary-row"><span>删除</span><b class="good">本地一键清空</b></div>
-        <div class="boundary-note"><svg class="ic" aria-hidden="true"><use href="#i-info"/></svg><span>EgressScope 是审计工具，不是杀毒软件。它不保证发现所有恶意行为，也不对证书固定、端到端加密、QUIC 或未经过本地代理的流量提供内容可见性；直连与 QUIC 仅记录候选元数据。</span></div>
-      </div>
+      <p class="quick-link reveal"><a href="./tech.html#pipeline">命令行、环境变量与热更新<svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg></a></p>
     </div>
   </section>
 
@@ -1349,80 +1067,40 @@ curl https://api.openai.com/v1/models</pre>
     <div class="wrap faq-grid">
       <div class="section-head left reveal" style="margin-bottom:0">
         <span class="eyebrow">常见问题</span>
-        <h2>关于能力边界与使用前提</h2>
-        <p>下面这些问题决定了它是否适合你的场景。答案与本产品的实际实现一致，不做超出能力的承诺。</p>
+        <h2>它适合你的场景吗？</h2>
+        <p>先看能力边界与使用前提。安装、更新、托盘与测试状态等技术问题在专门文档中。</p>
         <div class="hero-actions" style="margin-top:22px">
-          <a class="btn btn-ghost" data-repo-path="/issues" href="__REPO_URL__/issues" target="_blank" rel="noopener">
-            提交问题或反馈
-            <svg class="ic" aria-hidden="true"><use href="#i-external"/></svg>
+          <a class="btn btn-ghost" href="./tech.html#faq">
+            查看技术问答
+            <svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg>
           </a>
         </div>
       </div>
 
       <div class="faq reveal">
-        <details open>
-          <summary><span class="q">01</span>电脑突然关机或程序崩溃后，本机还能上网吗？<svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
-          <div class="a">系统代理仍指向已停止的回环端口时，浏览器与多数应用会连接失败——这是真实存在的失败模式。v0.4.0 提供四层处理：关机、重启或注销时收到 Windows 会话结束通知后立刻恢复原始代理；启动时校正过期设置；启用系统代理时默认勾选的每用户计划任务看门狗在登录后自动恢复；以及 <code>EgressScope.exe --restore-proxy</code> 手动恢复。v0.4.0 还会自愈：程序移动或覆盖更新后自动把 Run 键与看门狗改指当前 exe，也可运行 --repair-integrations 手动修复。直接拔电源、内核崩溃或强制结束进程时收不到会话结束通知，此时恢复发生在下一次登录后。</div>
+        <details>
+          <summary><span class="q">01</span>关机或崩溃后，系统代理会不会让本机断网？<svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
+          <div class="a">v0.4.0 会关机恢复、启动校正，并可用看门狗或 <code>--restore-proxy</code> 恢复。直接拔电源或强制结束进程时，恢复发生在下次登录后。</div>
         </details>
         <details>
           <summary><span class="q">02</span>它是杀毒软件或 EDR 吗？<svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
-          <div class="a">不是。EgressScope 只做外发流量的可见性、归因、策略判定与证据留存，不做恶意代码检测，也不提供阻断未知威胁的能力。风险分是启发式信号，用于辅助人工判断，不能直接当作处置结论。</div>
+          <div class="a">不是。它只做外发可见性、归因、策略与证据留存；风险分是启发式信号，需要人工复核。</div>
         </details>
         <details>
-          <summary><span class="q">03</span>它会读取我的聊天记录吗？<svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
-          <div class="a">只有在你启用系统代理或注入环境变量、并信任本地 CA 之后，经过代理的 HTTPS 正文才会被解析。列表与导出默认脱敏，原始正文需要在详情里再次确认才解密显示，且不回写数据库。它不读取任何 Agent 的本地会话文件。</div>
+          <summary><span class="q">03</span>能看见所有加密流量吗？<svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
+          <div class="a">不能。证书固定、mTLS、端到端加密与绕过代理的直连内容不可见；QUIC 只记录候选元数据。检测不等于拦截。</div>
         </details>
         <details>
-          <summary><span class="q">04</span>能看见所有加密流量吗？<svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
-          <div class="a">不能。证书固定、mTLS、应用层端到端加密，以及完全绕过代理的直连流量都不提供内容可见性。v0.4.0 会把直连、UDP 443 QUIC 与 DNS 目标记为候选或元数据，但检测不等于拦截，也不解密 QUIC。详见<a href="#coverage">覆盖边界</a>一节。</div>
+          <summary><span class="q">04</span>数据会上云吗？需要管理员权限吗？<svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
+          <div class="a">不上云，证据保存在本机并使用 AES-256-GCM 加密。Windows 安装器与 CA、系统代理、自启都按当前用户运行，不需要管理员。</div>
         </details>
         <details>
-          <summary><span class="q">05</span>审计数据会上传到云端吗？<svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
-          <div class="a">不会。证据保存在本机 SQLite，正文用 AES-256-GCM 加密，主密钥由当前用户的 DPAPI 保护。Web 审计台只绑定回环地址，使用每次启动随机生成的令牌，页面不含外部字体、脚本或统计代码。</div>
+          <summary><span class="q">05</span>支持哪些系统？<svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
+          <div class="a">Windows 10 / 11 x64 与 ARM64；x64 有安装器、自动更新与托盘，ARM64 的 Tk / 托盘未实机验收。macOS 与 Linux 提供审计引擎和 Web 审计台，代理与 CA 需手动配置。</div>
         </details>
         <details>
-          <summary><span class="q">06</span>需要管理员权限吗？<svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
-          <div class="a">不需要。Windows 安装器面向 x64，装到当前用户的固定目录，不申请管理员权限；CA、系统代理、断网保护看门狗与开机自启也都写在当前用户下（每用户计划任务 + Run 键），可随时逐项撤销。当前构建未签名，SmartScreen 可能提示未知发布者。这也是它的边界：Windows 服务与 SYSTEM 会话的完整归因不在当前版本范围内。</div>
-        </details>
-        <details>
-          <summary><span class="q">07</span>已经在用 Clash 或其他本地代理怎么办？<svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
-          <div class="a">启动时会自动继承本机回环 HTTP 代理（例如 <code>127.0.0.1:7890</code>）并串联转发，避免接管后断网。上游只看到重新加密后的 TLS 字节。带用户名密码的上游、PAC 脚本与 SOCKS 目前不支持，这些场景请改用单 Agent 环境变量接入。</div>
-        </details>
-        <details>
-          <summary><span class="q">08</span>对性能与磁盘有多大影响？<svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
-          <div class="a">代理运行在用户态、只走本机回环。正文保存有单条体积上限，只有 AI 请求或风险分达到阈值的流量才加密保留原文；证据默认保留 7 天，可在设置中调整，也可以一键清空。</div>
-        </details>
-        <details>
-          <summary><span class="q">09</span>支持哪些操作系统？<svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
-          <div class="a">Windows 10 / 11 的 x64 与 ARM64 是功能完整的桌面版本，含系统代理接入、CA 一键安装与断网保护；x64 另有每用户安装器与自动更新，ARM64 只有便携版，Tk 界面与托盘未在 ARM64 实机验收。macOS 与 Linux 提供同一套审计引擎与本机 Web 审计台，代理与 CA 需要手动配置；macOS 在非 root 下无法读取 TCP 归属表，会降级为不含 PID 的记录。</div>
-        </details>
-        <details>
-          <summary><span class="q">10</span>可以用它审计别人的设备吗？<svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
-          <div class="a">只应用于你拥有或已获得明确书面授权的设备，未经授权拦截他人流量可能违法。也不要在存有真实凭据的日常主机上分析疑似恶意软件：受信 CA 会扩大本机可被中间人解密的范围，请在隔离虚拟机或快照中进行，结束后移除 CA。</div>
-        </details>
-        <details>
-          <summary><span class="q">11</span>项目是开源的吗？许可是什么？<svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
-          <div class="a">源码与构建流水线公开在 GitHub，可自行审计与复现构建。仓库当前未附带标准开源许可证，使用即表示你理解并接受 README 中的授权、安全与覆盖边界声明。</div>
-        </details>
-        <details>
-          <summary><span class="q">12</span>修改设置需要重启程序吗？开机自启能关吗？<svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
-          <div class="a">采集开关、阻断阈值、保留期、文件句柄抽样、上游代理、自动更新检查与开机自启都是热更新：控制台改完立即生效，直接编辑 <code>config.json</code> 也会在 2 秒内被运行中的进程采纳，接口会返回 <code>config_reload</code> 告诉你哪些键已生效；上游代理变更会自动重连并重新校正系统代理。只有监听端口、Web 端口与证书目录这类需要重建进程的字段要重启一次。开机自启默认开启，写入当前用户 Run 键，可在控制台一键关闭或运行 <code>--disable-autostart</code>。</div>
-        </details>
-        <details>
-          <summary><span class="q">13</span>安装器和自动更新安全吗？构建签名了吗？<svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
-          <div class="a">Windows x64 安装器会装到固定目录并注册登录自启，不需要管理员权限；卸载会恢复系统代理与开机自启，交互式卸载会先询问是否删除审计数据，静默卸载默认保留。应用默认在启动约 30 秒后检查 GitHub Releases，之后每 24 小时一次，结果缓存 6 小时；检查只访问公共 API，不上传审计数据。安装包必须通过 SHA-256 校验才会静默安装，且只有 Windows x64 且发布页同时提供安装器与校验文件时才可用；检查可在设置中关闭。当前构建未签名，SmartScreen 可能提示未知发布者，请从官方发布页下载并核对校验值。</div>
-        </details>
-        <details>
-          <summary><span class="q">14</span>关闭窗口会退出吗？托盘能做什么？<svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
-          <div class="a">Windows 上关闭窗口会隐藏到通知区域，不会退出；托盘菜单可打开控制台与审计台、暂停或恢复采集、退出并恢复系统代理。登录自启默认隐藏启动；--no-tray 时关闭窗口即退出。托盘仅 Windows 提供，macOS 与 Linux 没有托盘。Windows x64 已手动冒烟测试，ARM64 的 Tk / 托盘界面尚未验证。</div>
-        </details>
-        <details>
-          <summary><span class="q">15</span>“检测，不重定向”是什么意思？直连和 QUIC 被拦截了吗？<svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
-          <div class="a">这是检测能力，不是拦截能力。v0.4.0 每 15 秒读取本机连接表与 Windows 解析缓存，记录直连 TCP 80/443/8080/8443、UDP 443 QUIC 候选与 DNS 目标，不记录查询内容。没有拦截、重定向、驱动或 QUIC 解密；候选只说明连接可能存在，不代表内容已经外发。暂停采集会同时暂停观测，WFP / WinDivert 透明重定向仍未实现。</div>
-        </details>
-        <details>
-          <summary><span class="q">16</span>这些功能做过真实关机或重启验证吗？<svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
-          <div class="a">没有做过真实虚拟机关机 / 重启验证。仓库提供 tools/shutdown_lab.ps1 实验脚本，包含 prepare / verify 与需要显式确认的重启选项，但本版本未在 CI 或真实虚拟机中执行真实关机 / 重启；契约测试只覆盖 Windows 会话结束回调。updater 52、visibility 42、netwatch 69、tray 67、smoke 61、recovery 78、upstream 15 项测试由 CI 运行，它们不覆盖打包后的托盘 UI，也不等于真实关机验证。</div>
+          <summary><span class="q">06</span>可以审计别人的设备吗？<svg class="ic chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
+          <div class="a">只限你拥有或已获得明确书面授权的设备。未知样本请在隔离虚拟机或快照中分析，结束后移除 CA。</div>
         </details>
       </div>
     </div>
@@ -1433,26 +1111,26 @@ curl https://api.openai.com/v1/models</pre>
       <div class="section-head reveal">
         <span class="eyebrow">路线图</span>
         <h2>先把闭环跑通，再把覆盖面做深</h2>
-        <p>路线图按“可验证的收益 / 增加的信任成本”排序。不承诺破解加密，也不以驱动或隐蔽手段扩张采集范围。</p>
+        <p>按可验证收益与信任成本排序，不承诺破解加密。</p>
       </div>
       <div class="roadmap-grid">
         <article class="road done reveal">
-          <div class="road-tag"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>DELIVERED · P0</div>
-          <h3>可交付的本机闭环</h3>
-          <p>嵌入式代理、本地 CA、TLS 解密、PID 归因、AI 与敏感数据规则、风险评分与阻断、加密证据、哈希链、桌面控制台与本机 Web 审计台；v0.4.0 补齐安装、更新、自愈、可见性与托盘。</p>
-          <ul><li>Windows 当前用户路径</li><li>系统代理备份 / 恢复 / 四层断网保护</li><li>关机注销优雅恢复 + 开机自启</li><li>配置热更新，无需重启</li><li>Agent 环境变量接入</li><li>回环上游代理自动串联</li><li>文件句柄抽样 Beta</li><li>每用户安装器 + SHA-256 自动更新</li><li>集成自愈（Run 键 / 看门狗）</li><li>五级可见性与仅元数据标注</li><li>代理逃逸 / QUIC / DNS 观测 Beta</li><li>Windows 托盘、暂停与关闭到托盘</li></ul>
+          <div class="road-tag"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>DELIVERED · v0.4.0</div>
+          <h3>本机闭环</h3>
+          <p>安装、更新、自愈、可见性、旁路观测与托盘已交付。</p>
+          <ul><li>每用户安装器</li><li>SHA-256 自动更新</li><li>五级可见性</li><li>Windows 托盘</li></ul>
         </article>
         <article class="road reveal">
-          <div class="road-tag">NEXT · P1</div>
-          <h3>扩大流量入口与系统视角</h3>
-          <p>以 WFP / WinDivert 做显式的透明重定向，支持不遵循系统代理的应用；用 ETW / USN / SACL 补齐读取事件，并开始盘点本机 Agent 与 MCP 资产。</p>
-          <ul><li>驱动签名与兼容性测试</li><li>按进程 / 端口重定向</li><li>ETW / USN / SACL 文件读取证据</li><li>Agent / MCP 资产清单</li></ul>
+          <div class="road-tag">NEXT · P2</div>
+          <h3>团队交付</h3>
+          <p>把本机证据接到团队流程，同时保持本地优先。</p>
+          <ul><li>证据导出签名</li><li>SIEM / OTel</li><li>Agent / MCP 资产清单</li></ul>
         </article>
         <article class="road reveal">
-          <div class="road-tag">LATER · P2</div>
-          <h3>团队交付与跨平台对等</h3>
-          <p>加入策略包、告警导出与团队级只读审计视图；补齐 macOS / Linux 的安装器与系统集成，并把归因扩展到服务 / SYSTEM 进程。</p>
-          <ul><li>SIEM / OTel 导出</li><li>签名策略包与可信时间戳</li><li>企业部署与保留策略</li><li>macOS / Linux 功能对等</li><li>Windows 服务 / SYSTEM 进程归因</li></ul>
+          <div class="road-tag">LATER · P3</div>
+          <h3>扩大覆盖面</h3>
+          <p>补齐不遵循代理的流量入口与跨平台交付。</p>
+          <ul><li>WFP / WinDivert</li><li>ETW / USN 读取事件</li><li>macOS / Linux 公证与自启对等</li></ul>
         </article>
       </div>
     </div>
@@ -1471,7 +1149,7 @@ curl https://api.openai.com/v1/models</pre>
             <span class="cta-label">下载 v0.4.0</span>
             <svg class="ic" aria-hidden="true"><use href="#i-download"/></svg>
           </a>
-          <a class="btn btn-quiet btn-lg" href="#coverage">再次查看边界</a>
+          <a class="btn btn-quiet btn-lg" href="./tech.html">查看技术实现</a>
         </div>
       </div>
       <div class="final-note">v0.4.0 · WINDOWS / MACOS / LINUX · 仅用于拥有或明确获授权的设备</div>
@@ -1497,21 +1175,21 @@ curl https://api.openai.com/v1/models</pre>
         <h4>产品</h4>
         <div class="footer-col">
           <a href="#capabilities">能力总览</a>
-          <a href="#how">工作原理</a>
+          <a href="./tech.html">技术实现</a>
           <a href="#coverage">覆盖边界</a>
-          <a href="#safety">断网保护</a>
-          <a href="#defaults">默认行为与热更新</a>
-          <a href="#privacy">隐私与安全</a>
+          <a href="./tech.html#fail-safe">断网保护</a>
+          <a href="#privacy">本地优先</a>
+          <a href="#start">快速开始</a>
         </div>
       </div>
       <div>
         <h4>文档</h4>
         <div class="footer-col">
-          <a data-repo-path="/blob/main/README.md" href="__REPO_URL__/blob/main/README.md" target="_blank" rel="noopener">技术文档<svg class="ic" aria-hidden="true"><use href="#i-external"/></svg></a>
-          <a href="#start">快速开始</a>
-          <a href="#download">平台与产物矩阵</a>
+          <a data-repo-path="/blob/main/README.md" href="__REPO_URL__/blob/main/README.md" target="_blank" rel="noopener">README<svg class="ic" aria-hidden="true"><use href="#i-external"/></svg></a>
+          <a href="./tech.html">技术实现文档</a>
+          <a href="./tech.html#pipeline">数据路径与 CLI</a>
+          <a href="./tech.html#verification">验证状态</a>
           <a href="#faq">常见问题</a>
-          <a href="#roadmap">路线图</a>
         </div>
       </div>
       <div>
@@ -1568,26 +1246,24 @@ curl https://api.openai.com/v1/models</pre>
 {
  "跳到主要内容": "Skip to main content",
  "v0.4.0 已发布": "v0.4.0 released",
- "：Windows 每用户安装器与自动更新、托盘常驻、代理逃逸与 QUIC / DNS 观测（Beta）。": ": per-user Windows installer and auto-update, always-on tray, proxy-bypass and QUIC / DNS observation (beta).",
- "查看 v0.4.0 新增": "See what's new in v0.4.0",
+ "：安装器、自动更新、断网保护与 Windows 托盘。": ": installer, auto-update, network fail-safe and a Windows tray.",
+ "查看新增": "See what's new",
  "本机数据外发审计": "Local egress audit",
  "能力": "Capabilities",
- "工作原理": "How it works",
- "覆盖边界": "Coverage",
- "断网保护": "Network fail-safe",
- "默认行为": "Defaults",
+ "边界": "Boundaries",
  "下载": "Download",
  "常见问题": "FAQ",
+ "技术实现": "Technical details",
  "下载 v0.4.0": "Download v0.4.0",
- "v0.4.0 · 每用户安装器 · 自动更新 · 本地优先": "v0.4.0 · per-user installer · auto-update · local-first",
+ "v0.4.0 · Windows-first · 本地优先": "v0.4.0 · Windows-first · local-first",
  "看清本机 AI Agent 的": "See every egress request",
  "每一次数据外发": "your local AI agents make",
- "EgressScope 在本机运行一个只绑定 127.0.0.1 的审计代理：还原 HTTPS 外发内容、定位发起进程、识别密钥与敏感数据，并把结果写入可验证的本地证据链。": "EgressScope runs an audit proxy bound to 127.0.0.1 only: it reconstructs HTTPS egress, identifies the originating process, detects secrets and sensitive data, and writes the results into a verifiable local evidence chain.",
- "阅读技术文档": "Read the docs",
- "观察能力默认开启；阻断与 Canary 诱饵需要显式开启": "Observation is on by default; blocking and Canary decoys need an explicit opt-in",
- "证据留在本机，正文以 AES-256-GCM 加密保存": "Evidence stays on this device, bodies encrypted with AES-256-GCM",
- "关机优雅恢复、开机自启、根证书与系统代理都可一键撤销": "Graceful shutdown restore, logon autostart, the root CA and the system proxy are all revocable in one click",
- "Windows 安装器无需管理员；更新包通过 SHA-256 校验后才安装": "The Windows installer needs no admin rights; updates install only after SHA-256 verification",
+ "在本机还原 HTTPS 外发内容、定位发起进程、识别敏感数据，并写入可验证的本地证据链。无需内核驱动，数据不上云。": "Reconstruct HTTPS egress on this device, attribute the originating process, detect sensitive data, and write a verifiable local evidence chain. No kernel driver, no cloud.",
+ "查看技术实现": "View technical details",
+ "观察默认开启，阻断与诱饵需显式确认": "Observation on by default; blocking and decoys require explicit confirmation",
+ "正文 AES-256-GCM 加密，证据只留在本机": "Bodies encrypted with AES-256-GCM; evidence stays on this device",
+ "断网保护、开机自启与 CA 均可一键撤销": "Network fail-safe, logon autostart and the CA are all revocable in one click",
+ "Windows 安装包免管理员 · 当前构建未签名": "Windows installer requires no admin · current builds are unsigned",
  "EgressScope · 本机审计台": "EgressScope · local console",
  "实时": "Live",
  "审计": "Audit",
@@ -1624,360 +1300,137 @@ curl https://api.openai.com/v1/models</pre>
  "代理监听": "Proxy listen",
  "审计台": "Console",
  "正文加密": "Body encryption",
- "证据完整性": "Integrity",
- "SHA-256 链": "SHA-256 chain",
+ "PID + 父链": "PID + parent chain",
  "原生构建": "Native builds",
  "6 个平台目标": "6 platform targets",
  "云同步": "Cloud sync",
  "无": "None",
  "v0.4.0 新增": "What's new in v0.4.0",
- "每用户安装器 + 自动更新": "Per-user installer + auto-update",
- "集成自愈与关机实验脚本": "Integration self-heal and shutdown lab script",
+ "每用户安装器": "Per-user installer",
+ "SHA-256 自动更新": "SHA-256 auto-update",
+ "集成自愈": "Integration self-heal",
  "五级可见性": "Five visibility levels",
- "QUIC / DNS 观测 Beta": "QUIC / DNS observation (beta)",
  "Windows 托盘": "Windows tray",
- "能力总览": "Capabilities",
- "把“有一条连接”变成一次可复核的外发记录": "Turn “a connection happened” into a reviewable egress record",
- "每一项能力都对应本机证据链上的一个环节：从流量入口、内容还原、进程归因，到风险判定与加密留存。审计台可随时校验链条是否完整。": "Each capability is one link in the local evidence chain: traffic ingress, content reconstruction, process attribution, risk decisions and encrypted retention. The console can verify the chain at any time.",
+ "六个环节，组成一条可复核的证据链": "Six stages that form a reviewable evidence chain",
+ "不读 Agent 的私有会话文件，只看真实外发：谁、发往哪里、带走了什么、证据是否完整。": "We do not read an agent's private session files, only real egress: who, where, what was taken, and whether the evidence is intact.",
  "HTTPS 外发可见性": "HTTPS egress visibility",
- "本地代理终止 TLS，还原请求方法、路径、请求头与正文，并记录响应状态与体积。不遵循代理设置的应用不会被假装看见。": "The local proxy terminates TLS and reconstructs method, path, headers and body, plus response status and size. Apps that ignore proxy settings are never reported as seen.",
+ "还原经过本地代理的请求与响应，并为每条流量标注可见性等级。": "Reconstruct requests and responses through the local proxy, and label every flow with a visibility level.",
  "进程级归因": "Process-level attribution",
- "用客户端临时端口匹配本机 TCP 归属表，缓存 PID 与进程创建时间以减少 PID 复用误判，并保留父进程链与脱敏命令行。": "Client ephemeral ports are matched against the local TCP owner table; PID and creation time are cached to reduce PID-reuse errors, and the parent chain plus a redacted command line are kept.",
- "AI 端点识别": "AI endpoint classification",
- "识别主流 AI 服务与本地自建端点，提取模型名与 token 用量，把 AI 外发与普通遥测、下载流量区分开。": "Recognises major AI services and self-hosted endpoints, extracts model names and token usage, and separates AI egress from ordinary telemetry or downloads.",
- "敏感数据规则": "Sensitive data rules",
- "匹配常见 API 密钥、私钥、证件号、银行卡、手机号、源码块与文件路径引用，形成可解释、可复核的风险分。": "Matches common API keys, private keys, national IDs, card numbers, phone numbers, source blocks and file-path references into an explainable, reviewable risk score.",
- "加密证据链": "Encrypted evidence chain",
- "每条记录的关键摘要与上一条哈希链接，正文加密保存，列表与导出默认脱敏；可随时校验链条并导出 JSONL 证据。": "Each record links its digest to the previous hash; bodies are encrypted, lists and exports are redacted by default, and the chain can be verified and exported as JSONL at any time.",
- "文件触达关联（Beta）": "File access correlation (beta)",
- "抽样近期外发进程打开的文件句柄，并用虚构诱饵文件观察异常触达。只记录路径与时间等元数据，不读取文件内容。": "Samples file handles opened by recently active egress processes and watches decoy files for unexpected access. Only metadata such as path and time is recorded; file contents are never read.",
- "Windows 安装器与自动更新": "Windows installer and auto-update",
- "Windows x64 安装器装到当前用户的固定目录，不需要管理员权限，可选桌面快捷方式；卸载时恢复系统代理与开机自启，交互式卸载会先询问是否删除审计数据。应用启动约 30 秒后检查 GitHub Releases，之后每 24 小时一次；安装包必须通过 SHA-256 校验才会静默安装，检查可在设置中关闭。当前构建未签名。": "The Windows x64 installer installs into a fixed per-user directory with no administrator rights and an optional desktop shortcut; uninstalling restores the system proxy and logon autostart, and the interactive uninstaller asks before deleting audit data. The app checks GitHub Releases about 30 seconds after launch and then every 24 hours; an installer is installed silently only after SHA-256 verification, and checks can be disabled in settings. Current builds are unsigned.",
- "托盘常驻与暂停（Windows）": "Tray presence and pause (Windows)",
- "关闭控制窗口会隐藏到通知区域而不是退出；托盘菜单可打开控制台与审计台、暂停或恢复采集、退出并恢复系统代理。登录自启默认隐藏启动，--no-tray 时关闭窗口即退出。托盘仅 Windows 提供，macOS 与 Linux 没有托盘。": "Closing the control window hides it to the notification area instead of exiting; the tray menu opens the console and dashboard, pauses or resumes capture, and exits while restoring the system proxy. Logon autostart starts hidden by default, and with --no-tray closing the window exits. The tray is Windows-only; macOS and Linux have no tray.",
- "代理逃逸与 QUIC / DNS 观测（Beta）": "Proxy bypass and QUIC / DNS observation (beta)",
- "每 15 秒读取本机连接表与 Windows 解析缓存，记录直连 TCP 80/443/8080/8443、UDP 443 QUIC 候选与 DNS 目标，不记录查询内容。检测，不重定向：没有拦截、驱动或 QUIC 解密，候选也不等于内容已经外发。": "Every 15 seconds it reads the local connection table and the Windows resolver cache, recording direct TCP 80/443/8080/8443, UDP 443 QUIC candidates and DNS destinations, without recording query content. Detection, not redirection: no interception, driver or QUIC decryption, and a candidate does not mean content has left the device.",
- "用户态本地代理 + 本地 CA + 进程归因": "User-space local proxy + local CA + process attribution",
- "这条路径不需要内核驱动签名，不依赖任何 Agent 的私有数据格式，并且失败模式清晰：应用不配合就看不到，不会把“代理已启动”说成“全部可见”。": "This path needs no signed kernel driver and no agent-specific data format, and it fails visibly: if an app does not cooperate nothing is captured, and “proxy running” is never presented as “everything visible”.",
- "应用 / Agent 发起请求": "App or agent sends a request",
- "Claude Code、Codex、编辑器插件、SDK 或普通桌面程序发出 HTTPS 请求。": "Claude Code, Codex, editor plugins, SDKs or ordinary desktop apps issue HTTPS requests.",
- "进入本地转发代理": "Enters the local forwarding proxy",
- "代理只监听 127.0.0.1，通过系统代理或进程环境变量接入，不影响局域网。": "The proxy listens on 127.0.0.1 only, reached through the system proxy or per-process environment variables, and never affects the LAN.",
- "本地 CA 终止 TLS": "Local CA terminates TLS",
- "使用当前用户信任的本地 CA 签发站点证书，还原 HTTP 语义后再重新加密转发。": "Site certificates are issued by a local CA trusted by the current user; HTTP semantics are reconstructed, then traffic is re-encrypted and forwarded.",
- "归因到发起进程": "Attributed to the originating process",
- "客户端端口匹配本机 TCP 表，得到 PID、进程名、父进程链与创建时间。": "The client port is matched against the local TCP table to obtain PID, process name, parent chain and creation time.",
- "策略判定与证据留存": "Policy decision and evidence retention",
- "端点分类、DLP 规则、风险评分与处置动作，正文加密写入哈希链证据库。": "Endpoint classification, DLP rules, risk scoring and actions; bodies are encrypted into a hash-chained evidence store.",
- "进程流量": "Process traffic",
- "内容可读": "Readable content",
- "是谁发起": "Who sent it",
- "可验证证据": "Verifiable evidence",
- "为什么选择本地代理": "Why a local proxy",
- "失败模式清晰、可解释、可撤销。修改系统代理前先备份，退出时恢复；检测到 PAC 脚本时拒绝接管；已有 Clash 等回环代理时自动串联，避免接管后断网。": "Failure modes are explicit, explainable and reversible. The system proxy is backed up before it changes and restored on exit, takeover is refused when a PAC script is detected, and an existing loopback proxy such as Clash is chained automatically so you are not cut off.",
- "为什么使用 mitmproxy": "Why mitmproxy",
- "不重复造 TLS。成熟的开源代理负责 HTTP/2、证书签发与流式转发，项目把工程精力集中在归因、策略、证据链与产品边界上。": "No reinventing TLS. A mature open-source proxy handles HTTP/2, certificate issuance and streaming, so the project can focus on attribution, policy, evidence and product boundaries.",
- "为什么需要本地 CA": "Why a local CA",
- "还原内容必须经过应用同意。CA 只安装到当前用户信任根且不会自动安装；证书固定、mTLS 与端到端加密不被本项目攻破。": "Reconstructing content requires the app's consent. The CA is installed only into the current user's trust store and never automatically; certificate pinning, mTLS and E2EE are not bypassed.",
- "技术路径": "Approach",
- "内容可见性": "Content visibility",
- "部署与维护": "Deployment & upkeep",
- "覆盖面": "Coverage",
- "用户可解释性": "Explainability",
- "本地代理 + 本地 CA": "Local proxy + local CA",
- "本版": "This release",
- "高：协议语义、正文、进程": "High: protocol semantics, bodies, processes",
- "中低：用户态、无驱动签名": "Medium-low: user space, no signed driver",
- "中：需应用遵循代理 / 信任 CA": "Medium: app must honour the proxy / trust the CA",
- "高：授权与边界可见": "High: consent and boundaries are visible",
- "WFP / WinDivert 透明重定向": "WFP / WinDivert transparent redirection",
- "中：仍受 TLS 固定与信任限制": "Medium: still limited by pinning and trust",
- "高：驱动、签名、兼容性": "High: drivers, signing, compatibility",
- "较高：不依赖应用代理设置": "Higher: independent of app proxy settings",
- "中：用户不易感知": "Medium: hard for users to notice",
- "Agent 会话 / MCP 旁路": "Agent session / MCP side-channel",
- "高：可读会话内容": "High: session content is readable",
- "低：只需读本地数据": "Low: only reads local data",
- "窄：只覆盖特定 Agent，不看真实外发": "Narrow: one agent only, not real egress",
- "中：依赖私有格式": "Medium: depends on private formats",
- "浏览器扩展": "Browser extension",
- "中：仅浏览器内页面与请求": "Medium: in-browser pages and requests only",
- "低：无需系统权限": "Low: no system privileges",
- "窄：桌面 Agent、CLI、后台服务不可见": "Narrow: desktop agents, CLIs and services invisible",
- "高": "High",
- "ETW / 内核文件审计": "ETW / kernel file auditing",
- "不提供内容": "No content",
- "高：需要管理员与规则工程": "High: needs admin rights and rule engineering",
- "广：网络 / 文件系统事件": "Broad: network and filesystem events",
- "中：事件量大、噪声高": "Medium: high volume, noisy",
- "选择标准：在可交付、可解释、可撤销的前提下，获得最高的单机内容可见性。": "Selection criteria: the highest single-machine content visibility that is still shippable, explainable and reversible.",
- "透明重定向与 ETW / SACL 已列入路线图；不进入这条管道的直连与 QUIC 只做候选元数据观测。": "Transparent redirection and ETW / SACL are on the roadmap; direct and QUIC traffic outside this pipeline is observed as candidate metadata only.",
- "我们主动写清楚了“看不到”的部分": "We document what cannot be seen",
- "没有一种用户态方案能看见所有加密流量。一个可信的审计产品，不应该把“代理已启动”宣传成“全部可见”。下面是当前版本的真实边界。": "No user-space approach can see all encrypted traffic. A trustworthy audit product should not advertise “proxy running” as “everything visible”. These are the real boundaries of the current release.",
- "在配合路径上可以看见": "Visible on cooperating paths",
- "经过本地代理的 HTTP/HTTPS 请求与响应元数据；系统代理、环境变量代理和手动指定的代理都属于这个范围。": "Request and response metadata for HTTP/HTTPS that passes the local proxy — via the system proxy, environment variables or an explicitly configured proxy.",
- "启动时自动继承本机回环 HTTP 代理（如 Clash 的 127.0.0.1:7890）并串联转发；只转发重新加密后的 TLS 字节，上游看不到审计器已解密的正文。": "An existing loopback HTTP proxy (for example Clash on 127.0.0.1:7890) is inherited at startup and chained; only re-encrypted TLS bytes are forwarded, so upstream never sees decrypted bodies.",
- "应用信任本地 CA 且未启用证书固定的 TLS 1.2 / 1.3 流量，可还原请求方法、路径、头、正文和响应。": "TLS 1.2 / 1.3 traffic from apps that trust the local CA and do not pin certificates: method, path, headers, body and response can be reconstructed.",
- "正文保存有体积上限；AI 请求或风险分 ≥ 25 的流量才加密保留原始正文，其他流量保留脱敏预览。": "Body retention has a size cap; raw bodies are encrypted and kept only for AI requests or flows scoring 25 and above, everything else keeps a redacted preview.",
- "客户端进程 PID、父进程链、脱敏命令行与进程创建时间，用于区分真实发起者与 PID 复用。": "Client PID, parent chain, redacted command line and process creation time, used to separate the real originator from PID reuse.",
- "AI 服务分类、模型名、密钥 / PII / 代码 / 文件引用等规则信号，以及可配置的阻断动作。": "AI service classification, model names, rule signals for secrets / PII / code / file references, and configurable blocking actions.",
- "每条流量标注五级可见性：完整 / 部分 / 仅元数据 / 已阻断 / 错误；CONNECT 隧道失败与 TLS 握手失败只保留元数据和原因，不伪装成内容可见。": "Every flow is labelled with one of five visibility levels: full / partial / metadata only / blocked / error; failed CONNECT tunnels and TLS handshakes keep metadata and a reason only, never disguised as visible content.",
- "不承诺、也看不到": "Not claimed, not visible",
- "未经过代理的直连流量。": "Direct traffic that bypasses the proxy.",
- "v0.4.0 会从本机连接表记录直连 TCP 80/443/8080/8443 候选，但内容不可见，也不会被拦截；要还原内容仍需环境变量接入或未来的透明重定向。": "v0.4.0 records direct TCP 80/443/8080/8443 candidates from the local connection table, but their content is not visible and they are not intercepted; reconstructing content still requires environment variables or future transparent redirection.",
- "证书固定、mTLS、双向证书校验。": "Certificate pinning, mTLS, mutual certificate validation.",
- "这些是应用有意建立的安全边界，不被本项目攻破，内容仍然不可见。": "These are deliberate application security boundaries that this project does not break; content remains invisible.",
- "UDP 443 只作为候选信号记录；不解析、不解密、不阻断，无法给出内容级结论。": "UDP 443 is recorded only as a candidate signal; it is not parsed, decrypted or blocked, so no content-level conclusions are drawn.",
- "应用层端到端加密。": "Application-layer end-to-end encryption.",
- "没有密钥时，即使流量经过代理也只能看到密文和元数据。": "Without the keys, proxied traffic still only yields ciphertext and metadata.",
- "WFP / WinDivert 透明重定向。": "WFP / WinDivert transparent redirection.",
- "当前版本未实现，也不安装驱动；不遵循代理的应用无法被强制接管。": "Not implemented in this release, and no driver is installed; apps that ignore the proxy cannot be forcibly taken over.",
- "Windows 服务 / SYSTEM 会话的完整归因。": "Full attribution for Windows services and SYSTEM sessions.",
- "当前面向登录用户进程，服务账户路径在路线图中。": "This release targets logged-on user processes; service accounts are on the roadmap.",
- "完整文件读取历史。": "A complete file-read history.",
- "打开句柄抽样无法证明文件已被读取，也不覆盖已经关闭的句柄。": "Handle sampling cannot prove a file was read and does not cover handles that are already closed.",
- "可见性等级": "Visibility level",
- "含义": "Meaning",
- "典型情况": "Typical case",
- "完整": "Full",
- "本地代理读取并保存了响应正文，仍受单条体积上限约束。": "The local proxy read and stored the response body, still subject to the per-record size cap.",
- "信任本地 CA 且未启用证书固定的 HTTPS 请求。": "HTTPS requests from apps that trust the local CA and do not pin certificates.",
- "部分": "Partial",
- "正文缺失、被截断、流式未保留，或 WebSocket 消息正文未持久化。": "Body missing, truncated or not retained for streaming, or WebSocket message bodies not persisted.",
- "WebSocket 握手成功；响应体超限；旧版本记录迁移。": "Successful WebSocket handshake; response body over the cap; records migrated from an older version.",
- "仅元数据": "Metadata only",
- "只记录连接元数据与失败原因，没有请求或响应内容。": "Only connection metadata and a failure reason are recorded; there is no request or response content.",
- "CONNECT 隧道失败；TLS 握手失败，可能是证书固定、mTLS 或客户端拒绝本地 CA。": "CONNECT tunnel failure; TLS handshake failure, possibly certificate pinning, mTLS or a client rejecting the local CA.",
- "已阻断": "Blocked",
- "策略命中，请求在本地被拒绝并记录原因。": "A policy matched and the request was rejected locally with the reason recorded.",
- "风险分达到阻断阈值且显式开启阻断。": "Risk score reaches the block threshold and blocking has been explicitly enabled.",
- "错误": "Error",
- "代理或上游错误，未收到响应。": "Proxy or upstream error; no response was received.",
- "上游不可达、代理异常或连接被重置。": "Upstream unreachable, proxy failure or connection reset.",
- "旧记录不会回填不存在的正文；仅元数据不等于内容可见，更不等于已拦截。": "Old records are never backfilled with bodies that never existed; metadata only does not mean content is visible, let alone intercepted.",
- "重要安全边界：": "Important safety boundary: ",
- "不要在日常使用、存有真实凭据的设备上分析疑似恶意软件。受信 CA 会扩大本机可被中间人解密的范围。请在隔离虚拟机 / 快照中处理未知样本，分析结束后移除 CA 并恢复系统代理。": "Do not analyse suspected malware on a daily-use device that holds real credentials. A trusted CA widens what can be decrypted by a man in the middle on this machine. Work in an isolated VM or snapshot, then remove the CA and restore the system proxy.",
- "接管系统代理之后，本机不能失联": "After taking over the system proxy, this machine must stay online",
- "这是一个真实存在的失败模式：如果电脑突然断电、程序崩溃或被强制结束，Windows 的系统代理仍会指向 127.0.0.1 上已经停止的端口，浏览器与多数应用会连接失败——和某些 VPN 客户端退出后留下的问题一样。v0.4.0 用四层机制处理它，其中三层不需要你做任何配置。": "This is a real failure mode: after a power loss, a crash or a forced kill, the Windows system proxy can still point at a 127.0.0.1 port that is no longer listening, so browsers and most apps fail to connect — the same problem some VPN clients leave behind. v0.4.0 handles it with four layers, and three of them need no configuration from you.",
- "关机 / 注销时优雅恢复": "Graceful restore at shutdown and logoff",
- "程序在独立消息线程上创建一个隐藏的顶层窗口并注册 Windows 会话结束通知（WM_QUERYENDSESSION / WM_ENDSESSION，控制台构建同时挂 SetConsoleCtrlHandler）。你点关机、重启或注销时，系统会先通知我们；程序在恢复期间用 ShutdownBlockReasonCreate 让系统显示等待原因，把系统代理还原为启用前的备份值并刷新 WinINET 后立即释放，因此下一次开机不会继承一个指向已停止端口的代理。": "The program creates a hidden top-level window on its own message thread and registers for the Windows session-end notification (WM_QUERYENDSESSION / WM_ENDSESSION, plus SetConsoleCtrlHandler in console builds). When you shut down, restart or sign out, Windows tells us first; while restoring, ShutdownBlockReasonCreate makes Windows show a wait reason, then the program puts the system proxy back to the backup values and refreshes WinINET before releasing the block immediately, so the next boot never inherits a proxy pointing at a dead port.",
- "AUTOMATIC · v0.4.0 · 无需配置": "AUTOMATIC · v0.4.0 · NO SETUP",
- "启动时校正": "Startup reconciliation",
- "程序启动会检查系统代理是否仍指向本工具：端口变了就重新指向新的监听端口；本地代理没能启动，就立刻恢复原始设置，不把机器留在断网状态。配合默认开启的开机自启，登录后这条链路会重新建立。": "At startup the program checks whether the system proxy still points at this tool: if the port changed it is repointed to the new listening port, and if the local proxy failed to start the original settings are restored right away instead of leaving the machine offline. With logon autostart on by default, that chain is rebuilt after you sign in.",
- "AUTOMATIC · 无需配置": "AUTOMATIC · no setup",
- "独立看门狗任务": "Independent watchdog task",
- "启用系统代理时的确认对话框默认勾选这一项，一键注册一个仅当前用户的计划任务：登录时以及每 2 分钟检查一次，如果系统代理仍指向已停止的回环端口，等待 30 秒宽限后恢复备份的原始值、刷新 WinINET 设置，然后自动停用任务，避免无意义的重复运行。": "The confirmation dialog shown when you enable the system proxy has this checked by default, so one click registers a per-user scheduled task: at logon and every 2 minutes it checks whether the system proxy still points at a stopped loopback port, waits a 30-second grace period, restores the backed-up original values, refreshes WinINET, then disables itself to avoid pointless repeated runs.",
- "默认勾选 · 每用户 · 不需要管理员": "CHECKED BY DEFAULT · PER-USER · NO ADMIN",
- "手动恢复": "Manual recovery",
- "桌面控制台提供“恢复系统代理”，也可以直接运行命令行恢复；极端情况下还能在 Windows 设置的网络代理页手动关闭。备份文件被保留，直到恢复成功。": "The desktop console offers “restore system proxy”, and the same can be done from the command line; in the worst case you can turn the proxy off in the Windows proxy settings page. The backup file is kept until a restore succeeds.",
- "MANUAL · 始终可用": "MANUAL · always available",
- "v0.4.0 集成自愈：": "v0.4.0 integration self-heal: ",
- "启动时以及运行中每 10 分钟核对当前用户的 Run 键与看门狗计划任务，程序被移动、覆盖安装或更新后自动改指当前 exe；也可以运行 --repair-integrations 手动修复。--restore-proxy 是独立恢复器，只恢复系统代理，不需要先启动应用。": "At startup and every 10 minutes while running, it checks the current user's Run key and watchdog scheduled task and repoints them at the current exe after the program is moved, reinstalled or updated; you can also run --repair-integrations to repair manually. --restore-proxy is a standalone restorer that only restores the system proxy and does not need the app to be running first.",
- "关机实验的真实边界：": "The real limits of the shutdown lab: ",
- "仓库提供 tools/shutdown_lab.ps1 实验脚本，包含 prepare / verify 与需要显式确认的重启选项；但本版本未在 CI 或真实虚拟机中执行真实关机 / 重启。契约测试只验证 Windows 会话结束回调能触发恢复，不能替代真实关机验证。": "The repository provides tools/shutdown_lab.ps1, an experimental script with prepare / verify and a reboot option that requires explicit confirmation; however, this release has not executed a real shutdown / restart in CI or a real VM. Contract tests only verify that the Windows session-end callback can trigger a restore and cannot replace real shutdown verification.",
- "手动恢复与自启": "Restore & autostart",
- "# 恢复启用系统代理前的原始设置": "# Restore the settings captured before the proxy was enabled",
- "# 仅当系统代理指向本工具且端口已停止时恢复": "# Restore only if the proxy points at us and the port is dead",
- "# 开机自启（当前用户 Run 键，默认开启，可随时撤销）": "# Logon autostart (current-user Run key, on by default, revocable any time)",
- "# 自愈：把开机自启与看门狗改指当前 exe": "# Self-heal: repoint autostart and the watchdog at the current exe",
- "# 看门狗脚本与日志位置（当前用户）": "# Watchdog script and log location (current user)",
- "# 系统留下的痕迹，全部可逐项撤销": "# Every trace it leaves on the system, each one revocable",
- "# 系统代理（含备份）": "# system proxy (with backup)",
- "# EgressScope 开机自启": "# EgressScope logon autostart",
- "# 每用户计划任务": "# per-user scheduled task",
- "诚实的限制：": "Honest limits: ",
- "优雅恢复依赖系统把会话结束消息投递给我们——直接拔电源、内核崩溃或强制结束进程时收不到，此时恢复发生在下一次登录后（启动校正 + 看门狗）。看门狗与开机自启都只覆盖当前登录用户；只要备份文件存在，指向已停止回环端口的系统代理会被视为本工具的设置。Linux 与 macOS 版本不修改系统代理，也不写 Run 键，不受此问题影响。如果不能接受任何全局代理风险，请只用 Agent 环境变量接入。": "Graceful restore depends on the system actually delivering the session-end message — a pulled power cord, a kernel crash or a forced kill never receives it, so recovery then happens after the next logon (startup reconciliation plus the watchdog). The watchdog and logon autostart both cover only the currently signed-in user; as long as the backup file exists, a system proxy pointing at a stopped loopback port is treated as ours. The Linux and macOS builds neither change the system proxy nor write a Run key, so they are unaffected. If you cannot accept any global-proxy risk, connect with agent environment variables only.",
- "安装即观察，改动即时生效": "Observing as soon as it is installed, changes apply instantly",
- "v0.4.0 延续“默认就位”：观察能力开箱开启，配置与更新检查都可热更新，登录自启与关机恢复形成闭环，Windows 托盘让关闭窗口不等于退出。会中断请求或写入文件的两项能力仍然保留显式确认。": "v0.4.0 keeps the “on by default” approach: observation is on out of the box, settings and update checks hot-reload, logon autostart and shutdown restore close the loop, and the Windows tray means closing the window no longer exits. The two capabilities that interrupt requests or write files still require explicit confirmation.",
- "默认开启的观察能力": "Observation capabilities on by default",
- "流量采集、AI 端点识别、敏感数据规则与文件句柄抽样默认全部开启，装完就能看到完整证据链，不必先研究一遍开关。两项例外仍需你显式打开：风险阻断会直接返回 403 中断请求，Canary 诱饵会往 Documents 写入含虚构凭据的文件。": "Traffic capture, AI endpoint detection, sensitive-data rules and file-handle sampling are all enabled by default, so the full evidence chain is there right after install — you do not have to study the switches first. Two exceptions still need an explicit opt-in: risk blocking returns 403 and interrupts the request, and Canary decoys write files containing fictitious credentials into Documents.",
- "配置热更新，无需重启": "Hot config reload, no restart",
- "控制台开关、Web 审计台开关，或直接编辑": "Console toggles, web console toggles, or direct edits to",
- "，都会在 2 秒内被运行中的进程采纳。上游代理变更会自动重连并重新校正系统代理，抽样间隔、保留期与自启开关即时生效，不需要等待重启窗口。": " are adopted by the running process within two seconds. An upstream proxy change reconnects automatically and re-reconciles the system proxy; the sampling interval, the retention period and the autostart switch apply immediately, with no restart window to wait for.",
- "默认开机自启，可随时撤销": "Logon autostart by default, revocable any time",
- "启用系统代理后写入当前用户的 Run 键，登录时隐藏启动，与关机 / 注销优雅恢复配合形成闭环，不会出现“开机后代理没人接管”的空档。控制台一键关闭，或运行": "It writes the current user's Run key and starts hidden at logon, closing the loop with the graceful shutdown and logoff restore so there is no gap where nobody owns the proxy after boot. Turn it off in the console with one click, or run",
- "；撤销时只删除我们自己写入的值，不动其他程序的自启项。": "; when revoking, only the value we wrote is removed — other programs' autostart entries are left alone.",
- "你可以确认热更新已经完成：": "You can confirm that the hot reload finished: ",
- "接口与控制台会返回": "The API and the console return",
- "（完成时间与本次生效的键名），不需要靠猜。监听端口、Web 端口与证书目录这类需要重建进程的字段不在热更新范围内，改完需要重启一次，控制台会明确提示。": " (the completion time and the key names that took effect), so you never have to guess. Fields that need a new process — the listen port, the web port and the certificate directory — are not hot-reloaded; restart once after changing them and the console says so explicitly.",
- "自动更新与托盘的默认值：": "Auto-update and tray defaults: ",
- "Windows x64 安装版默认在应用启动约 30 秒后检查一次 GitHub Releases，之后每 24 小时检查，结果缓存 6 小时；只有 Windows x64 且发布页同时提供安装器与 SHA-256 时才允许静默安装，检查可在设置中关闭。Windows 上托盘随控制台启动，关闭窗口会隐藏到通知区域；--no-tray 可恢复“关闭即退出”。": "The Windows x64 installed build checks GitHub Releases about 30 seconds after app launch and then every 24 hours, caching results for 6 hours; silent install is allowed only on Windows x64 when the release provides both an installer and a SHA-256 checksum, and checks can be disabled in settings. On Windows the tray starts with the console and closing the window hides it to the notification area; --no-tray restores “close to exit”.",
- "Windows 安装器与六个平台目标": "Windows installer and six platform targets",
- "每次发布提供六个平台目标、Windows x64 每用户安装器与 SHA-256 校验文件。安装器装到固定目录并支持自动更新；便携版与 ARM64 需要手动下载更新。Linux 与 macOS 提供审计引擎与本机 Web 审计台，系统代理与根证书需要手动配置。": "Every release provides six platform targets, a per-user Windows x64 installer and SHA-256 checksums. The installer uses a fixed directory and supports automatic updates; portable and ARM64 builds need manual downloads. Linux and macOS provide the audit engine and local web console, with the system proxy and root CA configured manually.",
- "平台": "Platform",
- "产物文件": "Artifact",
- "桌面控制台": "Desktop console",
- "一键 CA / 系统代理": "One-click CA / system proxy",
- "自动更新": "Auto-update",
- "说明": "Notes",
- "推荐安装器": "Recommended installer",
- "支持 · 托盘": "Yes · tray",
- "支持": "Included",
- "支持 · SHA-256": "Yes · SHA-256",
- "每用户安装到 %LOCALAPPDATA%\\Programs\\EgressScope，无需管理员，可选桌面快捷方式；卸载恢复系统代理与开机自启，交互式卸载会先询问是否删除审计数据。构建未签名。": "Per-user install into %LOCALAPPDATA%\\Programs\\EgressScope, no administrator rights, optional desktop shortcut; uninstall restores the system proxy and logon autostart, and the interactive uninstaller asks before deleting audit data. Builds are unsigned.",
- "便携版": "Portable",
- "手动": "Manual",
- "单文件 EXE，不写安装目录；含系统代理备份恢复、当前用户 CA 安装、四层断网保护、开机自启与进程归因。自动安装仅限安装器版本；构建未签名。": "Single-file EXE with no install directory; includes system proxy backup and restore, current-user CA install, the four-layer network fail-safe, logon autostart and process attribution. Automatic install applies to the installer build only; builds are unsigned.",
- "原生 ARM64": "Native ARM64",
- "支持 · 托盘未验收": "Yes · tray unverified",
- "在 ARM runner 上编译 OpenSSL 与 Rust 依赖，非 x64 模拟；Tk 界面与托盘未在 ARM64 实机验收；自动安装不适用。构建未签名。": "OpenSSL and Rust dependencies compiled on an ARM runner, not x64 emulation; the Tk UI and tray have not been verified on real ARM64 hardware; automatic install does not apply. Builds are unsigned.",
- "命令行 / Web": "CLI / web",
- "需手动信任 CA，并通过环境变量接入目标 Agent；无托盘，更新请手动下载。二进制未签名。": "Trust the CA manually and onboard agents with environment variables; no tray, updates require manual download. Binaries are unsigned.",
- "使用兼容的 cryptography 版本构建；无托盘，更新请手动下载。二进制未签名，Gatekeeper 可能要求放行。": "Built with a compatible cryptography release; no tray, updates require manual download. Unsigned, so Gatekeeper may ask you to allow it.",
- "PID 归因依赖 /proc/net/tcp；代理与 CA 需手动配置；无托盘。": "PID attribution relies on /proc/net/tcp; proxy and CA are configured manually; no tray.",
- "面向 ARM64 服务器与开发机，能力与 Linux x64 一致；无托盘。": "For ARM64 servers and dev machines, with the same capabilities as Linux x64; no tray.",
- "每个产物附带": "Every artifact ships with a",
- "，发布页同时提供": " file, and the release page also provides",
- "；建议先校验再运行。": "; verify before you run.",
- "自动安装更新仅在 Windows x64 且发布页同时提供 Setup 与校验文件时可用；ARM64、Linux 与 macOS 请手动下载。": "Automatic update install is available only on Windows x64 when the release provides both Setup and a checksum file; on ARM64, Linux and macOS, download manually.",
- "托盘仅 Windows 提供，--no-tray 可关闭。": "The tray is Windows-only; --no-tray disables it.",
- "当前构建未签名；除非仓库所有者配置签名密钥，SmartScreen 与 Gatekeeper 可能提示未知发布者。CI 提供可选签名钩子。": "Current builds are unsigned; unless the repository owner configures signing keys, SmartScreen and Gatekeeper may report an unknown publisher. CI provides optional signing hooks.",
- "每个 tag 的发布页都附带该版本的更新说明，内容与仓库 CHANGELOG.md 保持一致。": "Every tag's release page carries the update notes for that version, matching CHANGELOG.md in the repository.",
- "前往 GitHub Releases": "Go to GitHub Releases",
- "查看构建流水线": "View build pipelines",
- "快速开始": "Quick start",
- "三步接入，不自动接管系统": "Three steps, no automatic takeover",
- "Windows x64 安装器会装到当前用户的固定目录，首次启动会注册登录自启，之后登录时在托盘隐藏运行；桌面控制台与本机审计台会同时启动，采集、AI 端点识别、敏感数据规则与文件句柄抽样默认开启。真正改动系统的三件事——根证书、系统代理与风险阻断——仍然需要你显式确认；所有设置改动即时生效，不需要重启进程。": "The Windows x64 installer installs into a fixed per-user directory and registers logon autostart on first launch, then runs hidden in the tray at logon; the desktop console and local web console start together, and capture, AI endpoint detection, sensitive-data rules and file-handle sampling are on by default. The three things that actually change your system — the root CA, the system proxy and risk blocking — still need your explicit confirmation, and every settings change takes effect immediately without restarting the process.",
- "启动 EgressScope": "Start EgressScope",
- "运行 Windows 安装器，或双击便携版可执行文件；代理默认监听": "Run the Windows installer, or double-click the portable executable; the proxy listens on",
- "，审计台绑定回环地址并带随机访问令牌。首次启动会写入当前用户 Run 键实现登录自启（Windows 上登录时在托盘隐藏启动），可在控制台一键关闭；用": ", and the web console binds to the loopback address with a random access token. The first launch writes the current user's Run key for logon autostart (on Windows it starts hidden in the tray at logon), which you can turn off in the console with one click; use",
- "可运行无窗口模式。": "for headless mode.",
- "确认根证书": "Confirm the root certificate",
- "在控制台点击“安装根证书”，把公开 CA 加入当前用户信任根。私钥始终留在本机数据目录，不会分发；安装后可随时移除。": "Click “install root certificate” in the console to add the public CA to the current user's trust store. The private key never leaves the local data directory and the CA can be removed again at any time.",
- "选择流量入口": "Choose the traffic entry point",
- "开启系统代理（确认对话框默认勾选断网保护看门狗），或只给目标 Agent 注入环境变量。若本机原本通过 Clash 等回环代理上网，程序会在启动或热更新时自动串联，避免接管后断网。": "Enable the system proxy (the confirmation dialog has the fail-safe watchdog checked by default), or inject environment variables into the target agent only. If this machine already reaches the internet through a loopback proxy such as Clash, it is chained automatically at startup or on hot reload so you are not cut off.",
- "只影响当前终端": "Affects this terminal only",
- ":: 只给一个终端注入代理与 CA，不改动系统设置": ":: Inject the proxy and CA into one terminal without touching system settings",
- ":: 验证链路是否被审计": ":: Verify the path is being audited",
- "EgressScope · 控制窗口": "EgressScope · control window",
- "运行中": "Running",
- "本地代理": "Local proxy",
- "审计状态": "Audit status",
- "采集中": "Capturing",
- "本地 CA": "Local CA",
- "等待信任": "Awaiting trust",
- "系统代理": "System proxy",
- "未启用": "Off",
- "开机自启": "Logon autostart",
- "已注册": "Registered",
+ "把连接定位到 PID、父进程链与脱敏命令行，降低 PID 复用误判。": "Map connections to a PID, parent chain and redacted command line, reducing PID-reuse mistakes.",
+ "AI 与敏感数据识别": "AI and sensitive-data detection",
+ "识别 AI 端点、模型与 token 用量，并命中密钥、证件号、银行卡与源码风险。": "Identify AI endpoints, models and token usage, and flag secrets, ID numbers, bank cards and source-code risk.",
+ "本地加密证据链": "Local encrypted evidence chain",
+ "正文加密保存，摘要逐条哈希链接，列表与导出默认脱敏。": "Bodies are stored encrypted and digests are hash-chained; lists and exports are redacted by default.",
+ "断网保护与自愈": "Network fail-safe and self-heal",
+ "关机恢复、启动校正、看门狗与独立恢复器；程序移动后自动改指当前 exe。": "Restore at shutdown, reconcile at startup, watchdog and a standalone restorer; integrations re-point to the current exe after the program moves.",
+ "Windows 桌面体验": "Windows desktop experience",
+ "免管理员安装、SHA-256 校验更新、托盘暂停与关闭到托盘。": "Admin-free install, SHA-256-verified updates, tray pause and close-to-tray.",
+ "还有": "Also",
+ "文件触达 · 仅元数据": "File access · metadata only",
+ "直连 / QUIC / DNS 观测 · 检测不重定向": "Direct / QUIC / DNS observation · detect, do not redirect",
  "配置热更新": "Config hot reload",
- "无需重启": "No restart needed",
- "观察能力已默认开启。下一步：安装 CA，再启用系统代理（断网保护默认勾选）或使用 Agent 环境变量。": "Observation is already on by default. Next: install the CA, then enable the system proxy (the fail-safe is checked by default) or use the agent environment variables.",
- "安装根证书": "Install root CA",
- "启用系统代理": "Enable system proxy",
- "复制环境变量": "Copy env variables",
- "打开审计台": "Open console",
- "仅限授权设备": "Authorized devices only",
- "隐私与安全设计": "Privacy & security design",
- "审计工具本身不应该成为新的泄露面": "The audit tool must not become a new leak",
- "数据边界不能只靠一句“我们很重视隐私”。它需要落实在密钥位置、导出格式、默认设置与系统变更的撤销路径上。": "A data boundary cannot rest on “we take privacy seriously”. It has to be implemented in key location, export format, defaults and the reversal path for every system change.",
- "正文加密存储": "Bodies encrypted at rest",
- "AES-256-GCM 加密请求与响应正文，主密钥由当前 Windows 用户的 DPAPI 保护。更换用户或离线拷走数据库都无法直接解密。": "Request and response bodies are encrypted with AES-256-GCM and the master key is protected by the current Windows user's DPAPI. Another user, or a copied database, cannot decrypt them.",
- "脱敏是默认值": "Redaction is the default",
- "列表、搜索、预览与 JSONL 导出只包含脱敏后的内容与哈希。原始正文需要显式二次确认才会在当前会话解密，且不回写数据库。": "Lists, search, previews and JSONL exports contain redacted content and hashes only. Raw bodies are decrypted in the current session after an explicit second confirmation and are never written back.",
- "最小化系统变更": "Minimal system changes",
- "CA 只装当前用户且不自动安装；系统代理修改前先备份，检测到 PAC 时拒绝接管；退出时仅在设置仍属于本工具时恢复。": "The CA is installed for the current user only and never automatically; the system proxy is backed up before it changes and takeover is refused when a PAC is detected; on exit it is restored only if the settings still belong to this tool.",
- "本地回环服务": "Loopback-only services",
- "Web 审计台只绑定 127.0.0.1，使用每次启动随机生成的会话令牌，校验 Host 头并应用严格 CSP。没有云同步、外部字体或第三方脚本。": "The web console binds to 127.0.0.1 only, uses a session token generated at each start, validates the Host header and applies a strict CSP. No cloud sync, external fonts or third-party scripts.",
- "你掌握密钥、保留期与删除权": "You control the keys, retention and deletion",
+ "一键暂停采集": "One-click capture pause",
+ "能看见什么，不能看见什么": "What it can and cannot see",
+ "用户态审计有明确边界。我们把限制写在前面，而不是把“代理运行中”说成“全部可见”。": "User-mode audit has clear limits. We put them first instead of calling \"proxy running\" full visibility.",
+ "在配合路径上可以看见": "Visible on cooperating paths",
+ "经过本地代理的 HTTPS 请求、响应与五级可见性": "HTTPS requests and responses through the local proxy, with five visibility levels",
+ "发起进程、父链、脱敏命令行与创建时间": "Originating process, parent chain, redacted command line and creation time",
+ "AI 端点、模型、token 与敏感数据风险信号": "AI endpoints, models, tokens and sensitive-data risk signals",
+ "直连、QUIC 与 DNS 目标元数据（仅候选）": "Direct, QUIC and DNS target metadata (candidates only)",
+ "不承诺、也看不到": "Not claimed, not visible",
+ "证书固定、mTLS 与应用层端到端加密": "Certificate pinning, mTLS and application-layer end-to-end encryption",
+ "QUIC / HTTP3 的内容级解析": "Content-level parsing of QUIC / HTTP3",
+ "绕过代理的直连内容": "Direct content that bypasses the proxy",
+ "Windows 服务 / SYSTEM 会话的完整归因": "Full attribution for Windows services / SYSTEM sessions",
+ "每条流量都有可见性等级": "Every flow carries a visibility level",
+ "完整": "Full",
+ "部分": "Partial",
+ "仅元数据": "Metadata only",
+ "已阻断": "Blocked",
+ "错误": "Error",
+ "仅用于你拥有或明确获授权的设备。": "Use only on devices you own or are explicitly authorized to audit.",
+ "不要在日常主机上分析未知样本；完整边界与测试状态见": "Do not analyze unknown samples on a daily-use host; full boundaries and test status are in the",
+ "技术文档": "Documentation",
+ "本地优先": "Local-first",
+ "证据留在本机，密钥也留在本机": "Evidence stays here, and so do the keys",
+ "审计工具本身不应成为新的泄露面。加密、脱敏与撤销路径都是默认设计。": "An audit tool should not become a new leak surface. Encryption, redaction and revocation are the default design.",
  "数据目录": "Data directory",
- "安装目录": "Install directory",
- "原始正文": "Raw bodies",
- "主密钥保护": "Master key",
- "内容上云": "Cloud upload",
- "不启用": "Disabled",
- "上游链路": "Upstream",
- "仅回环 · 可关闭": "Loopback only · optional",
- "更新检查": "Update checks",
- "GitHub Releases · 可关闭": "GitHub Releases · optional",
- "默认审计动作": "Default action",
- "观察，不阻断": "Observe, never block",
- "证据保留": "Retention",
- "默认 7 天 · 可配置": "7 days · configurable",
- "删除": "Deletion",
- "本地一键清空": "One-click local wipe",
- "EgressScope 是审计工具，不是杀毒软件。它不保证发现所有恶意行为，也不对证书固定、端到端加密、QUIC 或未经过本地代理的流量提供内容可见性；直连与 QUIC 仅记录候选元数据。": "EgressScope is an audit tool, not antivirus. It does not guarantee detection of all malicious behaviour and offers no content visibility into pinned, end-to-end encrypted, QUIC or non-proxied traffic; direct and QUIC traffic is recorded as candidate metadata only.",
- "关于能力边界与使用前提": "Boundaries and preconditions",
- "下面这些问题决定了它是否适合你的场景。答案与本产品的实际实现一致，不做超出能力的承诺。": "These questions decide whether it fits your scenario. The answers match the implementation and make no claim beyond what the product can do.",
- "提交问题或反馈": "Open an issue",
- "电脑突然关机或程序崩溃后，本机还能上网吗？": "After a sudden shutdown or crash, can this machine still reach the internet?",
- "系统代理仍指向已停止的回环端口时，浏览器与多数应用会连接失败——这是真实存在的失败模式。v0.4.0 提供四层处理：关机、重启或注销时收到 Windows 会话结束通知后立刻恢复原始代理；启动时校正过期设置；启用系统代理时默认勾选的每用户计划任务看门狗在登录后自动恢复；以及": "While the system proxy still points at a stopped loopback port, browsers and most apps fail to connect — a real failure mode. v0.4.0 handles it in four layers: the original proxy is restored as soon as the Windows session-end notification arrives at shutdown, restart or sign-out; stale settings are reconciled at startup; the per-user scheduled-task watchdog, checked by default when you enable the system proxy, restores it after logon; and",
- "手动恢复。v0.4.0 还会自愈：程序移动或覆盖更新后自动把 Run 键与看门狗改指当前 exe，也可运行 --repair-integrations 手动修复。直接拔电源、内核崩溃或强制结束进程时收不到会话结束通知，此时恢复发生在下一次登录后。": " manual restore. v0.4.0 also self-heals: after the program is moved or reinstalled, it repoints the Run key and watchdog at the current exe, and --repair-integrations can repair manually. A pulled power cord, a kernel crash or a forced kill never receives the session-end notification, so recovery then happens after the next logon.",
+ "默认保留": "Default retention",
+ "7 天 · 可配置": "7 days · configurable",
+ "Web 审计台只绑定 127.0.0.1 并使用随机令牌；原始正文需二次确认才解密，且不回写数据库。": "The web console binds only to 127.0.0.1 and uses a random token; raw bodies require a second confirmation to decrypt and are never written back to the database.",
+ "查看数据安全设计": "Read the data-safety design",
+ "一个 Windows 安装器，六个原生平台": "One Windows installer, six native platforms",
+ "Windows x64 安装器免管理员，支持 SHA-256 自动更新与托盘；macOS 与 Linux 提供同一套审计引擎和 Web 审计台。": "The Windows x64 installer needs no admin and supports SHA-256 auto-update and a tray; macOS and Linux share the same audit engine and web console.",
+ "推荐 · x64 安装器": "Recommended · x64 installer",
+ "Setup 安装器或便携版；自动更新与托盘": "Setup installer or portable build; auto-update and tray",
+ "原生便携版；Tk / 托盘未实机验收": "Native portable build; Tk / tray not verified on hardware",
+ "安装": "Install",
+ "免管理员，固定到 %LOCALAPPDATA%\\Programs\\EgressScope": "No admin required; installs to %LOCALAPPDATA%\\Programs\\EgressScope",
+ "构建": "Build",
+ "macOS arm64 / x64 原生 tar.gz": "macOS arm64 / x64 native tar.gz",
+ "接入": "Onboarding",
+ "手动信任 CA，并通过环境变量接入 Agent": "Trust the CA manually and connect agents through environment variables",
+ "限制": "Limits",
+ "无托盘；非 root 下没有 PID 归因": "No tray; no PID attribution without root",
+ "Linux x64 / arm64 原生 tar.gz": "Linux x64 / arm64 native tar.gz",
+ "代理与 CA 手动配置；PID 归因依赖 /proc": "Configure the proxy and CA manually; PID attribution relies on /proc",
+ "无托盘；不修改系统代理": "No tray; does not modify the system proxy",
+ "前往 GitHub Releases": "Go to GitHub Releases",
+ "每个产物附": "Every artifact ships with",
+ "与": "and",
+ "。当前构建未签名，SmartScreen / Gatekeeper 可能提示未知发布者。": ". Current builds are unsigned; SmartScreen / Gatekeeper may warn about an unknown publisher.",
+ "快速开始": "Quick start",
+ "三步开始，不自动接管系统": "Three steps, no automatic takeover",
+ "根证书、系统代理与风险阻断都需要你显式确认；采集与观察能力默认开启。": "The root CA, system proxy and risk blocking all need your explicit confirmation; capture and observation are on by default.",
+ "安装并启动": "Install and start",
+ "运行 Windows 安装器或便携版。代理监听 127.0.0.1:8899，审计台仅回环访问。": "Run the Windows installer or portable build. The proxy listens on 127.0.0.1:8899 and the console is loopback-only.",
+ "信任本地 CA": "Trust the local CA",
+ "在控制台一键安装到当前用户；私钥不出本机，可随时移除。": "Install it for the current user from the console; the private key never leaves this device and can be removed at any time.",
+ "选择流量入口": "Choose the traffic entry point",
+ "开启系统代理（默认勾选断网保护），或只给目标 Agent 注入环境变量。": "Enable the system proxy (network fail-safe is checked by default), or inject environment variables into the target agent only.",
+ "命令行、环境变量与热更新": "Command line, environment variables and hot reload",
+ "它适合你的场景吗？": "Is it right for your scenario?",
+ "先看能力边界与使用前提。安装、更新、托盘与测试状态等技术问题在专门文档中。": "Start with the capability boundaries and prerequisites. Installer, updater, tray and test status live in the dedicated document.",
+ "查看技术问答": "Read the technical FAQ",
+ "关机或崩溃后，系统代理会不会让本机断网？": "Will the system proxy cut off my network after a shutdown or crash?",
+ "v0.4.0 会关机恢复、启动校正，并可用看门狗或": "v0.4.0 restores the proxy at shutdown, reconciles stale settings at startup, and can recover with the watchdog or",
+ "恢复。直接拔电源或强制结束进程时，恢复发生在下次登录后。": "to restore. After a power cut or a forced process kill, recovery happens at the next logon.",
  "它是杀毒软件或 EDR 吗？": "Is it antivirus or an EDR?",
- "不是。EgressScope 只做外发流量的可见性、归因、策略判定与证据留存，不做恶意代码检测，也不提供阻断未知威胁的能力。风险分是启发式信号，用于辅助人工判断，不能直接当作处置结论。": "No. EgressScope provides egress visibility, attribution, policy decisions and evidence retention. It does not detect malicious code and cannot block unknown threats. Risk scores are heuristic signals that support human judgement, not verdicts.",
- "它会读取我的聊天记录吗？": "Does it read my chat history?",
- "只有在你启用系统代理或注入环境变量、并信任本地 CA 之后，经过代理的 HTTPS 正文才会被解析。列表与导出默认脱敏，原始正文需要在详情里再次确认才解密显示，且不回写数据库。它不读取任何 Agent 的本地会话文件。": "HTTPS bodies are only reconstructed after you enable the system proxy or inject environment variables and trust the local CA. Lists and exports are redacted by default, raw bodies need a second confirmation in the detail view and are not written back. It never reads any agent's local session files.",
+ "不是。它只做外发可见性、归因、策略与证据留存；风险分是启发式信号，需要人工复核。": "No. It only provides egress visibility, attribution, policy and evidence retention; risk scores are heuristic signals that need human review.",
  "能看见所有加密流量吗？": "Can it see all encrypted traffic?",
- "不能。证书固定、mTLS、应用层端到端加密，以及完全绕过代理的直连流量都不提供内容可见性。v0.4.0 会把直连、UDP 443 QUIC 与 DNS 目标记为候选或元数据，但检测不等于拦截，也不解密 QUIC。详见": "No. Certificate pinning, mTLS, application-layer E2EE and direct traffic that completely bypasses the proxy offer no content visibility. v0.4.0 records direct traffic, UDP 443 QUIC and DNS destinations as candidates or metadata, but detection is not interception and QUIC is not decrypted. See the",
- "一节。": "section.",
- "审计数据会上传到云端吗？": "Is audit data uploaded to the cloud?",
- "不会。证据保存在本机 SQLite，正文用 AES-256-GCM 加密，主密钥由当前用户的 DPAPI 保护。Web 审计台只绑定回环地址，使用每次启动随机生成的令牌，页面不含外部字体、脚本或统计代码。": "No. Evidence is stored in a local SQLite database, bodies are encrypted with AES-256-GCM and the master key is protected by the current user's DPAPI. The web console binds to loopback with a token generated at each start, and the page contains no external fonts, scripts or analytics.",
- "需要管理员权限吗？": "Does it need administrator rights?",
- "不需要。Windows 安装器面向 x64，装到当前用户的固定目录，不申请管理员权限；CA、系统代理、断网保护看门狗与开机自启也都写在当前用户下（每用户计划任务 + Run 键），可随时逐项撤销。当前构建未签名，SmartScreen 可能提示未知发布者。这也是它的边界：Windows 服务与 SYSTEM 会话的完整归因不在当前版本范围内。": "No. The Windows installer targets x64 and installs into a fixed per-user directory without administrator rights; the CA, system proxy, fail-safe watchdog and logon autostart all live under the current user (a per-user scheduled task plus the Run key), so each can be revoked individually. Current builds are unsigned, so SmartScreen may report an unknown publisher. That is also the boundary: full attribution for Windows services and SYSTEM sessions is out of scope for this release.",
- "已经在用 Clash 或其他本地代理怎么办？": "What if I already run Clash or another local proxy?",
- "启动时会自动继承本机回环 HTTP 代理（例如": "At startup the existing loopback HTTP proxy (for example",
- "）并串联转发，避免接管后断网。上游只看到重新加密后的 TLS 字节。带用户名密码的上游、PAC 脚本与 SOCKS 目前不支持，这些场景请改用单 Agent 环境变量接入。": ") is inherited and chained so you are not cut off. Upstream only sees re-encrypted TLS bytes. Authenticated upstreams, PAC scripts and SOCKS are not supported yet — use per-agent environment variables in those cases.",
- "对性能与磁盘有多大影响？": "What is the performance and disk impact?",
- "代理运行在用户态、只走本机回环。正文保存有单条体积上限，只有 AI 请求或风险分达到阈值的流量才加密保留原文；证据默认保留 7 天，可在设置中调整，也可以一键清空。": "The proxy runs in user space over loopback only. Body storage has a per-record size cap and raw bodies are kept only for AI requests or flows above the risk threshold; evidence is retained for 7 days by default, adjustable in settings, and can be wiped in one click.",
- "支持哪些操作系统？": "Which operating systems are supported?",
- "Windows 10 / 11 的 x64 与 ARM64 是功能完整的桌面版本，含系统代理接入、CA 一键安装与断网保护；x64 另有每用户安装器与自动更新，ARM64 只有便携版，Tk 界面与托盘未在 ARM64 实机验收。macOS 与 Linux 提供同一套审计引擎与本机 Web 审计台，代理与 CA 需要手动配置；macOS 在非 root 下无法读取 TCP 归属表，会降级为不含 PID 的记录。": "Windows 10 / 11 on x64 and ARM64 are full desktop builds with system proxy onboarding, one-click CA install and the network fail-safe; x64 additionally has the per-user installer and auto-update, while ARM64 is portable only and its Tk UI and tray have not been verified on real ARM64 hardware. macOS and Linux share the same audit engine and local web console, with proxy and CA configured manually; on macOS without root the TCP owner table is unavailable, so records degrade to flows without a PID.",
- "可以用它审计别人的设备吗？": "Can I use it to audit someone else's device?",
- "只应用于你拥有或已获得明确书面授权的设备，未经授权拦截他人流量可能违法。也不要在存有真实凭据的日常主机上分析疑似恶意软件：受信 CA 会扩大本机可被中间人解密的范围，请在隔离虚拟机或快照中进行，结束后移除 CA。": "Only on devices you own or are explicitly authorised to audit in writing; intercepting other people's traffic without authorisation may be illegal. Do not analyse suspected malware on a daily-use host holding real credentials — a trusted CA widens what can be decrypted locally. Use an isolated VM or snapshot and remove the CA afterwards.",
- "项目是开源的吗？许可是什么？": "Is the project open source, and under what licence?",
- "源码与构建流水线公开在 GitHub，可自行审计与复现构建。仓库当前未附带标准开源许可证，使用即表示你理解并接受 README 中的授权、安全与覆盖边界声明。": "Source code and build pipelines are public on GitHub so you can audit and reproduce builds. The repository currently ships without a standard open-source licence; using it means you understand and accept the authorisation, safety and coverage statements in the README.",
- "修改设置需要重启程序吗？开机自启能关吗？": "Do I need to restart to change settings? Can logon autostart be turned off?",
- "采集开关、阻断阈值、保留期、文件句柄抽样、上游代理、自动更新检查与开机自启都是热更新：控制台改完立即生效，直接编辑": "Capture, the block threshold, retention, file-handle sampling, the upstream proxy, update checks and logon autostart are all hot-reloaded: console changes apply immediately, and direct edits to",
- "也会在 2 秒内被运行中的进程采纳，接口会返回": " are adopted by the running process within two seconds; the API returns",
- "告诉你哪些键已生效；上游代理变更会自动重连并重新校正系统代理。只有监听端口、Web 端口与证书目录这类需要重建进程的字段要重启一次。开机自启默认开启，写入当前用户 Run 键，可在控制台一键关闭或运行": " to tell you which keys took effect, and an upstream proxy change reconnects and re-reconciles the system proxy automatically. Only fields that need a new process — the listen port, the web port and the certificate directory — require one restart. Logon autostart is on by default, written to the current user's Run key, and can be turned off in the console with one click or with",
- "安装器和自动更新安全吗？构建签名了吗？": "Are the installer and auto-update safe? Are builds signed?",
- "Windows x64 安装器会装到固定目录并注册登录自启，不需要管理员权限；卸载会恢复系统代理与开机自启，交互式卸载会先询问是否删除审计数据，静默卸载默认保留。应用默认在启动约 30 秒后检查 GitHub Releases，之后每 24 小时一次，结果缓存 6 小时；检查只访问公共 API，不上传审计数据。安装包必须通过 SHA-256 校验才会静默安装，且只有 Windows x64 且发布页同时提供安装器与校验文件时才可用；检查可在设置中关闭。当前构建未签名，SmartScreen 可能提示未知发布者，请从官方发布页下载并核对校验值。": "The Windows x64 installer uses a fixed directory and registers logon autostart without administrator rights; uninstalling restores the system proxy and logon autostart, the interactive uninstaller asks before deleting audit data, and silent uninstall keeps it by default. The app checks GitHub Releases about 30 seconds after launch and then every 24 hours, caching results for 6 hours; it only calls the public API and uploads no audit data. An installer must pass SHA-256 verification before silent install, which is available only on Windows x64 when the release provides both the installer and a checksum; checks can be disabled in settings. Current builds are unsigned, SmartScreen may report an unknown publisher, so download from the official release page and verify the checksum.",
- "关闭窗口会退出吗？托盘能做什么？": "Does closing the window exit the app? What can the tray do?",
- "Windows 上关闭窗口会隐藏到通知区域，不会退出；托盘菜单可打开控制台与审计台、暂停或恢复采集、退出并恢复系统代理。登录自启默认隐藏启动；--no-tray 时关闭窗口即退出。托盘仅 Windows 提供，macOS 与 Linux 没有托盘。Windows x64 已手动冒烟测试，ARM64 的 Tk / 托盘界面尚未验证。": "On Windows, closing the window hides it to the notification area instead of exiting; the tray menu opens the console and dashboard, pauses or resumes capture, and exits while restoring the system proxy. Logon autostart starts hidden by default; with --no-tray, closing the window exits. The tray is Windows-only; macOS and Linux have no tray. Windows x64 has been manually smoke-tested; the Tk / tray UI on ARM64 has not been verified.",
- "“检测，不重定向”是什么意思？直连和 QUIC 被拦截了吗？": "What does “detection, not redirection” mean? Are direct and QUIC traffic intercepted?",
- "这是检测能力，不是拦截能力。v0.4.0 每 15 秒读取本机连接表与 Windows 解析缓存，记录直连 TCP 80/443/8080/8443、UDP 443 QUIC 候选与 DNS 目标，不记录查询内容。没有拦截、重定向、驱动或 QUIC 解密；候选只说明连接可能存在，不代表内容已经外发。暂停采集会同时暂停观测，WFP / WinDivert 透明重定向仍未实现。": "This is detection, not interception. v0.4.0 reads the local connection table and the Windows resolver cache every 15 seconds, recording direct TCP 80/443/8080/8443, UDP 443 QUIC candidates and DNS destinations, without recording query content. There is no interception, redirection, driver or QUIC decryption; a candidate only means a connection may exist and does not mean content has left the device. Pausing capture also pauses observation, and WFP / WinDivert transparent redirection is still not implemented.",
- "这些功能做过真实关机或重启验证吗？": "Have these features been verified with a real shutdown or restart?",
- "没有做过真实虚拟机关机 / 重启验证。仓库提供 tools/shutdown_lab.ps1 实验脚本，包含 prepare / verify 与需要显式确认的重启选项，但本版本未在 CI 或真实虚拟机中执行真实关机 / 重启；契约测试只覆盖 Windows 会话结束回调。updater 52、visibility 42、netwatch 69、tray 67、smoke 61、recovery 78、upstream 15 项测试由 CI 运行，它们不覆盖打包后的托盘 UI，也不等于真实关机验证。": "No real VM shutdown / restart verification has been performed. The repository provides tools/shutdown_lab.ps1, an experimental script with prepare / verify and a reboot option that requires explicit confirmation, but this release has not executed a real shutdown / restart in CI or a real VM; contract tests only cover the Windows session-end callback. The updater 52, visibility 42, netwatch 69, tray 67, smoke 61, recovery 78 and upstream 15 tests run in CI; they do not cover the packaged tray UI and are not equivalent to real shutdown verification.",
+ "不能。证书固定、mTLS、端到端加密与绕过代理的直连内容不可见；QUIC 只记录候选元数据。检测不等于拦截。": "No. Pinned certificates, mTLS, end-to-end encryption and direct traffic that bypasses the proxy are invisible; QUIC only records candidate metadata. Detection is not blocking.",
+ "数据会上云吗？需要管理员权限吗？": "Does data go to the cloud? Does it need admin rights?",
+ "不上云，证据保存在本机并使用 AES-256-GCM 加密。Windows 安装器与 CA、系统代理、自启都按当前用户运行，不需要管理员。": "No cloud. Evidence stays on this device and is encrypted with AES-256-GCM. The Windows installer, CA, system proxy and autostart all run per user and need no admin rights.",
+ "支持哪些系统？": "Which systems are supported?",
+ "Windows 10 / 11 x64 与 ARM64；x64 有安装器、自动更新与托盘，ARM64 的 Tk / 托盘未实机验收。macOS 与 Linux 提供审计引擎和 Web 审计台，代理与 CA 需手动配置。": "Windows 10 / 11 x64 and ARM64; x64 has an installer, auto-update and tray, while ARM64 Tk / tray is not verified on hardware. macOS and Linux provide the audit engine and web console; the proxy and CA must be configured manually.",
+ "可以审计别人的设备吗？": "Can I audit someone else's device?",
+ "只限你拥有或已获得明确书面授权的设备。未知样本请在隔离虚拟机或快照中分析，结束后移除 CA。": "Only devices you own or have explicit written authorization to audit. Analyze unknown samples in an isolated VM or snapshot and remove the CA afterwards.",
  "路线图": "Roadmap",
  "先把闭环跑通，再把覆盖面做深": "Close the loop first, then deepen coverage",
- "路线图按“可验证的收益 / 增加的信任成本”排序。不承诺破解加密，也不以驱动或隐蔽手段扩张采集范围。": "The roadmap is ordered by verifiable benefit over added trust cost. It does not promise to break encryption and does not expand capture through drivers or covert means.",
- "可交付的本机闭环": "A shippable local loop",
- "嵌入式代理、本地 CA、TLS 解密、PID 归因、AI 与敏感数据规则、风险评分与阻断、加密证据、哈希链、桌面控制台与本机 Web 审计台；v0.4.0 补齐安装、更新、自愈、可见性与托盘。": "Embedded proxy, local CA, TLS reconstruction, PID attribution, AI and sensitive-data rules, risk scoring and blocking, encrypted evidence, hash chain, desktop console and local web console; v0.4.0 adds installation, updates, self-heal, visibility and the tray.",
- "Windows 当前用户路径": "Current-user path on Windows",
- "系统代理备份 / 恢复 / 四层断网保护": "System proxy backup / restore / four-layer fail-safe",
- "关机注销优雅恢复 + 开机自启": "Graceful shutdown and logoff restore + logon autostart",
- "Agent 环境变量接入": "Agent environment variable onboarding",
- "回环上游代理自动串联": "Automatic loopback upstream chaining",
- "文件句柄抽样 Beta": "File handle sampling (beta)",
- "每用户安装器 + SHA-256 自动更新": "Per-user installer + SHA-256 auto-update",
- "集成自愈（Run 键 / 看门狗）": "Integration self-heal (Run key / watchdog)",
- "五级可见性与仅元数据标注": "Five-level visibility and metadata-only labelling",
- "代理逃逸 / QUIC / DNS 观测 Beta": "Proxy bypass / QUIC / DNS observation (beta)",
- "Windows 托盘、暂停与关闭到托盘": "Windows tray, pause and close-to-tray",
- "扩大流量入口与系统视角": "Widen traffic entry points and the system view",
- "以 WFP / WinDivert 做显式的透明重定向，支持不遵循系统代理的应用；用 ETW / USN / SACL 补齐读取事件，并开始盘点本机 Agent 与 MCP 资产。": "Explicit transparent redirection with WFP / WinDivert for apps that ignore the system proxy; complete read events with ETW / USN / SACL and start inventorying local Agent and MCP assets.",
- "驱动签名与兼容性测试": "Driver signing and compatibility testing",
- "按进程 / 端口重定向": "Per-process and per-port redirection",
- "ETW / USN / SACL 文件读取证据": "ETW / USN / SACL file-read evidence",
+ "按可验证收益与信任成本排序，不承诺破解加密。": "Ordered by verifiable value and trust cost; no promise of breaking encryption.",
+ "本机闭环": "Local loop",
+ "安装、更新、自愈、可见性、旁路观测与托盘已交付。": "Install, update, self-heal, visibility, side-channel observation and tray are delivered.",
+ "团队交付": "Team delivery",
+ "把本机证据接到团队流程，同时保持本地优先。": "Connect local evidence to team workflows while staying local-first.",
+ "证据导出签名": "Signed evidence export",
  "Agent / MCP 资产清单": "Agent / MCP asset inventory",
- "团队交付与跨平台对等": "Team delivery and cross-platform parity",
- "加入策略包、告警导出与团队级只读审计视图；补齐 macOS / Linux 的安装器与系统集成，并把归因扩展到服务 / SYSTEM 进程。": "Add policy packs, alert export and a read-only team audit view; complete macOS / Linux installers and system integration, and extend attribution to service / SYSTEM processes.",
- "SIEM / OTel 导出": "SIEM / OTel export",
- "签名策略包与可信时间戳": "Signed policy packs and trusted timestamps",
- "企业部署与保留策略": "Enterprise deployment and retention policy",
- "macOS / Linux 功能对等": "macOS / Linux feature parity",
- "Windows 服务 / SYSTEM 进程归因": "Windows service / SYSTEM process attribution",
+ "扩大覆盖面": "Broader coverage",
+ "补齐不遵循代理的流量入口与跨平台交付。": "Add traffic paths that ignore the proxy and cross-platform delivery.",
+ "ETW / USN 读取事件": "ETW / USN read events",
+ "macOS / Linux 公证与自启对等": "macOS / Linux notarization and autostart parity",
  "从第一条可解释的外发记录开始": "Start with your first explainable egress record",
  "下载后打开本机审计台，查看代理、CA、断网保护与证据链状态。仅在你拥有或明确获授权的设备上使用。": "After installing, open the local console to check proxy, CA, fail-safe and evidence-chain status. Use it only on devices you own or are explicitly authorised to audit.",
- "再次查看边界": "Review the boundaries again",
  "v0.4.0 · WINDOWS / MACOS / LINUX · 仅用于拥有或明确获授权的设备": "v0.4.0 · WINDOWS / MACOS / LINUX · authorized devices only",
  "本机数据外发审计工具。Windows 版本提供每用户安装器、自动更新、系统托盘与系统代理接入；Linux 与 macOS 版本提供审计引擎与本机 Web 审计台。界面与数据都在这台设备上运行。": "Local data egress audit. The Windows build provides the per-user installer, auto-update, system tray and system proxy onboarding; Linux and macOS provide the audit engine and local web console. UI and data both run on this device.",
  "LOCAL-FIRST · 无云同步": "LOCAL-FIRST · no cloud sync",
  "产品": "Product",
- "默认行为与热更新": "Defaults & hot reload",
- "隐私与安全": "Privacy & security",
+ "能力总览": "Capabilities",
+ "覆盖边界": "Coverage",
+ "断网保护": "Network fail-safe",
  "文档": "Docs",
- "技术文档": "Documentation",
- "平台与产物矩阵": "Platforms & artifacts",
+ "技术实现文档": "Technical documentation",
+ "数据路径与 CLI": "Data path & CLI",
+ "验证状态": "Verification status",
  "资源": "Resources",
  "发布与校验文件": "Releases & checksums",
  "源代码仓库": "Source repository",
@@ -2051,17 +1504,17 @@ const ARIA_EN = {
 const META = {
   zh: {
     title: "EgressScope 外发审计｜AI Agent 数据外发审计与进程归因",
-    description: "EgressScope（本机数据外发审计）是本地优先的 AI Agent 审计工具：看清 AI 与桌面应用的 HTTPS 外发流量，定位发起进程，识别密钥与敏感数据，保留可验证的本地证据链。提供 Windows 每用户安装器、自动更新与托盘，并以检测方式观测直连、QUIC 与 DNS 目标。支持 Windows / macOS / Linux。",
+    description: "EgressScope（本机数据外发审计）是本地优先的 AI Agent 审计工具：查看经过本地代理的 HTTPS 外发内容，定位发起进程，识别密钥与敏感数据，并把加密证据留在本机。Windows 提供免管理员安装器、自动更新与托盘；直连、QUIC 与 DNS 仅做检测。",
     ogTitle: "EgressScope 外发审计｜AI Agent 数据外发审计与进程归因",
-    ogDescription: "本地优先的 AI Agent 外发审计工具：看清 HTTPS 外发流量、定位发起进程、识别密钥与敏感数据，并保留可验证的本地证据链。Windows 提供安装器、自动更新与托盘。",
+    ogDescription: "本地优先的 AI Agent 外发审计工具：查看 HTTPS 外发内容、定位发起进程、识别敏感数据，并把加密证据留在本机。Windows 提供安装器、自动更新与托盘。",
     ogImageAlt: "EgressScope 本机数据外发审计：让每一次 AI 外发都有迹可循",
     ogLocale: "zh_CN"
   },
   en: {
     title: "EgressScope — AI Agent Egress Audit & Process Attribution",
-    description: "EgressScope is a local-first AI agent egress audit tool: see HTTPS traffic from AI and desktop apps, attribute the originating process, detect secrets and sensitive data, and keep a verifiable local evidence chain. Windows builds add a per-user installer, auto-update and tray, with detection-only observation of direct, QUIC and DNS traffic. Windows, macOS and Linux.",
+    description: "EgressScope is a local-first egress audit tool for AI agents: inspect HTTPS traffic through a local proxy, attribute the originating process, detect secrets and sensitive data, and keep encrypted evidence on this device. Windows builds add a per-user installer, auto-update and tray; direct, QUIC and DNS traffic is observed only.",
     ogTitle: "EgressScope — AI Agent Egress Audit & Process Attribution",
-    ogDescription: "Local-first egress audit for AI agents: see HTTPS traffic, attribute the originating process, detect secrets and sensitive data, and keep a verifiable local evidence chain. Windows builds add a per-user installer, auto-update and tray.",
+    ogDescription: "Local-first egress audit for AI agents: inspect HTTPS traffic, attribute the originating process, detect sensitive data, and keep encrypted evidence on this device. Windows builds add an installer, auto-update and tray.",
     ogImageAlt: "EgressScope local egress audit: every AI egress leaves a trace",
     ogLocale: "en_US"
   }
