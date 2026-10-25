@@ -5,7 +5,9 @@
 ## Unreleased
 
 - 许可协议：新增 PolyForm Noncommercial License 1.0.0。允许个人与非商业组织下载、使用、修改和非商业分发，禁止商业用途；分发需保留许可证与 `Required Notice`。严格来说这是 source-available，而不是 OSI 开源。安装器、安装目录与 GitHub Release 资产都会携带 LICENSE。
+- 文档：新增 `docs/` 工程文档包，包含文档地图与维护约定、设计说明、执行计划、测试与发布手册；README 增加文档中心与项目结构入口，并修正测试基数与上游热更新描述。
 - License: adopted the PolyForm Noncommercial License 1.0.0. Individuals and noncommercial organizations may download, use, modify and redistribute it for noncommercial purposes; commercial use is prohibited. Redistribution must retain the license and the Required Notice. This is source-available, not OSI open source. The installer, installed files and GitHub release assets include the LICENSE.
+- Docs: added the `docs/` engineering documentation bundle with a document map and maintenance rules, design notes, the execution plan, and the testing/release handbook. README now links the documentation center and project structure, and stale test-baseline and upstream hot-reload notes were corrected.
 
 ## v0.4.0
 

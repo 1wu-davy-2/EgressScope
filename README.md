@@ -15,6 +15,7 @@
 <p align="center">
   <a href="https://1wu-davy-2.github.io/EgressScope/">官网 / Product site</a> ·
   <a href="https://1wu-davy-2.github.io/EgressScope/tech.html">技术实现 / Technical notes</a> ·
+  <a href="https://github.com/1wu-davy-2/EgressScope/blob/main/docs/README.md">工程文档 / Docs</a> ·
   <a href="https://github.com/1wu-davy-2/EgressScope/releases/latest">Releases</a> ·
   <a href="https://github.com/1wu-davy-2/EgressScope">GitHub</a> ·
   <a href="https://github.com/1wu-davy-2/EgressScope/blob/main/LICENSE">License</a>
@@ -40,6 +41,7 @@ EgressScope 是一个以 Windows 为主的本机审计工具。它在用户明�
 ## 目录
 
 - [交付内容](#交付内容)
+- [文档中心](#文档中心)
 - [快速开始](#快速开始)
 - [安装、更新与集成自愈](#安装更新与集成自愈)
 - [平台与 GitHub Actions](#平台与-github-actions)
@@ -66,7 +68,7 @@ EgressScope 是一个以 Windows 为主的本机审计工具。它在用户明�
 | Linux / macOS | `EgressScope-v0.4.0-linux-x64.tar.gz` 等 | 审计引擎 + 本机 Web 审计台；没有 Windows 系统代理接管与托盘 |
 | 静态产品介绍页 | `web\intro.html` | 能力优先的官网首页；启动程序后同样可通过 `/intro` 访问 |
 | 技术实现文档 | `web\tech.html` | 数据路径、进程归因、可见性、旁路观测、断网保护、安装更新、数据安全与验证状态；启动程序后可通过 `/tech` 访问 |
-| 许可协议 | `LICENSE` | PolyForm Noncommercial License 1.0.0；允许非商业使用，禁止商业用途；安装器显示并安装 `LICENSE.txt`，Release 同时提供 `LICENSE` 资产 |
+| 许可协议 | `LICENSE` | PolyForm Noncommercial License 1.0.0；允许非商业使用，禁止商业用途；安装器显示并安装 `LICENSE.txt`，下一次发布起 Release 同时提供 `LICENSE` 资产（v0.4.0 既有产物早于该变更） |
 | 本机审计台 | 启动后 `http://127.0.0.1:8898/` | 流量、发现、文件触达、覆盖范围、可见性统计、旁路观测与策略设置 |
 | 桌面控制窗口 + Windows 托盘 | 可执行文件启动后的主窗口 / 通知区域 | 安装/移除 CA、启用/恢复系统代理、暂停采集、导出证据；Windows 上关闭窗口默认隐藏到托盘 |
 | 构建校验清单 | `dist\SHA256SUMS.txt` | 本地构建的可执行文件 SHA-256；发布页另有每个产物的 `.sha256` 与汇总 `SHA256SUMS.txt` |
@@ -74,12 +76,30 @@ EgressScope 是一个以 Windows 为主的本机审计工具。它在用户明�
 | GitHub Release | [releases/latest](https://github.com/1wu-davy-2/EgressScope/releases/latest) | Windows x64 安装包与 x64 / arm64 便携版、Linux x64 / arm64、macOS x64 / arm64；每个 tag 的发布说明取自 `CHANGELOG.md` 对应小节 |
 | 版本更新说明 | `CHANGELOG.md` | 按版本记录变更；打包 tag 时由发布工作流自动截取对应小节写入 Release 正文 |
 | 研究/执行计划 | `PLAN.md` | 本项目的技术与产品调研底稿 |
+| 工程文档 | `docs/` | 设计说明、执行计划、测试与发布手册，以及文档地图与维护约定 |
 
 审计台固定访问 `http://127.0.0.1:8898/`（端口可在设置中修改）。`18898` 只是自动化测试临时使用的端口，不是产品默认端口；临时测试进程关闭后访问会被拒绝。
 
 首次启动会在 `%LOCALAPPDATA%\EgressScope` 下生成数据目录、数据库和审计 CA。**不会自动安装根证书，也不会自动修改系统代理**；两者都需要在桌面控制窗口中显式确认。采集、AI 端点识别、敏感数据规则、文件句柄抽样、更新检查与旁路观测（Beta）默认开启；风险阻断与 Canary 诱饵默认关闭。首次启动会写入当前用户的开机自启（`HKCU\...\CurrentVersion\Run` 的 `EgressScope` 值），可在控制台、审计台设置或 `--disable-autostart` 撤销。Windows 托盘可用时，开机自启会隐藏启动到通知区域。
 
 > 当前发布的 Windows 可执行文件与安装包默认未做 Authenticode 代码签名，Windows SmartScreen 可能显示“未知发布者”。只有仓库所有者配置 `WINDOWS_CERT_PFX_BASE64` / `WINDOWS_CERT_PASSWORD` 后，CI 的可选 `signtool` 步骤才会签名。请先核对发布页或 `SHA256SUMS.txt` 中的 SHA-256，再决定是否运行；不要从来源不明的渠道获取本程序。SHA-256 只能确认下载内容与发布页一致，不等同于发布者身份验证。
+
+---
+
+## 文档中心
+
+工程文档集中在 [`docs/`](docs/README.md)。根目录 README 仍是安装与使用的权威入口，`PLAN.md` 保留立项前的调研底稿，`CHANGELOG.md` 记录版本事实。
+
+| 文档 | 内容 |
+| --- | --- |
+| [`docs/README.md`](docs/README.md) | 文档地图、阅读路径、权威来源与维护约定 |
+| [`docs/design.md`](docs/design.md) | 问题与目标、设计原则、总体架构、模块职责、关键设计决策、安全与隐私边界 |
+| [`docs/execution-plan.md`](docs/execution-plan.md) | P0/P1/P2 阶段映射、v0.4.0 交付状态、验收证据、风险、后续路线 |
+| [`docs/testing-and-release.md`](docs/testing-and-release.md) | 测试矩阵、CI 工作流、发布运行手册、产物与校验、验证缺口、故障恢复 |
+| [`PLAN.md`](PLAN.md) | 调研结论、技术路线对比与详细阶段计划（早期假设不等于现有能力） |
+| [`CHANGELOG.md`](CHANGELOG.md) | 按版本记录变更；发布工作流据此生成 Release 正文 |
+
+对外页面：[产品介绍](https://1wu-davy-2.github.io/EgressScope/) · [技术实现](https://1wu-davy-2.github.io/EgressScope/tech.html)。程序启动后也可通过 `/intro` 与 `/tech` 访问同一组页面。
 
 ---
 
@@ -425,7 +445,7 @@ SQLite（WAL）＋ AES-GCM 证据正文＋ SHA-256 审计链
 - 代理地址是本机回环地址（`127.0.0.1` / `localhost` / `::1`）的 HTTP 或 HTTPS 代理；
 - 端口不是 EgressScope 自身的代理端口或审计台端口。
 
-也可以在“上行链路”中手动指定，或用 `--upstream-proxy http://127.0.0.1:7890` 启动。手动指定优先于自动继承；`--no-inherit-upstream` 可完全关闭继承。该配置在代理启动时读取，修改后需要重启程序。
+也可以在“上行链路”中手动指定，或用 `--upstream-proxy http://127.0.0.1:7890` 启动。手动指定优先于自动继承；`--no-inherit-upstream` 可完全关闭继承。上游代理属于热更新范围：保存后会自动重连本地代理并重新校准系统代理，不需要重启程序；`insecure_upstream` 与 `upstream_ca` 仍需重启。
 
 上游链路只负责把 mitmproxy 重新加密后的 TLS 字节转发出去。上游代理能看到目标主机与连接元数据，但**看不到** EgressScope 已解密的正文；如果上游本身也是会终止 TLS 的企业代理，则它可能按自己的策略看到内容，这属于另一层信任边界。当前不支持需要用户名密码认证的代理、PAC 脚本、SOCKS 上游与非回环自动继承，这些场景请使用单 Agent 环境变量或手动配置。
 
@@ -562,7 +582,7 @@ Windows GUI 构建集成 pystray 0.19.5 与 Pillow 12.3.0，在通知区域显�
 - **显式解密**：在流量详情点击“解密原文”后，服务端才在本次响应中返回明文；不会将明文重新写回数据库或导出文件。
 - **审计链**：每条流量写入时，将摘要与上一条哈希链接，提供可验证的完整性基线。注意：它不是外部公证，拥有完整数据库写入权限的攻击者仍可能重写整条链。
 - **本地 Web 安全**：Web 审计台只监听 `127.0.0.1`，每次启动生成随机令牌，校验 Host，使用 CSP、`no-store`，并拒绝非回环 Host。
-- **显式系统变更**：CA 安装、系统代理启用、文件诱饵创建都只在桌面控制窗口中发生，且都有确认步骤；Web 审计台没有系统级授权接口。
+- **显式系统变更**：CA 安装与系统代理启用只在桌面控制窗口中发生，且都有确认步骤；Canary 默认关闭，可在控制台或审计台设置中显式开启，开启时会写入含虚构凭据的文件；Web 审计台没有安装 CA 或接管系统代理的接口。
 - **上游只接手重新加密的流量**：自动继承或手动指定的上游代理不会收到审计器已解密的正文，只会收到目标主机与重新加密的 TLS 字节。
 - **更新检查不携带审计数据**：只向 GitHub Releases API 发送当前版本 User-Agent 等必要请求头，不上传流量、主机名、进程或证据。`--check-update` 同样只读公开 Release 信息。
 - **更新下载可验证**：只接受 HTTPS 与 GitHub 控制域名，必须匹配发布页的 SHA-256；校验失败会删除文件。SHA-256 保证传输内容一致，但不等同于代码签名或发布者身份验证。
@@ -633,7 +653,13 @@ ai-agent-audit/
 │  └─ web.py               本地审计台 HTTP 服务与 API
 ├─ web/
 │  ├─ dashboard.html       交互式审计台（无外部依赖）
-│  └─ intro.html           产品介绍官网页面
+│  ├─ intro.html           产品介绍官网页面
+│  └─ tech.html            技术实现与边界说明页
+├─ docs/
+│  ├─ README.md            文档地图、阅读路径与维护约定
+│  ├─ design.md            设计说明、关键决策与安全边界
+│  ├─ execution-plan.md    阶段映射、交付状态与后续路线
+│  └─ testing-and-release.md  测试矩阵、CI 与发布手册
 ├─ tests/
 │  ├─ smoke_test.py        端到端冒烟测试（不修改系统设置）
 │  ├─ recovery_test.py     断网保护、关机钩子、自愈、端口校准、开机自启、热更新
@@ -649,6 +675,7 @@ ai-agent-audit/
 ├─ build.spec              PyInstaller 单文件构建配置（含 Windows 托盘依赖）
 ├─ build.bat               Windows 一键构建脚本
 ├─ CHANGELOG.md            版本更新说明，发布 tag 时写入 Release 正文
+├─ LICENSE                 PolyForm Noncommercial 1.0.0
 ├─ requirements.txt        运行时依赖
 ├─ requirements-dev.txt    构建与测试依赖
 └─ PLAN.md                 调研与执行计划
@@ -685,7 +712,7 @@ ai-agent-audit/
 - 使用真实本地 CA 完成一次 HTTPS 请求并校验流量落库、PID 归因、AI 分类、DLP、可见性分级、加密解密、阻断、哈希链、旁路观测 API、导出脱敏与 Web 鉴权；
 - **不会**安装根证书、修改系统代理、写开机自启或触碰真实业务数据。
 
-当前基线：**61 项检查全部通过**。测试使用 `--insecure-upstream` 仅针对 Mock 服务端，生产运行不要开启；同时显式关闭系统代理继承与开机自启，避免连接本机日常使用的代理或改动真实 Run 键。CI 会在 Windows、Linux、macOS 三平台运行同一套源码测试；Windows 的发布构建还会运行打包验收。
+当前本地基线：**64 项检查全部通过**（2026-10-25；以实际运行输出为准）。测试使用 `--insecure-upstream` 仅针对 Mock 服务端，生产运行不要开启；同时显式关闭系统代理继承与开机自启，避免连接本机日常使用的代理或改动真实 Run 键。CI 会在 Windows、Linux、macOS 三平台运行同一套源码测试；Windows 的发布构建还会运行打包验收。
 
 断网保护、自愈与恢复逻辑测试：
 
@@ -891,6 +918,7 @@ EgressScope 采用 **PolyForm Noncommercial License 1.0.0**（源码可用 / sou
 
 **说明**
 
+- 既有 v0.4.0 可执行文件与安装包早于本许可文件加入仓库，不包含 `LICENSE`；下一次构建/发布起，安装器、安装目录与 Release 资产会携带许可证文件。
 - “禁止商用”不符合 OSI 对开源许可证的定义，因此本项目的准确表述是 **source-available（源码可用）**，而不是 OSI 开源；中文语境中的“开源协议”仅为通俗说法。
 - 以上为便于阅读的摘要，不构成法律意见，也不替代 [LICENSE](LICENSE) 英文全文；如条款冲突，以 LICENSE 为准。
 - 软件按“现状”提供，不附带任何明示或默示担保。使用即表示你理解并接受上述授权、安全与覆盖边界；对超出授权范围使用、在生产设备上安装审计 CA、或依赖启发式风险分做出处置而造成的后果，作者不承担责任。
